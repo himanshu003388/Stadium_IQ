@@ -1,129 +1,217 @@
-# Stadium IQ — FIFA World Cup 2026 Smart Stadium Operations
+# 🏟️ Stadium IQ
 
-A GenAI-enabled smart stadium operations platform designed for the **FIFA World Cup 2026**, built with React 19, Vite, Tailwind CSS v4, and Google Gemini 1.5 Flash. Real-time crowd management, AI multilingual assistance, volunteer dispatch, transportation coordination, and sustainability monitoring.
+### **FIFA World Cup 2026™ — Smart Stadium Operations Platform**
 
-## Problem Statement Alignment
+[![React 19](https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react&logoColor=black)](https://react.dev/)
+[![Vite](https://img.shields.io/badge/Vite-8-646CFF?style=flat-square&logo=vite&logoColor=white)](https://vitejs.dev/)
+[![Tailwind CSS v4](https://img.shields.io/badge/Tailwind_CSS-v4-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
+[![Google Gemini 1.5](https://img.shields.io/badge/Google_Gemini-1.5_Flash-4285F4?style=flat-square&logo=google-gemini&logoColor=white)](https://deepmind.google/technologies/gemini/)
+[![Accessibility](https://img.shields.io/badge/WCAG_2.1-AA_Compliant-2EA44F?style=flat-square)](https://www.w3.org/WAI/standards-guidelines/wcag/)
+[![Security](https://img.shields.io/badge/Security-Production_Ready-success?style=flat-square&logo=snyk)](https://snyk.io/)
 
-**Smart Stadiums & Tournament Operations** — This solution enhances stadium operations and the overall tournament experience for fans, organizers, volunteers, and venue staff by leveraging Generative AI across every dimension:
+---
 
-| Requirement                    | Implementation                                                                                                                                                                 |
-| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **GenAI-enabled**              | Google Gemini 1.5 Flash integration via secure API proxy + smart demo mode fallback                                                                                            |
-| **Navigation**                 | Interactive SVG stadium map with keyboard-navigable zones, gate directions, AI navigation tips                                                                                 |
-| **Crowd management**           | Real-time density monitoring, critical gate alerts, zone occupancy tracking, live simulation engine                                                                            |
-| **Accessibility**              | Dedicated Accessibility Hub with service map, accessible gates with features, AI-powered accessibility assistant, wheelchair routes, sign language info, service animal relief |
-| **Transportation**             | Post-match transport hub with CO₂ tracking, eco scores, AI departure recommendations                                                                                           |
-| **Sustainability**             | Full dashboard: energy, water, waste, solar, CO₂ savings, eco mode, FIFA 2026 goals tracking                                                                                   |
-| **Multilingual assistance**    | 7 languages (EN, ES, FR, AR, PT, JA, HI) in AI chat with keyboard-navigable language selector                                                                                  |
-| **Operational intelligence**   | Command Center with 4 KPIs, AI-recommended incident actions, critical gate alerts, live system status                                                                          |
-| **Real-time decision support** | Live simulation engine, AI incident recommendations, AI volunteer assignment, AI departure recommendations                                                                     |
-| **FIFA World Cup 2026**        | AT&T Stadium (Arlington, TX), Brazil vs France quarter-final, FIFA sustainability goals                                                                                        |
+**Stadium IQ** is a state-of-the-art, GenAI-enabled stadium operations command center tailored for the **FIFA World Cup 2026™** (headquartered at the AT&T Stadium in Arlington, TX, featuring the France vs. Brazil Quarter-Final match). Built using React 19, Tailwind CSS v4, Express, and Google Gemini 1.5 Flash, it empowers stadium managers, operators, volunteers, and fans with real-time intelligence, interactive crowd routing, and automated operational dispatch.
 
-## Tech Stack
+---
 
-| Category  | Technology                                                   |
-| --------- | ------------------------------------------------------------ |
-| Framework | React 19 (JSX)                                               |
-| Build     | Vite 8                                                       |
-| Styling   | Tailwind CSS v4 + PostCSS                                    |
-| AI        | Google Generative AI (Gemini 1.5 Flash)                      |
-| Server    | Express.js (API proxy with Helmet, CORS, rate limiting)      |
-| Security  | Helmet, DOMPurify, CSRF protection, API key auth             |
-| Icons     | Lucide React + Material Symbols                              |
-| Testing   | Vitest + Testing Library + jest-axe (unit), Playwright (E2E) |
-| Linting   | oxlint + Prettier                                            |
+## 🗺️ Table of Contents
+- [🎯 Problem Statement Alignment](#-problem-statement-alignment)
+- [🛠️ Tech Stack](#️-tech-stack)
+- [✨ Core Features](#-core-features)
+- [🚀 Getting Started](#-getting-started)
+- [📦 Project Architecture](#-project-architecture)
+- [🛡️ Security Hardening](#️-security-hardening)
+- [🧪 Testing & Quality Assurance](#-testing--quality-assurance)
+- [♿ Accessibility (WCAG 2.1 AA)](#-accessibility-wcag-21-aa)
 
-## Features
+---
 
-- **WC 26 Ops Center** — Real-time KPIs, zone/gate status, AI-recommended incident management
-- **GenAI Assistant** — Multilingual chat with Gemini AI (or demo mode), 7 languages, markdown rendering
-- **Crowd & Navigation** — Interactive SVG stadium map, keyboard navigation, zone selection, AI navigation tips
-- **Volunteer Dispatch** — AI-powered task assignment, volunteer roster with language/skill matching
-- **Transport Hub** — Post-match departure options, CO₂ tracking, AI recommendations, multi-sort
-- **Sustainability Dashboard** — Energy, water, waste, solar metrics, eco mode toggle, FIFA goals tracking
-- **Accessibility Hub** — Dedicated view for accessible gates, service locations (wheelchair, hearing loops, braille), AI-powered accessibility assistant with quick queries
+## 🎯 Problem Statement Alignment
 
-## Getting Started
+Stadium IQ addresses the critical operational challenges of hosting large-scale tournaments by merging **Generative AI** with real-time operations:
 
+| Pillar | Requirement | Stadium IQ Implementation |
+| :--- | :--- | :--- |
+| **🤖 Generative AI** | GenAI-enabled platform | Integration with Google Gemini 1.5 Flash via a secure backend proxy with a local Demo Mode fallback. |
+| **🧭 Navigation** | Smart Navigation | Interactive SVG stadium map with keyboard-navigable zones, gate status, and AI-generated egress/ingress tips. |
+| **👥 Crowd Management** | Incident & Density Control | Real-time density monitoring, gate alerts, zone occupancy trackers, and simulation control. |
+| **♿ Accessibility** | Dedicated Hub | Comprehensive suite detailing accessible gates, wheelchair routing, hearing loop locations, and an AI-powered accessibility advisor. |
+| **🌱 Sustainability** | Green Infrastructure | Monitoring metrics (energy, water, waste, solar output, CO₂ saved) coupled with a FIFA 2026 goals tracker. |
+| **🌐 Multilingual** | Inclusivity & Support | AI Assistant offering instant translation and assistance across 7 languages (EN, ES, FR, AR, PT, JA, HI). |
+| **🧠 Intelligence** | Operational Support | Live Command Center showcasing real-time KPIs, live incident lists, and automated volunteer dispatch recommendations. |
+
+---
+
+## 🛠️ Tech Stack
+
+<details>
+<summary><b>Click to expand full Tech Stack breakdown</b></summary>
+
+### Frontend
+- **Framework:** React 19 (Functional Components, Context API)
+- **Styling:** Tailwind CSS v4 (Sleek dark mode, glassmorphism, responsive CSS grid)
+- **Icons:** Lucide React & Google Material Symbols
+- **State Management:** StadiumContext & AppContext (managing live operational simulation updates)
+
+### Backend & Security
+- **Server:** Express.js (serving as a secure middleware and proxy for Google Gemini API)
+- **Security Headers:** Helmet.js (strict Content Security Policy, HSTS, frame options)
+- **Rate Limiting:** Express Rate Limit (restricting requests to 30 req/min per IP)
+- **Sanitization:** DOMPurify for cleansing all user inputs and AI markdown responses
+
+### Testing & Tooling
+- **Unit Testing:** Vitest, React Testing Library, `jest-axe` (automated accessibility validation)
+- **E2E Testing:** Playwright (cross-browser automation across Chromium, Firefox, WebKit, Mobile Chrome)
+- **Linter & Formatter:** oxlint (fast linting) & Prettier
+
+</details>
+
+---
+
+## ✨ Core Features
+
+### 🖥️ 1. WC 26 Operations Command Center
+- **Real-Time KPIs:** Live tracking of Stadium Capacity, Active Incidents, Deployed Volunteers, and Eco Power utilization.
+- **Incident Intelligence:** Live simulator feeds incident notifications (e.g., gate blockages, medical requests) with immediate, AI-suggested mitigation procedures.
+- **System Status:** Health checks for API proxy, AI Engine, and Simulator.
+
+### 🤖 2. GenAI Multilingual Assistant
+- Powered by **Google Gemini 1.5 Flash** with an offline mock responder for offline execution.
+- Native rendering of complex Markdown, bullet points, and code snippets.
+- Interactive quick-query pills tailored to user role/language.
+- Full keyboard accessibility and semantic ARIA configuration.
+
+### 🗺️ 3. Crowd Density & Navigation Map
+- Interactive, responsive vector map of **AT&T Stadium**.
+- Real-time density coloring (Clear, Moderate, Crowded, Critical).
+- Keyboard accessibility: Navigate zones with arrow keys, select zones with Enter/Space.
+- Dynamic gate status side panel containing directions, waiting times, and AI navigation advice.
+
+### 🤝 4. Volunteer Dispatch Engine
+- Smart assignment system matching incident criteria to volunteer profiles.
+- Profiles include language capabilities, specialized skills (medical, security, customer service), and location coordinates.
+- Drag-and-drop / single-click assignment interface.
+
+### 🚍 5. Post-Match Green Transport Hub
+- Multi-modal transport tracker (Metrolink, Eco Shuttle, Rideshare, Walking).
+- Dynamic eco scores and real-time CO₂ footprint tracker.
+- Smart Sorting: Sort options by departure frequency, ETA, capacity, or CO₂ emissions.
+- AI Transport Recommendations based on current egress crowd levels.
+
+### 🍃 6. FIFA Sustainability Dashboard
+- Live gauges for energy consumption, solar panel efficiency, water recycling rates, and diverted waste.
+- **Eco Mode Toggle:** Dynamically simulates power saving across light fixtures, screen brightness, and HVAC.
+- Automated tracker comparing current statistics against official FIFA 2026 sustainability targets.
+
+### ♿ 7. Dedicated Accessibility Hub
+- Specifically tailored for fans with physical, auditory, or visual impairments.
+- Interactive list of accessible gates highlighting specific features (e.g., low-slope ramps, hearing loops).
+- Real-time accessibility advisor answering questions on wheelchair rentals, shuttle paths, and sensory rooms.
+
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+- Node.js (v18 or higher)
+- npm (v9 or higher)
+
+### Setup & Installation
 ```bash
+# Clone the repository
+git clone https://github.com/himanshu003388/Stadium-IQ.git
+cd Stadium-IQ
+
 # Install dependencies
 npm install
-
-# Start development (Vite + Express proxy)
-npm run dev
-
-# Run tests
-npm test                 # Unit tests
-npm run test:coverage    # With coverage report
-npm run test:e2e         # Playwright E2E tests
-npm run test:a11y        # Accessibility-specific tests
-
-# Lint & format
-npm run lint
-npm run format
-
-# Build for production
-npm run build
 ```
 
-### API Key Configuration
-
-For full GenAI features, create a `.env` file:
-
+### Configuration
+Create a `.env` file in the root directory to configure the Gemini API:
 ```env
 VITE_GEMINI_API_KEY=your_gemini_api_key_here
 ```
+> [!NOTE]  
+> If no API key is specified, the application will automatically activate **Demo Mode** which simulates smart, context-aware AI interactions using an offline parser.
 
-The app gracefully falls back to **Demo Mode** with smart keyword-based responses when no API key is configured.
+### Scripts & Development
+| Command | Description |
+| :--- | :--- |
+| `npm run dev` | Launches the React Vite frontend and the Express API proxy simultaneously. |
+| `npm run build` | Compiles production-ready bundle assets. |
+| `npm run lint` | Scans the codebase using `oxlint` for rapid linting. |
+| `npm run format` | Enforces formatting style guidelines via Prettier. |
+| `npm test` | Runs unit tests using Vitest and React Testing Library. |
+| `npm run test:coverage` | Generates a Vitest coverage report. |
+| `npm run test:e2e` | Triggers Playwright E2E suites. |
+| `npm run test:a11y` | Executes automated accessibility regression suites. |
 
-## Project Structure
+---
+
+## 📦 Project Architecture
 
 ```
-src/
-├── components/     # UI components (lazy-loaded)
-│   ├── CommandCenter.jsx
-│   ├── AIAssistant.jsx
-│   ├── CrowdMap.jsx
-│   ├── VolunteerDispatch.jsx
-│   ├── TransportHub.jsx
-│   ├── Sustainability.jsx
-│   ├── Layout.jsx / Header.jsx / Sidebar.jsx
-│   └── *.test.jsx  # Unit tests per component
-├── context/        # StadiumContext (real-time simulation engine)
-├── hooks/          # Custom hooks (useGemini)
-├── utils/          # Constants, helpers, design tokens
-├── data/           # Mock data (AT&T Stadium)
-└── main.jsx        # Entry point
+Stadium-IQ/
+├── .github/workflows/   # CI/CD workflows for automation
+├── e2e/                 # E2E integration test suites (Playwright)
+├── public/              # Static assets, SVG sprites, service workers
+├── server.js            # Express server (middleware, security headers, Gemini proxy)
+├── src/
+│   ├── components/      # Modular component library
+│   │   ├── CommandCenter.jsx      # Live operational dashboard
+│   │   ├── AIAssistant.jsx        # Gemini-powered chatbot
+│   │   ├── CrowdMap.jsx           # Interactive SVG Map
+│   │   ├── VolunteerDispatch.jsx  # Smart volunteer tasking
+│   │   ├── TransportHub.jsx       # Sustainability transport options
+│   │   ├── Sustainability.jsx     # Green metrics & targets
+│   │   ├── AccessibilityHub.jsx   # ADA compliance features
+│   │   └── Layout.jsx             # Core shell container
+│   ├── context/         # React Context (simulation engine & application state)
+│   ├── hooks/           # Custom hooks (Gemini fetch hook)
+│   ├── utils/           # Helper utility functions & UI token constants
+│   ├── data/            # Static JSON datasets (stadium metadata, zones, volunteers)
+│   ├── index.css        # Tailwind styling entries & custom design system tokens
+│   └── main.jsx         # App bootstrapping
+└── vite.config.js       # Vite build configurations
 ```
 
-## Security
+---
 
-- Helmet.js with strict Content Security Policy
-- DOMPurify XSS sanitization for AI responses
-- API keys stored in `.env` (never in source)
-- Rate limiting (30 req/min per IP)
-- CSRF protection
-- CORS restricted to allowed origins
-- Request body size limits (10kb)
-- Input validation + sanitization
-- HTTPS redirect in production
-- Security headers (HSTS, X-Frame-Options, Permissions-Policy)
+## 🛡️ Security Hardening
 
-## Testing
+Stadium IQ incorporates a robust, multi-layer security configuration to protect stadium interfaces:
 
-- **100% component coverage** with Vitest + Testing Library
-- **jest-axe** automated accessibility checks in every component test
-- **Playwright E2E** across Chromium, Firefox, and mobile Chrome
-- **Coverage thresholds:** 80%+ statements, 70%+ branches, 80%+ functions, 80%+ lines
+- **Express Middleware:** Powered by `Helmet` to enforce strict Content Security Policies (CSP), prevent clickjacking, and enforce HSTS.
+- **API Defense:** Restricts API endpoint access with rate limit thresholds (30 requests/minute per client IP) to block DDoS and scraping attempts.
+- **XSS Mitigation:** Integrates `DOMPurify` to sanitize all incoming prompt queries and outgoing AI markdown formats.
+- **CORS Policies:** Configured strictly to limit requests to trusted origins.
+- **Data Protection:** Implements payload size limits (10kb) and input validations on all backend controller routes.
 
-## Accessibility (WCAG 2.1 AA Compliant)
+---
 
-- Skip navigation links (static + dynamic)
-- Comprehensive ARIA: roles, labels, live regions, expanded/current states
-- Full keyboard navigation (arrows, tab, enter/space)
-- `prefers-reduced-motion` support
-- Screen reader utilities (`.sr-only`, `.sr-live-region`)
-- Semantic HTML landmarks
-- Focus trap management
-- Color contrast optimized palette
-- Automated a11y regression testing
+## 🧪 Testing & Quality Assurance
+
+Our robust verification pipeline ensures operational reliability during peak event hours:
+
+- **Unit Testing:** Powered by Vitest with **100% component coverage** across state transitions, custom hooks, and mock render trees.
+- **Accessibility Tests:** Integrated `jest-axe` within unit test runners to block regressions in color contrast, focus ordering, and markup semantics.
+- **End-to-End Tests:** Playwright simulates complete user journeys (e.g., filtering green transit routes, activating volunteer dispatches, interacting with the SVG map) on Chrome, Firefox, and mobile viewport layouts.
+
+---
+
+## ♿ Accessibility (WCAG 2.1 AA)
+
+Designed to be accessible to all global fans and tournament operators:
+
+- **Semantic HTML5:** Built entirely with proper semantic landmark tags (`<header>`, `<main>`, `<nav>`, `<aside>`).
+- **Keyboard Traversal:** Complete keyboard focus loop management, arrow-key SVG map navigation, and action execution using Space/Enter.
+- **Screen Reader Support:** Configured using ARIA descriptors (`aria-live`, `aria-expanded`, `aria-controls`) and custom `.sr-only` descriptive texts.
+- **Visual Design:** Fully complies with WCAG AA color contrast guidelines. Supports user configurations such as `prefers-reduced-motion`.
+- **Skip Navigation:** Focus-visible skip links allow power-users to jump directly to operational widgets.
+
+---
+
+<p align="center">
+  <b>Built for FIFA World Cup 2026™ Stadium Operations.</b>
+</p>
