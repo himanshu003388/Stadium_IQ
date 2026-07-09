@@ -38,16 +38,22 @@ describe('App', () => {
 
   it('renders Command Center by default (first view)', async () => {
     render(<App />);
-    await waitFor(() => {
-      expect(screen.getByText('Crowd Density')).toBeInTheDocument();
-    }, { timeout: 10000 });
+    await waitFor(
+      () => {
+        expect(screen.getByText('Crowd Density')).toBeInTheDocument();
+      },
+      { timeout: 10000 },
+    );
   });
 
   it('renders Occupancy KPI card by default', async () => {
     render(<App />);
-    await waitFor(() => {
-      expect(screen.getByText('Occupancy')).toBeInTheDocument();
-    }, { timeout: 10000 });
+    await waitFor(
+      () => {
+        expect(screen.getByText('Occupancy')).toBeInTheDocument();
+      },
+      { timeout: 10000 },
+    );
   });
 
   it('renders the AI Active status indicator', async () => {

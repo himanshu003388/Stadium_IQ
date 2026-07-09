@@ -41,14 +41,20 @@ describe('Full Application Integration', () => {
 
   it('has a proper heading structure with landmarks', async () => {
     render(<App />);
-    await waitFor(() => {
-      expect(screen.getByRole('banner')).toBeInTheDocument();
-      expect(screen.getByRole('main')).toBeInTheDocument();
-    }, { timeout: 10000 });
-    await waitFor(() => {
-      const regions = document.querySelectorAll('[role="region"]');
-      expect(regions.length).toBeGreaterThan(0);
-    }, { timeout: 10000 });
+    await waitFor(
+      () => {
+        expect(screen.getByRole('banner')).toBeInTheDocument();
+        expect(screen.getByRole('main')).toBeInTheDocument();
+      },
+      { timeout: 10000 },
+    );
+    await waitFor(
+      () => {
+        const regions = document.querySelectorAll('[role="region"]');
+        expect(regions.length).toBeGreaterThan(0);
+      },
+      { timeout: 10000 },
+    );
   });
 
   it('passes comprehensive accessibility audit across entire page', async () => {
