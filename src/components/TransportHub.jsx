@@ -121,11 +121,11 @@ function TransportHub() {
 
   useEffect(() => {
     requestDep(
-      `Give a concise departure recommendation for fans at ${stadium.name}. Best eco option: ${bestEco?.type} (${bestEco?.co2e}g CO2). Fastest: ${fastest?.type} (${fastest?.etaMinutes}min). Occupancy: ${Math.round((stadium.currentOccupancy / stadium.capacity) * 100)}%. Keep to 2 sentences.`,
+      `Give a concise transportation recommendation for fans departing ${stadium.name} to improve crowd management. Best eco option: ${bestEco?.type} (${bestEco?.co2e}g CO2). Fastest: ${fastest?.type} (${fastest?.etaMinutes}min). Occupancy: ${Math.round((stadium.currentOccupancy / stadium.capacity) * 100)}%. Keep to 2 sentences.`,
       depFallback,
     );
     requestArrival(
-      `Give a concise pre-match arrival recommendation for fans arriving at ${stadium.name}. State of parking: Lot A is 85% full, Lot B is 40% full, Lot C is closed. Suggest using Lot B or transit. Keep to 2 sentences.`,
+      `Give a concise transportation recommendation for fans arriving at ${stadium.name} to improve crowd management. State of parking: Lot A is 85% full, Lot B is 40% full, Lot C is closed. Suggest using Lot B or transit. Keep to 2 sentences.`,
       arrivalFallback,
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps

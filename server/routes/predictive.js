@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import logger from '../utils/logger.js';
 import crypto from 'crypto';
 import { jwtAuth } from '../middleware/auth.js';
 import { getGenAI, getBestAvailableModel } from '../utils/genai.js';
@@ -92,7 +93,8 @@ router.post('/api/ai/predictive-insights', jwtAuth, async (req, res) => {
       const selectedModel = await getBestAvailableModel(GEMINI_API_KEY);
       const model = genAI.getGenerativeModel({ model: selectedModel });
 
-      const prompt = `You are a predictive operational analysis engine for the FIFA World Cup 2026 Smart Stadium operations center.
+      const prompt = `You are a predictive operational intelligence engine for the FIFA World Cup 2026 Smart Stadium operations center, designed to enhance the tournament experience for venue staff and organizers.
+Your goal is to leverage Generative AI to provide real-time decision support, crowd management forecasting, and operational intelligence.
 Given the current stadium status context:
 ${JSON.stringify(contextData || {})}
 
@@ -156,7 +158,7 @@ The JSON object must have EXACTLY the following structure (do not return any mar
     const insights = generateInsights(contextData);
     res.json({ insights, requestId });
   } catch (err) {
-    console.error(`[${requestId}] Predictive insights error, falling back:`, err);
+    logger.error(`[${requestId}] Predictive insights error, falling back:`, err);
     try {
       const insights = generateInsights(req.body.contextData);
       res.json({ insights, requestId, fallback: true });

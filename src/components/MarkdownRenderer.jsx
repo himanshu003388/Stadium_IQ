@@ -8,10 +8,11 @@ function parseMarkdown(text) {
 
   function flushList() {
     if (listItems.length > 0) {
+      const listId = crypto.randomUUID();
       elements.push(
-        <ul key={`ul-${elements.length}`} style={{ margin: '6px 0', paddingLeft: '16px' }}>
-          {listItems.map((item, i) => (
-            <li key={i}>{item}</li>
+        <ul key={`ul-${listId}`} style={{ margin: '6px 0', paddingLeft: '16px' }}>
+          {listItems.map((item) => (
+            <li key={crypto.randomUUID()}>{item}</li>
           ))}
         </ul>,
       );
@@ -25,16 +26,16 @@ function parseMarkdown(text) {
     if (bulletMatch) {
       const boldProcessed = bulletMatch[1]
         .split(/\*\*(.*?)\*\*/)
-        .map((part, j) => (j % 2 === 1 ? <strong key={j}>{part}</strong> : part));
-      listItems.push(<React.Fragment key={i}>{boldProcessed}</React.Fragment>);
+        .map((part, j) => (j % 2 === 1 ? <strong key={crypto.randomUUID()}>{part}</strong> : part));
+      listItems.push(<React.Fragment key={crypto.randomUUID()}>{boldProcessed}</React.Fragment>);
       continue;
     }
     flushList();
     const boldProcessed = line
       .split(/\*\*(.*?)\*\*/)
-      .map((part, j) => (j % 2 === 1 ? <strong key={j}>{part}</strong> : part));
+      .map((part, j) => (j % 2 === 1 ? <strong key={crypto.randomUUID()}>{part}</strong> : part));
     elements.push(
-      <p key={`p-${i}`} style={{ margin: '4px 0' }}>
+      <p key={crypto.randomUUID()} style={{ margin: '4px 0' }}>
         {boldProcessed}
       </p>,
     );

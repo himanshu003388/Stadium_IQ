@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import logger from '../utils/logger.js';
 import crypto from 'crypto';
 import { authenticateApiKey, csrfProtection } from '../middleware/auth.js';
 import { getGenAI, getBestAvailableModel } from '../utils/genai.js';
@@ -78,7 +79,7 @@ router.post('/api/ai/translate', authenticateApiKey, csrfProtection, async (req,
     queryCache.set(cacheKey, fallbackText);
     res.json({ translatedText: fallbackText, requestId, fallback: true });
   } catch (err) {
-    console.error(`[${requestId}] Translation error:`, err);
+    logger.error(`[${requestId}] Translation error:`, err);
     const fallbackText = `"${cleanText}" (Translated to ${cleanLang})`;
     res.json({ translatedText: fallbackText, requestId, fallback: true });
   }

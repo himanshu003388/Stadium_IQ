@@ -255,7 +255,7 @@ function Sustainability() {
   const sustainFallback = `Enabling Eco Mode could reduce energy draw by ~22% and save an additional 2,400 kg CO₂ for this event. Current renewable mix: ${s.renewablePercentage}%.`;
   useEffect(() => {
     requestSustain(
-      `Give a concise sustainability insight for ${stadium.name}. Current energy draw: ${s.energyDrawMW}MW. Renewable: ${s.renewablePercentage}%. Waste diversion: ${s.wasteDiversionRate}%. Eco mode: ${s.ecoModeActive ? 'active' : 'inactive'}. CO2 saved today: ${s.co2SavedKg}kg. Keep to 2 sentences.`,
+      `Give a concise sustainability insight for ${stadium.name} to improve stadium operations and tournament experience. Current energy draw: ${s.energyDrawMW}MW. Renewable: ${s.renewablePercentage}%. Waste diversion: ${s.wasteDiversionRate}%. Eco mode: ${s.ecoModeActive ? 'active' : 'inactive'}. CO2 saved today: ${s.co2SavedKg}kg. Keep to 2 sentences.`,
       sustainFallback,
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps

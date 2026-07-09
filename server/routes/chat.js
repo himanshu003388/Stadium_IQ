@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import logger from '../utils/logger.js';
 import crypto from 'crypto';
 import { JSDOM } from 'jsdom';
 import DOMPurify from 'dompurify';
@@ -111,7 +112,7 @@ router.post('/api/chat', authenticateApiKey, csrfProtection, async (req, res) =>
 
     res.json({ reply: safeResponse, requestId, elapsed });
   } catch (error) {
-    console.error(`[${requestId}] Gemini API Error:`, error);
+    logger.error(`[${requestId}] Gemini API Error:`, error);
     if (
       error.status === 400 ||
       error.status === 403 ||
@@ -207,7 +208,7 @@ router.post('/api/chat/stream', authenticateApiKey, csrfProtection, async (req, 
     }
     safeWrite(`data: ${JSON.stringify({ done: true, requestId })}\n\n`);
   } catch (err) {
-    console.error(`[${requestId}] Streaming error:`, err);
+    logger.error(`[${requestId}] Streaming error:`, err);
     if (
       err.status === 400 ||
       err.status === 403 ||

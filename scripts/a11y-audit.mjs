@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 /**
  * Stadium IQ - Full Accessibility Audit Script
  * Generates HTML report using Playwright + axe-core

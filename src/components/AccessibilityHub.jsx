@@ -28,7 +28,10 @@ function AccessibilityHub() {
 
   const handleAskAI = (query) => {
     const fallback = getDemoResponse(query, contextData, 'en');
-    requestAiTip(query, fallback);
+    requestAiTip(
+      `Provide accessibility assistance for: ${query}. Focus on improving tournament experience and navigation.`,
+      fallback,
+    );
   };
 
   const [highContrast, setHighContrast] = useState(

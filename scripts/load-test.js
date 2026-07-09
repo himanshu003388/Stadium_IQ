@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 /**
  * Stadium IQ - Load / Stress Test Script (autocannon)
  * Run: node scripts/load-test.js [duration_seconds]

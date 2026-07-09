@@ -3,8 +3,8 @@
   "rules": {
     "react/no-danger-with-children": "error",
     "react/jsx-no-target-blank": "error",
-    "react/no-array-index-key": "off",
-    "no-console": "off",
+    "react/no-array-index-key": "error",
+    "no-console": "error",
     "no-debugger": "error",
     "no-var": "error",
     "prefer-const": "warn",

@@ -1,6 +1,11 @@
 import { buildSafeContext } from './contextFilter';
 export { buildSafeContext };
 
+/**
+ * Calculates a human-readable "time ago" string from a timestamp.
+ * @param {string|number|Date} ts - The timestamp to calculate the difference from.
+ * @returns {string} The formatted "time ago" string (e.g., '5m ago', 'just now').
+ */
 export function timeAgo(ts) {
   const diff = Math.floor((Date.now() - new Date(ts)) / 60000);
   if (diff < 0) return 'just now';
@@ -157,6 +162,13 @@ function getAccessibilityInfo(services) {
     .join('\n');
 }
 
+/**
+ * Generates an offline/demo GenAI response when the API is unavailable.
+ * @param {string} text - The user query to parse.
+ * @param {Object} ctx - The current stadium context (gates, incidents, etc.).
+ * @param {string} [language='en'] - The requested ISO language code.
+ * @returns {string} The mock translated or contextualized response.
+ */
 export function getDemoResponse(text, ctx, language = 'en') {
   const { gates = [], transportOptions = [], stadium = {}, accessibilityServices = [] } = ctx || {};
   const lowerText = text.toLowerCase();
@@ -197,6 +209,12 @@ export function getDemoResponse(text, ctx, language = 'en') {
   return langTemplates.default(stadium);
 }
 
+/**
+ * Safely parses and renders simple Markdown text into HTML strings.
+ * Used primarily for formatting Gemini chat responses.
+ * @param {string} text - The raw Markdown text.
+ * @returns {string} The parsed HTML output.
+ */
 export function renderMarkdown(text) {
   let result = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
   result = result.replace(/^• (.+)$/gm, '<li>$1</li>');

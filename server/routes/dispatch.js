@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import logger from '../utils/logger.js';
 import crypto from 'crypto';
 import { authenticateApiKey, csrfProtection } from '../middleware/auth.js';
 import { getGenAI, getBestAvailableModel } from '../utils/genai.js';
@@ -57,8 +58,8 @@ router.post('/api/ai/volunteer-dispatch', authenticateApiKey, csrfProtection, as
       const selectedModel = await getBestAvailableModel(GEMINI_API_KEY);
       const model = genAI.getGenerativeModel({ model: selectedModel });
 
-      const prompt = `You are an AI Volunteer Dispatcher for the FIFA World Cup 2026 Smart Stadium operations center.
-Your task is to assign the single best volunteer to handle the operational incident.
+      const prompt = `You are an AI Volunteer Dispatcher for the FIFA World Cup 2026 Smart Stadium operations center, designed to enhance the tournament experience for organizers and volunteers.
+Your task is to leverage Generative AI to provide operational intelligence and real-time decision support by assigning the single best volunteer to handle the operational incident.
 
 Incident details:
 ${JSON.stringify(task)}
@@ -86,7 +87,7 @@ Choose the best volunteer. Output ONLY a valid JSON object with the volunteer's 
     const fallback = fallbackDispatch(task, cappedVolunteers);
     res.json({ suggestion: fallback, requestId, fallback: true });
   } catch (err) {
-    console.error(`[${requestId}] AI Dispatch suggestion error:`, err);
+    logger.error(`[${requestId}] AI Dispatch suggestion error:`, err);
     const fallback = fallbackDispatch(task, cappedVolunteers);
     res.json({ suggestion: fallback, requestId, fallback: true });
   }

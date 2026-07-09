@@ -462,7 +462,7 @@ function CrowdMap() {
   const navTipFallback = `🟢 Use Gate ${bestGate?.id || 'A'} for fastest entry — only ${bestGate?.waitTimeMinutes || 5} min wait. 🔴 ${worstZone?.name || 'Unknown'} is at ${Math.round((worstZone?.occupancy || 0) * 100)}% capacity.`;
   useEffect(() => {
     requestNavTip(
-      `Give a concise navigation tip for fans at ${stadium.name}. Current best gate: ${bestGate?.id}, wait time: ${bestGate?.waitTimeMinutes}min. Busiest zone: ${worstZone?.name} at ${Math.round((worstZone?.occupancy || 0) * 100)}% capacity. Current score: ${stadium.score}. Keep it to 2 sentences.`,
+      `Give a concise navigation and crowd management tip for fans at ${stadium.name}. Current best gate: ${bestGate?.id}, wait time: ${bestGate?.waitTimeMinutes}min. Busiest zone: ${worstZone?.name} at ${Math.round((worstZone?.occupancy || 0) * 100)}% capacity. Current score: ${stadium.score}. Keep it to 2 sentences.`,
       navTipFallback,
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -641,17 +641,19 @@ function CrowdMap() {
             </div>
             <div className="flex flex-col gap-2">
               {gates.map((gate) => {
-                const color = GATE_STATUS_COLORS[gate.status]?.bg || COLORS.success;
+                const gateColorConfig = GATE_STATUS_COLORS[gate.status] || GATE_STATUS_COLORS.normal;
+                const bgColor = gateColorConfig.bg;
+                const textColor = gateColorConfig.text;
                 const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent('AT&T Stadium, Arlington, TX')}&travelmode=walking&q=${encodeURIComponent(`Gate ${gate.id} AT&T Stadium Arlington TX`)}`;
                 return (
                   <div
                     key={gate.id}
                     className="flex items-center gap-2 p-2.5 rounded-xl"
-                    style={{ background: `${color}0f`, border: `1px solid ${color}28` }}
+                    style={{ background: `${bgColor}33`, border: `1px solid ${textColor}30` }}
                   >
                     <div
                       className="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold text-white shrink-0"
-                      style={{ background: color }}
+                      style={{ background: textColor }}
                     >
                       {gate.id}
                     </div>
@@ -660,14 +662,14 @@ function CrowdMap() {
                         <span className="font-medium" style={{ color: COLORS.onSurface }}>
                           {gate.direction} — {gate.waitTimeMinutes}m wait
                         </span>
-                        <span className="font-mono font-bold" style={{ color }}>
+                        <span className="font-mono font-bold" style={{ color: textColor }}>
                           {Math.round(gate.density * 100)}%
                         </span>
                       </div>
                       <div className="density-bar" style={{ height: '4px' }}>
                         <div
                           className="density-fill"
-                          style={{ width: `${gate.density * 100}%`, background: color }}
+                          style={{ width: `${gate.density * 100}%`, background: textColor }}
                         />
                       </div>
                     </div>
@@ -776,8 +778,8 @@ function CrowdMap() {
                 className="flex flex-col gap-3 font-mono text-[11px]"
                 style={{ color: COLORS.onSurfaceVariant }}
               >
-                {INDOOR_ROUTES[activeIndoorGate]?.map((step, idx) => (
-                  <div key={idx} className="flex gap-2.5 items-start">
+                {INDOOR_ROUTES[activeIndoorGate]?.map((step) => (
+                  <div key={crypto.randomUUID()} className="flex gap-2.5 items-start">
                     <span
                       className="material-symbols-outlined text-xs shrink-0 mt-0.5"
                       style={{ color: COLORS.primary }}

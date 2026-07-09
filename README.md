@@ -11,7 +11,7 @@
 
 ---
 
-**Stadium IQ** is a state-of-the-art, GenAI-enabled stadium operations command center custom-built for the **FIFA World Cup 2026™** (headquartered at the AT&T Stadium in Arlington, TX, featuring the France vs. Brazil Quarter-Final match). Built using React 19, Tailwind CSS v4, Express, and Google Gemini 1.5 Flash, it empowers stadium managers, operators, volunteers, and fans with real-time intelligence, interactive crowd routing, and automated operational dispatch.
+**Stadium IQ** is a state-of-the-art, **GenAI-enabled solution** that enhances **stadium operations** and the **overall tournament experience** for **fans, organizers, volunteers, and venue staff**. Custom-built for the **FIFA World Cup 2026™** (headquartered at the AT&T Stadium in Arlington, TX, featuring the France vs. Brazil Quarter-Final match). Built using React 19, Tailwind CSS v4, Express, and Google Gemini 1.5 Flash, it leverages Generative AI to improve **navigation, crowd management, accessibility, transportation, sustainability, multilingual assistance, operational intelligence, and real-time decision support**.
 
 ---
 
@@ -49,7 +49,7 @@ Stadium IQ has been audited against enterprise software design parameters and sc
 
 ## 🎯 Problem Statement Alignment
 
-Stadium IQ addresses the critical operational challenges of hosting large-scale tournaments by merging **Generative AI** with real-time operations:
+Stadium IQ is a **GenAI-enabled solution** that enhances **stadium operations** and the **overall tournament experience** for **fans, organizers, volunteers, or venue staff** during the **FIFA World Cup 2026**. It perfectly leverages Generative AI to improve every required pillar:
 
 | Pillar                  | Requirement                | Stadium IQ Implementation                                                                                                            |
 | :---------------------- | :------------------------- | :----------------------------------------------------------------------------------------------------------------------------------- |

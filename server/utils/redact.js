@@ -1,4 +1,6 @@
+/* eslint-disable no-console */
 const originalLog = console.log;
+// eslint-disable-next-line no-console
 const originalError = console.error;
 
 function redact(args) {
