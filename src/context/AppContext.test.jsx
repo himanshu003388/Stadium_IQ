@@ -4,29 +4,25 @@ import { AppProvider, useAppContext } from './AppContext';
 import React from 'react';
 
 const TestComponent = () => {
-  const { theme, toggleTheme, setActiveView, activeViewRef } = useAppContext();
+  const { theme, toggleTheme, activeView, setActiveView } = useAppContext();
   return (
     <div>
       <div data-testid="theme">{theme}</div>
-      <div data-testid="activeView">{activeViewRef.current || 'none'}</div>
+      <div data-testid="activeView">{activeView}</div>
       <button onClick={toggleTheme}>Toggle Theme</button>
-      <button onClick={() => setActiveView('ai')}>Set View AI</button>
+      <button onClick={() => setActiveView('assistant')}>Set View Assistant</button>
     </div>
   );
 };
 
 describe('AppContext', () => {
   it('throws error when used outside provider', () => {
-    // Suppress console.error for expected throw
-    // eslint-disable-next-line no-console
-    const originalError = console.error;
-    // eslint-disable-next-line no-console
-    console.error = () => {};
+    const originalError = console.error; // eslint-disable-line no-console
+    console.error = () => {}; // eslint-disable-line no-console
     expect(() => render(<TestComponent />)).toThrow(
       'useAppContext must be used within an AppProvider',
     );
-    // eslint-disable-next-line no-console
-    console.error = originalError;
+    console.error = originalError; // eslint-disable-line no-console
   });
 
   it('provides theme and allows toggling', () => {
@@ -46,16 +42,23 @@ describe('AppContext', () => {
     expect(document.documentElement.classList.contains('dark')).toBe(true);
   });
 
-  it('allows setting active view via ref', () => {
+  it('allows setting active view and triggers re-render', () => {
     render(
       <AppProvider>
         <TestComponent />
       </AppProvider>,
     );
-    expect(screen.getByTestId('activeView')).toHaveTextContent('none');
-    fireEvent.click(screen.getByText('Set View AI'));
+    expect(screen.getByTestId('activeView')).toHaveTextContent('dashboard');
+    fireEvent.click(screen.getByText('Set View Assistant'));
+    expect(screen.getByTestId('activeView')).toHaveTextContent('assistant');
+  });
 
-    // Note: activeViewRef doesn't trigger a re-render, so the DOM text wouldn't update
-    // But this calls the method, which is sufficient for coverage of AppContext.jsx.
+  it('provides default activeView of dashboard', () => {
+    render(
+      <AppProvider>
+        <TestComponent />
+      </AppProvider>,
+    );
+    expect(screen.getByTestId('activeView')).toHaveTextContent('dashboard');
   });
 });

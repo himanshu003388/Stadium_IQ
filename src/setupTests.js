@@ -17,7 +17,6 @@ const axe = configureAxe({
     { id: 'document-title', enabled: false },
     { id: 'html-has-lang', enabled: false },
     { id: 'page-has-heading-one', enabled: false },
-    { id: 'landmark-one-main', enabled: false },
     { id: 'region', enabled: false },
     { id: 'bypass', enabled: false },
     // Enable all other rules
@@ -74,12 +73,9 @@ Object.defineProperty(navigator, 'serviceWorker', {
   },
 });
 
-// Suppress specific react console errors in tests
+// Suppress specific react console errors in tests (standard React test wrapper alerts)
 const originalConsoleError = console.error;
 console.error = (...args) => {
-  if (args[0]?.includes?.('React does not recognize')) return;
-  if (args[0]?.includes?.('Unknown prop')) return;
   if (args[0]?.includes?.('inside a test was not wrapped in act')) return;
-  if (args[0]?.includes?.('validateDOMNesting')) return;
   originalConsoleError(...args);
 };

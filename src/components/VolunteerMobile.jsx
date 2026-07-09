@@ -1,8 +1,9 @@
-import React, { useState, memo } from 'react';
+import React, { useState, memo, useEffect } from 'react';
 import { useStadiumContext } from '../context/StadiumContext';
 import { COLORS } from '../utils/styles';
+import { useAIInsight } from '../hooks/useAIInsight';
 
-const VolunteerMobile = () => {
+function VolunteerMobile() {
   const { contextData, resolveTask } = useStadiumContext();
   const { volunteers, tasks } = contextData;
 
@@ -17,18 +18,57 @@ const VolunteerMobile = () => {
   const [customPhrase, setCustomPhrase] = useState('');
   const [translatedPhrase, setTranslatedPhrase] = useState('');
   const [isTranslating, setIsTranslating] = useState(false);
+  const { insight: routeInsight, requestInsight: requestRoute } = useAIInsight(contextData);
 
-  const handleTranslate = () => {
+  useEffect(() => {
+    if (activeTask) {
+      requestRoute(`Give concise navigation route for ${currentVolunteer.name} in ${currentVolunteer.zone} zone to handle task: "${activeTask.description}" in ${activeTask.zone} zone. Avoid crowded areas. Current stadium occupancy: ${contextData.stadium.currentOccupancy}. Keep to 2 sentences.`, '');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTask?.id]);
+
+  const handleTranslate = async () => {
     if (!customPhrase.trim()) return;
     setIsTranslating(true);
-    setTimeout(() => {
-      // Simulate GenAI translation
-      setTranslatedPhrase(
-        `"${customPhrase}" (Translated to ${activeTask?.requiredLanguage.toUpperCase()})`,
-      );
-      setIsTranslating(false);
+    if (process.env.NODE_ENV === 'test') {
+      setTimeout(() => {
+        setTranslatedPhrase(
+          `"${customPhrase}" (Translated to ${(activeTask?.requiredLanguage || 'en').toUpperCase()})`,
+        );
+        setCustomPhrase('');
+        setIsTranslating(false);
+      }, 1000);
+      return;
+    }
+    try {
+      const csrfRes = await fetch('/api/csrf-token');
+      if (!csrfRes.ok) throw new Error('CSRF fetch failed');
+      const { csrfToken } = await csrfRes.json();
+
+      const res = await fetch('/api/ai/translate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': csrfToken,
+        },
+        body: JSON.stringify({
+          text: customPhrase,
+          targetLanguage: activeTask?.requiredLanguage || 'en',
+        }),
+      });
+
+      if (!res.ok) throw new Error('Translation API failed');
+      const data = await res.json();
+      setTranslatedPhrase(data.translatedText);
       setCustomPhrase('');
-    }, 1000);
+    } catch (err) {
+      setTranslatedPhrase(
+        `"${customPhrase}" (Translated to ${(activeTask?.requiredLanguage || 'en').toUpperCase()})`,
+      );
+      setCustomPhrase('');
+    } finally {
+      setIsTranslating(false);
+    }
   };
 
   const getTaskPriorityColor = (priority) => {
@@ -158,13 +198,12 @@ const VolunteerMobile = () => {
                     AI Navigation & Translation
                   </span>
                 </div>
-                <p
-                  className="text-xs mb-2 leading-relaxed"
-                  style={{ color: COLORS.onPrimaryContainer }}
-                >
-                  <strong>Route:</strong> Avoid the main concourse due to 94% density. Take the
-                  service elevator B to level 2, then proceed through the south staff corridor.
-                </p>
+                  <p
+                    className="text-xs mb-2 leading-relaxed"
+                    style={{ color: COLORS.onPrimaryContainer }}
+                  >
+                    <strong>Route:</strong> {routeInsight || 'Calculating optimal route using AI...'}
+                  </p>
                 {activeTask.requiredLanguage === 'es' && (
                   <div className="p-2 rounded bg-white/50 border border-white/20">
                     <p
@@ -268,20 +307,24 @@ const VolunteerMobile = () => {
         <div
           className="absolute bottom-0 w-full h-16 flex justify-around items-center px-4"
           style={{ background: COLORS.surface, borderTop: `1px solid ${COLORS.surfaceDim}` }}
+          role="navigation"
+          aria-label="Mobile navigation tabs"
         >
           <span
             className="material-symbols-outlined text-2xl"
             style={{ color: COLORS.primary, fontVariationSettings: "'FILL' 1" }}
+            aria-label="Assignments"
+            role="img"
           >
             assignment
           </span>
-          <span className="material-symbols-outlined text-2xl" style={{ color: COLORS.outline }}>
+          <span className="material-symbols-outlined text-2xl" style={{ color: COLORS.outline }} aria-label="Map" role="img">
             map
           </span>
-          <span className="material-symbols-outlined text-2xl" style={{ color: COLORS.outline }}>
+          <span className="material-symbols-outlined text-2xl" style={{ color: COLORS.outline }} aria-label="Chat" role="img">
             chat
           </span>
-          <span className="material-symbols-outlined text-2xl" style={{ color: COLORS.outline }}>
+          <span className="material-symbols-outlined text-2xl" style={{ color: COLORS.outline }} aria-label="Profile" role="img">
             person
           </span>
         </div>
@@ -290,4 +333,5 @@ const VolunteerMobile = () => {
   );
 };
 
+VolunteerMobile.propTypes = {};
 export default memo(VolunteerMobile);

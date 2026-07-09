@@ -817,6 +817,50 @@
 }
 
 /* =========================================
+   RTL SUPPORT — Arabic language
+   ========================================= */
+html[lang="ar"] {
+  direction: rtl;
+}
+
+html[lang="ar"] .chat-bubble-user {
+  border-radius: 18px 18px 18px 4px;
+  margin-left: 0;
+  margin-right: auto;
+}
+
+html[lang="ar"] .chat-bubble-ai {
+  border-radius: 18px 4px 18px 18px;
+}
+
+html[lang="ar"] .nav-item {
+  border-left: none;
+  border-right: 3px solid transparent;
+  text-align: right;
+}
+
+html[lang="ar"] .nav-item.active {
+  border-left-color: transparent;
+  border-right-color: var(--color-primary);
+}
+
+html[lang="ar"] .nav-item:hover {
+  border-left-color: transparent;
+  border-right-color: color-mix(in srgb, var(--color-primary) 40%, transparent);
+}
+
+/* Voice pulse animation respects reduced motion */
+:root {
+  --voice-pulse: pulse 1s infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --voice-pulse: none;
+  }
+}
+
+/* =========================================
    REDUCED MOTION — accessibility
    ========================================= */
 @media (prefers-reduced-motion: reduce) {
@@ -904,19 +948,6 @@ button:focus:not(:focus-visible) {
   margin: -1px;
   overflow: hidden;
   clip: rect(0, 0, 0, 0);
-  border: 0;
-}
-
-/* Screen reader only utility */
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
   border: 0;
 }
 

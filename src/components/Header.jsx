@@ -118,9 +118,9 @@ function RoleSelector({ role, setRole }) {
           className="material-symbols-outlined text-base"
           style={{ fontVariationSettings: "'FILL' 1" }}
         >
-          {roles.find((r) => r.value === role)?.icon || 'person'}
+          {roles.find((r) => r.value.toLowerCase() === role.toLowerCase())?.icon || 'person'}
         </span>
-        {role}
+        {role.charAt(0).toUpperCase() + role.slice(1)}
         <span
           className="material-symbols-outlined text-base transition-transform duration-200"
           style={{ transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}
@@ -147,29 +147,29 @@ function RoleSelector({ role, setRole }) {
               <button
                 className="w-full text-left px-4 py-2.5 text-sm flex items-center gap-3 transition-colors hover:bg-black/5 dark:hover:bg-white/5"
                 style={{
-                  color: role === r.value ? 'var(--color-primary)' : 'var(--color-on-surface)',
+                  color: role.toLowerCase() === r.value.toLowerCase() ? 'var(--color-primary)' : 'var(--color-on-surface)',
                   background:
-                    role === r.value
+                    role.toLowerCase() === r.value.toLowerCase()
                       ? 'color-mix(in srgb, var(--color-primary) 10%, transparent)'
                       : 'transparent',
-                  fontWeight: role === r.value ? '600' : '500',
+                  fontWeight: role.toLowerCase() === r.value.toLowerCase() ? '600' : '500',
                 }}
                 onClick={() => {
-                  setRole(r.value);
+                  setRole(r.value.toLowerCase());
                   setIsOpen(false);
                   triggerRef.current?.focus();
                 }}
                 role="option"
-                aria-selected={role === r.value}
+                aria-selected={role.toLowerCase() === r.value.toLowerCase()}
               >
                 <span
                   className="material-symbols-outlined text-lg"
-                  style={{ fontVariationSettings: role === r.value ? "'FILL' 1" : "'FILL' 0" }}
+                  style={{ fontVariationSettings: role.toLowerCase() === r.value.toLowerCase() ? "'FILL' 1" : "'FILL' 0" }}
                 >
                   {r.icon}
                 </span>
                 {r.value}
-                {role === r.value && (
+                {role.toLowerCase() === r.value.toLowerCase() && (
                   <span className="material-symbols-outlined text-lg ml-auto">check</span>
                 )}
               </button>
@@ -220,6 +220,8 @@ function Header({ setActiveView }) {
               <img
                 src="/logo.png"
                 alt="Stadium IQ Logo"
+                width="56"
+                height="56"
                 className="h-14 w-auto rounded-lg shadow-sm"
               />
             </div>

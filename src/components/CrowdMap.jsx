@@ -23,6 +23,7 @@ import React, { useState, useEffect, useCallback, useMemo, memo } from 'react';
 import { useStadiumContext } from '../context/StadiumContext';
 import { COLORS, ZONE_COLORS, GATE_STATUS_COLORS } from '../utils/styles';
 import { getStatusColor } from '../utils/helpers';
+import { useAIInsight } from '../hooks/useAIInsight';
 
 const GATE_POSITIONS = {
   A: { x: 250, y: 22, dir: 'N' },
@@ -202,6 +203,7 @@ const StadiumSVG = memo(function StadiumSVG({
             onClick: () => onZoneClick(zone),
             onMouseEnter: () => setHoveredZone(zone.id),
             onMouseLeave: () => setHoveredZone(null),
+            onFocus: () => setFocusIndex(idx),
             onKeyDown: (e) => handleKeyDown(e, zone),
             role: 'button',
             tabIndex: 0,
@@ -209,7 +211,8 @@ const StadiumSVG = memo(function StadiumSVG({
             'aria-pressed': isSelected,
             style: {
               transition: 'opacity 0.3s ease, stroke-width 0.2s ease, filter 0.3s ease',
-              outline: 'none',
+              outline: isFocused ? '3px solid var(--color-secondary)' : 'none',
+              outlineOffset: '2px',
             },
           };
 
@@ -335,8 +338,8 @@ const StadiumSVG = memo(function StadiumSVG({
       })}
 
       {/* Compass / Navigation Rose */}
-      <g transform="translate(460, 30)">
-        <circle cx="0" cy="0" r="14" fill="#0f1623" stroke="#334155" strokeWidth="1" />
+      <g transform="translate(460, 30)" role="img" aria-label="Compass rose, north pointing up">
+        <circle cx="0" cy="0" r="14" fill="#0f1623" stroke="#334155" strokeWidth="1" aria-hidden="true" />
         <text
           x="0"
           y="-1"
@@ -349,7 +352,7 @@ const StadiumSVG = memo(function StadiumSVG({
         >
           N
         </text>
-        <path d="M 0 -14 L 4 -22 L 0 -18 L -4 -22 Z" fill="#00f0ff" />
+        <path d="M 0 -14 L 4 -22 L 0 -18 L -4 -22 Z" fill="#00f0ff" aria-hidden="true" />
       </g>
     </svg>
   );
@@ -365,6 +368,7 @@ function CrowdMap() {
   const [reducedMotion, setReducedMotion] = useState(
     () => window.matchMedia('(prefers-reduced-motion: reduce)').matches,
   );
+  const { insight: aiNavTip, requestInsight: requestNavTip } = useAIInsight(contextData);
 
   useEffect(() => {
     const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -385,6 +389,12 @@ function CrowdMap() {
     () => stadium.zones.toSorted((a, b) => b.occupancy - a.occupancy)[0],
     [stadium.zones],
   );
+
+  const navTipFallback = `🟢 Use Gate ${bestGate?.id || 'A'} for fastest entry — only ${bestGate?.waitTimeMinutes || 5} min wait. 🔴 ${worstZone?.name || 'Unknown'} is at ${Math.round((worstZone?.occupancy || 0) * 100)}% capacity.`;
+  useEffect(() => {
+    requestNavTip(`Give a concise navigation tip for fans at ${stadium.name}. Current best gate: ${bestGate?.id}, wait time: ${bestGate?.waitTimeMinutes}min. Busiest zone: ${worstZone?.name} at ${Math.round((worstZone?.occupancy || 0) * 100)}% capacity. Current score: ${stadium.score}. Keep it to 2 sentences.`, navTipFallback);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div
@@ -635,7 +645,7 @@ function CrowdMap() {
             </div>
           </div>
 
-          {/* AI Navigation Tip */}
+          {/* AI Navigation Tip — GenAI powered */}
           <div
             className="card p-4 animate-fade-in-up stagger-2"
             style={{ background: COLORS.gradientNavy, border: 'none' }}
@@ -650,16 +660,8 @@ function CrowdMap() {
               </span>
               <span className="text-white font-bold text-sm">AI Navigation Tip</span>
             </div>
-            <div>
-              <p className="text-sm mb-2" style={{ color: 'rgba(168,202,255,0.9)' }}>
-                🟢 Use <strong className="text-white">Gate {bestGate.id}</strong> for fastest entry
-                — only {bestGate.waitTimeMinutes} min wait.
-              </p>
-              <p className="text-sm" style={{ color: 'rgba(168,202,255,0.9)' }}>
-                🔴 <strong className="text-white">{worstZone.name}</strong> is at{' '}
-                {Math.round(worstZone.occupancy * 100)}% capacity. Consider an alternate seating
-                area.
-              </p>
+            <div className="text-sm" style={{ color: 'rgba(168,202,255,0.9)' }}>
+              {aiNavTip || navTipFallback}
             </div>
           </div>
         </div>

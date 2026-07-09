@@ -262,4 +262,230 @@ describe('useGemini Hook', () => {
 
     expect(result.current.messages[2].text).toBe('AI response');
   });
+
+  it('should stream tokens via SSE when streaming endpoint succeeds', async () => {
+    const streamChunks = [
+      'data: {"chunk":"Hello","requestId":"test"}\n\n',
+      'data: {"chunk":", I am","requestId":"test"}\n\n',
+      'data: {"chunk":" Gemini AI.","requestId":"test"}\n\n',
+      'data: {"done":true,"requestId":"test"}\n\n',
+    ];
+
+    fetch.mockImplementation((url) => {
+      if (url === '/api/csrf-token') {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({ csrfToken: 'test-token' }),
+        });
+      }
+      if (url === '/api/chat/stream') {
+        const encoder = new TextEncoder();
+        const reader = {
+          read: () => {
+            if (streamChunks.length === 0) return Promise.resolve({ value: undefined, done: true });
+            const chunk = streamChunks.shift();
+            return Promise.resolve({ value: encoder.encode(chunk), done: false });
+          },
+        };
+        return Promise.resolve({
+          ok: true,
+          body: { getReader: () => reader },
+        });
+      }
+      return Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve({ reply: 'fallback' }),
+      });
+    });
+
+    const { result } = renderHook(() => useGemini(mockContext));
+
+    await act(async () => {
+      await result.current.sendMessage('Hello');
+    });
+
+    expect(result.current.messages).toHaveLength(3);
+    expect(result.current.messages[1].role).toBe('user');
+    expect(result.current.messages[2].role).toBe('ai');
+    expect(result.current.messages[2].text).toBe('Hello, I am Gemini AI.');
+    expect(result.current.messages[2].isStreaming).toBeFalsy();
+    expect(result.current.isLoading).toBe(false);
+  });
+
+  it('should fall back to /api/chat when SSE streaming fails', async () => {
+    let streamAttempted = false;
+
+    fetch.mockImplementation((url) => {
+      if (url === '/api/csrf-token') {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({ csrfToken: 'test-token' }),
+        });
+      }
+      if (url === '/api/chat/stream') {
+        streamAttempted = true;
+        return Promise.resolve({ ok: false, status: 500, body: null });
+      }
+      if (url === '/api/chat') {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({ reply: 'Fallback response works' }),
+        });
+      }
+      return Promise.resolve({ ok: false, status: 404 });
+    });
+
+    const { result } = renderHook(() => useGemini(mockContext));
+
+    await act(async () => {
+      await result.current.sendMessage('Hello');
+    });
+
+    expect(streamAttempted).toBe(true);
+    expect(result.current.messages).toHaveLength(3);
+    expect(result.current.messages[2].text).toBe('Fallback response works');
+    expect(result.current.isLoading).toBe(false);
+  });
+
+  it('should handle streaming endpoint returning API key missing error', async () => {
+    fetch.mockImplementation((url) => {
+      if (url === '/api/csrf-token') {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({ csrfToken: 'test-token' }),
+        });
+      }
+      if (url === '/api/chat/stream') {
+        return Promise.resolve({
+          ok: false,
+          status: 400,
+          json: () => Promise.resolve({ error: 'API Key is missing' }),
+          body: null,
+        });
+      }
+      if (url === '/api/chat') {
+        return Promise.resolve({
+          ok: false,
+          status: 400,
+          json: () => Promise.resolve({ error: 'API Key is missing' }),
+        });
+      }
+      return Promise.resolve({ ok: false, status: 404 });
+    });
+
+    const { result } = renderHook(() => useGemini(mockContext));
+
+    await act(async () => {
+      await result.current.sendMessage('Hello');
+    });
+
+    expect(result.current.messages).toHaveLength(3);
+    expect(result.current.messages[2].role).toBe('ai');
+    expect(result.current.isLoading).toBe(false);
+  });
+
+  it('should handle AbortError gracefully without adding error state', async () => {
+    fetch.mockImplementation((url) => {
+      if (url === '/api/csrf-token') {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({ csrfToken: 'test-token' }),
+        });
+      }
+      if (url === '/api/chat/stream') {
+        return Promise.reject(new DOMException('The operation was aborted', 'AbortError'));
+      }
+      return Promise.resolve({ ok: true, json: () => Promise.resolve({ reply: 'OK' }) });
+    });
+
+    const { result } = renderHook(() => useGemini(mockContext));
+
+    await act(async () => {
+      await result.current.sendMessage('Hello');
+    });
+
+    // AbortError should be swallowed, no error message added
+    expect(result.current.messages).toHaveLength(2);
+    expect(result.current.isLoading).toBe(false);
+  });
+
+  it('should refresh CSRF token on 403 and retry', async () => {
+    let csrfCalls = 0;
+    let chatCalls = 0;
+
+    fetch.mockImplementation((url) => {
+      if (url === '/api/csrf-token') {
+        csrfCalls++;
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({ csrfToken: `refreshed-token-${csrfCalls}` }),
+        });
+      }
+      if (url === '/api/chat/stream') {
+        return Promise.resolve({ ok: false, status: 403, body: null });
+      }
+      if (url === '/api/chat') {
+        chatCalls++;
+        if (chatCalls === 1) {
+          return Promise.resolve({ ok: false, status: 403, body: null });
+        }
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({ reply: 'After CSRF refresh' }),
+        });
+      }
+      return Promise.resolve({ ok: false, status: 404 });
+    });
+
+    const { result } = renderHook(() => useGemini(mockContext));
+
+    await act(async () => {
+      await result.current.sendMessage('Hello');
+    });
+
+    expect(csrfCalls).toBeGreaterThanOrEqual(2);
+    expect(result.current.messages[2].text).toBe('After CSRF refresh');
+  });
+
+  it('should handle SSE stream error chunk', async () => {
+    const streamChunks = [
+      'data: {"error":"Stream failed","requestId":"test"}\n\n',
+    ];
+
+    fetch.mockImplementation((url) => {
+      if (url === '/api/csrf-token') {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({ csrfToken: 'test-token' }),
+        });
+      }
+      if (url === '/api/chat/stream') {
+        const encoder = new TextEncoder();
+        const reader = {
+          read: () => {
+            if (streamChunks.length === 0) return Promise.resolve({ value: undefined, done: true });
+            const chunk = streamChunks.shift();
+            return Promise.resolve({ value: encoder.encode(chunk), done: false });
+          },
+        };
+        return Promise.resolve({
+          ok: true,
+          body: { getReader: () => reader },
+        });
+      }
+      return Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve({ reply: 'Fallback' }),
+      });
+    });
+
+    const { result } = renderHook(() => useGemini(mockContext));
+
+    await act(async () => {
+      await result.current.sendMessage('Hello');
+    });
+
+    // Should fall through to /api/chat since stream had error
+    expect(result.current.messages[2].text).toBe('Fallback');
+  });
 });

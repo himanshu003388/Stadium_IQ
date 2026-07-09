@@ -1,8 +1,12 @@
 import { render, screen } from '@testing-library/react';
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { axe } from 'jest-axe';
 import CommandCenter from './CommandCenter';
 import { StadiumProvider } from '../context/StadiumContext';
+
+beforeEach(() => {
+  global.fetch = vi.fn().mockRejectedValue(new Error('Network error'));
+});
 
 describe('CommandCenter Component', () => {
   const renderCommandCenter = () =>

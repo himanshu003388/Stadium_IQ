@@ -111,7 +111,7 @@ const ChatInput = function ChatInput({
               style={{
                 background: isListening ? COLORS.error : COLORS.surfaceContainerHigh,
                 color: isListening ? 'white' : COLORS.outline,
-                animation: isListening ? 'pulse 1s infinite' : 'none',
+                animation: isListening ? 'var(--voice-pulse, pulse 1s infinite)' : 'none',
               }}
             >
               <span

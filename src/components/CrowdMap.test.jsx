@@ -1,8 +1,12 @@
 import { render, screen, fireEvent } from '@testing-library/react';
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { axe } from 'jest-axe';
 import CrowdMap from './CrowdMap';
 import { StadiumProvider } from '../context/StadiumContext';
+
+beforeEach(() => {
+  global.fetch = vi.fn().mockRejectedValue(new Error('Network error'));
+});
 
 describe('CrowdMap Component', () => {
   const renderCrowdMap = () =>
@@ -24,7 +28,7 @@ describe('CrowdMap Component', () => {
 
   it('renders color legend', () => {
     renderCrowdMap();
-    expect(screen.getByText('Clear')).toBeInTheDocument();
+    expect(screen.getByText('Nominal')).toBeInTheDocument();
     expect(screen.getByText('Moderate')).toBeInTheDocument();
     expect(screen.getByText('Busy')).toBeInTheDocument();
     expect(screen.getByText('Critical')).toBeInTheDocument();

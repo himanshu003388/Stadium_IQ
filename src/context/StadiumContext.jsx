@@ -4,13 +4,12 @@
  * Separated from AppContext (theme, activeView) to prevent
  * unnecessary re-renders of UI-only consumers on simulation ticks
  */
-import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import initialMockContext from '../data/mockContext.json';
 import { useAppContext, AppProvider } from './AppContext';
+import { NotificationProvider, useNotifications } from './NotificationContext';
 
 const StadiumDataContext = createContext(null);
-
-export { AppProvider };
 
 /**
  * Hook to access stadium simulation data (gates, incidents, etc.)
@@ -33,20 +32,26 @@ export const useStadiumContext = () => {
   return useMemo(() => ({ ...data, ...app }), [data, app]);
 };
 
+const SIMULATION_VIEWS = new Set(['dashboard', 'crowdmap', 'volunteers', 'sustainability', 'vendors']);
+
 function InnerProvider({ children }) {
   const [contextData, setContextData] = useState(initialMockContext);
   const [isSimulating, setIsSimulating] = useState(true);
+  const { activeView } = useAppContext();
+  const { addNotification } = useNotifications();
+  const prevCriticalRef = useRef(0);
+  const notificationCooldownRef = useRef({});
 
   useEffect(() => {
     if (!isSimulating) return;
+    if (!SIMULATION_VIEWS.has(activeView)) return;
 
     let interval = null;
 
     function startInterval() {
       interval = setInterval(() => {
-        setContextData((prev) => ({
-          ...prev,
-          gates: prev.gates.map((gate) => {
+        setContextData((prev) => {
+          const newGates = prev.gates.map((gate) => {
             const delta = (Math.random() - 0.48) * 0.04;
             const newDensity = Math.max(0.05, Math.min(0.99, gate.density + delta));
             const newWait = Math.max(1, Math.round(newDensity * 30));
@@ -60,19 +65,17 @@ function InnerProvider({ children }) {
               waitTimeMinutes: newWait,
               status: newStatus,
             };
-          }),
-          stadium: {
-            ...prev.stadium,
-            currentOccupancy: Math.max(
-              80000,
-              Math.min(
-                prev.stadium.capacity,
-                prev.stadium.currentOccupancy + Math.round((Math.random() - 0.5) * 200),
-              ),
+          });
+
+          const newOccupancy = Math.max(
+            80000,
+            Math.min(
+              prev.stadium.capacity,
+              prev.stadium.currentOccupancy + Math.round((Math.random() - 0.5) * 200),
             ),
-          },
-          vendors: (prev.vendors || []).map((vendor) => {
-            // Deplete stock based on some random factor
+          );
+
+          const newVendors = (prev.vendors || []).map((vendor) => {
             const depletion = Math.round(Math.random() * 3);
             const newStock = Math.max(0, vendor.stockLevel - depletion);
             return {
@@ -80,8 +83,33 @@ function InnerProvider({ children }) {
               stockLevel: newStock,
               status: newStock < 20 ? 'critical' : newStock < 50 ? 'warning' : 'nominal',
             };
-          }),
-        }));
+          });
+
+          const now = Date.now();
+          const newCriticalCount = newGates.filter((g) => g.status === 'critical').length;
+          if (newCriticalCount > prevCriticalRef.current) {
+            const cooldownKey = 'gate-critical';
+            if (!notificationCooldownRef.current[cooldownKey] ||
+                now - notificationCooldownRef.current[cooldownKey] > 30000) {
+              notificationCooldownRef.current[cooldownKey] = now;
+              const criticalGates = newGates.filter((g) => g.status === 'critical');
+              addNotification({
+                title: 'CRITICAL: Gate Congestion',
+                message: `Gate${criticalGates.length > 1 ? 's' : ''} ${criticalGates.map((g) => g.id).join(', ')} at critical density. AI recommends rerouting fans.`,
+                severity: 'critical',
+                duration: 10000,
+              });
+            }
+          }
+          prevCriticalRef.current = newCriticalCount;
+
+          return {
+            ...prev,
+            gates: newGates,
+            stadium: { ...prev.stadium, currentOccupancy: newOccupancy },
+            vendors: newVendors,
+          };
+        });
       }, 8000);
     }
 
@@ -109,7 +137,7 @@ function InnerProvider({ children }) {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       stopInterval();
     };
-  }, [isSimulating]);
+  }, [isSimulating, activeView, addNotification]);
 
   const assignVolunteer = useCallback((taskId, volunteerId) => {
     setContextData((prev) => ({
@@ -180,7 +208,9 @@ function InnerProvider({ children }) {
 export function StadiumProvider({ children }) {
   return (
     <AppProvider>
-      <InnerProvider>{children}</InnerProvider>
+      <NotificationProvider>
+        <InnerProvider>{children}</InnerProvider>
+      </NotificationProvider>
     </AppProvider>
   );
 }

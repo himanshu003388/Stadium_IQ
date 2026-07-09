@@ -2,6 +2,7 @@ import React, { useState, useMemo, memo, useEffect } from 'react';
 import { useStadiumContext } from '../context/StadiumContext';
 import { COLORS } from '../utils/styles';
 import { getDemoResponse } from '../utils/helpers';
+import { useAIInsight } from '../hooks/useAIInsight';
 
 const ACCENT_COLORS = [
   COLORS.success,
@@ -17,11 +18,11 @@ function AccessibilityHub() {
   const { accessibilityServices, gates } = contextData;
 
   const accessibleGates = useMemo(() => gates.filter((g) => g.accessible), [gates]);
-  const [aiTip, setAiTip] = useState(null);
+  const { insight: aiTip, isLoading: aiTipLoading, requestInsight: requestAiTip, clearInsight: clearAiTip } = useAIInsight(contextData);
 
   const handleAskAI = (query) => {
-    const response = getDemoResponse(query, contextData, 'en');
-    setAiTip(response);
+    const fallback = getDemoResponse(query, contextData, 'en');
+    requestAiTip(query, fallback);
   };
 
   const [highContrast, setHighContrast] = useState(
@@ -231,7 +232,7 @@ function AccessibilityHub() {
           <div className="p-3 rounded-xl mb-3" style={{ background: 'rgba(255,255,255,0.1)' }}>
             <div className="text-sm text-white whitespace-pre-wrap">{aiTip}</div>
             <button
-              onClick={() => setAiTip(null)}
+              onClick={clearAiTip}
               className="text-xs mt-2 font-medium underline underline-offset-2"
               style={{ color: 'rgba(168,202,255,0.9)' }}
             >
@@ -240,7 +241,7 @@ function AccessibilityHub() {
           </div>
         ) : (
           <p className="text-sm mb-3" style={{ color: 'rgba(168,202,255,0.9)' }}>
-            Ask about accessible routes, services, or get personalized assistance.
+            {aiTipLoading ? 'Consulting AI...' : 'Ask about accessible routes, services, or get personalized assistance.'}
           </p>
         )}
         <div

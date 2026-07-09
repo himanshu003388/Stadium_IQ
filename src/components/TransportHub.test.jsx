@@ -1,8 +1,12 @@
 import { render, screen, fireEvent } from '@testing-library/react';
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { axe } from 'jest-axe';
 import TransportHub from './TransportHub';
 import { StadiumProvider } from '../context/StadiumContext';
+
+beforeEach(() => {
+  global.fetch = vi.fn().mockRejectedValue(new Error('Network error'));
+});
 
 describe('TransportHub Component', () => {
   const renderTransportHub = () =>

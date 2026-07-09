@@ -52,10 +52,4 @@ export const ECO_SCORE_THRESHOLDS = {
   high: 40,
 };
 
-/**
- * Time formatting constants
- */
-export const TIME_FORMAT_OPTIONS = {
-  hour: '2-digit',
-  minute: '2-digit',
-};
+

@@ -1,8 +1,7 @@
 import React, { memo } from 'react';
 import PropTypes from 'prop-types';
-import DOMPurify from 'dompurify';
-import { renderMarkdown } from '../utils/helpers';
 import { COLORS } from '../utils/styles';
+import MarkdownRenderer from './MarkdownRenderer';
 
 const ChatMessage = memo(function ChatMessage({ msg, index }) {
   return (
@@ -29,14 +28,13 @@ const ChatMessage = memo(function ChatMessage({ msg, index }) {
       )}
       <div className={msg.role === 'user' ? 'chat-bubble-user' : 'chat-bubble-ai'}>
         {msg.role === 'ai' ? (
-          <div
-            className="text-sm"
-            dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(renderMarkdown(msg.text)) }}
-          />
+          <div className="text-sm">
+            <MarkdownRenderer text={msg.text} />
+          </div>
         ) : (
           <p className="text-sm">{msg.text}</p>
         )}
-        <div className="text-xs mt-1.5 opacity-50">
+        <div className="text-xs mt-1.5" style={{ opacity: 0.65, color: 'var(--color-on-surface-variant)' }}>
           {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
         </div>
       </div>

@@ -27,9 +27,16 @@ vi.mock('../context/StadiumContext', async (importOriginal) => {
             priority: 'high',
           },
         ],
+        stadium: {
+          currentOccupancy: 68,
+        },
       },
     }),
   };
+});
+
+beforeEach(() => {
+  global.fetch = vi.fn().mockRejectedValue(new Error('Network error'));
 });
 
 describe('VolunteerMobile', () => {

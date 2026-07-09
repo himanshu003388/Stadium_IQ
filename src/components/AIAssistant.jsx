@@ -24,7 +24,8 @@ function AIAssistant() {
   useEffect(() => {
     const el = messagesEndRef.current;
     if (el && typeof el.scrollIntoView === 'function') {
-      el.scrollIntoView({ behavior: 'smooth' });
+      const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+      el.scrollIntoView({ behavior: mq.matches ? 'auto' : 'smooth' });
     }
   }, [messages, isLoading]);
 
@@ -126,6 +127,7 @@ function AIAssistant() {
           {QUICK_PROMPTS.map((q) => (
             <button
               key={q.text}
+              data-testid="quick-prompt-btn"
               onClick={() => sendMessage(q.text)}
               disabled={isLoading}
               className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all hover:scale-105 disabled:opacity-50"
@@ -161,4 +163,5 @@ function AIAssistant() {
   );
 }
 
+AIAssistant.propTypes = {};
 export default memo(AIAssistant);

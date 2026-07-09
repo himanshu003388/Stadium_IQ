@@ -3,7 +3,6 @@ import React, {
   useContext,
   useState,
   useCallback,
-  useRef,
   useMemo,
   useEffect,
 } from 'react';
@@ -18,12 +17,12 @@ export const useAppContext = () => {
 
 export function AppProvider({ children }) {
   const [theme, setTheme] = useState('dark');
-  const [role, setRole] = useState('Organizer');
+  const [role, setRole] = useState('organizer');
   const [uiLanguage, setUiLanguage] = useState('en');
-  const activeViewRef = useRef(null);
+  const [activeView, setActiveViewState] = useState('dashboard');
 
   const setActiveView = useCallback((view) => {
-    activeViewRef.current = view;
+    setActiveViewState(view);
   }, []);
 
   useEffect(() => {
@@ -43,14 +42,14 @@ export function AppProvider({ children }) {
     () => ({
       theme,
       toggleTheme,
-      activeViewRef,
+      activeView,
       setActiveView,
       role,
       setRole,
       uiLanguage,
       setUiLanguage,
     }),
-    [theme, toggleTheme, setActiveView, role, uiLanguage],
+    [theme, toggleTheme, activeView, setActiveView, role, uiLanguage],
   );
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

@@ -18,6 +18,7 @@ import { useStadiumContext } from '../context/StadiumContext';
 import { COLORS, ZONE_COLORS } from '../utils/styles';
 import { SEVERITY_BADGE_MAP, STATUS_DOT_COLORS, INCIDENT_ICON_MAP } from '../utils/constants';
 import { timeAgo, getDensityColor, getStatusColor, getSeverityColor } from '../utils/helpers';
+import { useAIInsight } from '../hooks/useAIInsight';
 
 /**
  * Severity badge component
@@ -239,7 +240,7 @@ const IncidentCard = memo(function IncidentCard({ incident, onResolve }) {
             </span>
             <SeverityBadge severity={incident.severity} />
             {incident.status === 'resolved' && <span className="badge-success">Resolved</span>}
-            <span className="text-xs ml-auto" style={{ color: COLORS.outline }}>
+            <span className="text-xs ml-auto" style={{ color: COLORS.onSurfaceVariant }}>
               {timeAgo(incident.timestamp)}
             </span>
           </div>
@@ -268,7 +269,11 @@ const IncidentCard = memo(function IncidentCard({ incident, onResolve }) {
       </div>
       {incident.status === 'active' && (
         <div className="mt-3 flex justify-end">
-          <button className="btn-ghost text-xs py-1.5 px-3" onClick={() => onResolve(incident.id)}>
+          <button
+            className="btn-ghost text-xs py-1.5 px-3"
+            onClick={() => onResolve(incident.id)}
+            aria-label={`Mark incident ${incident.id} as resolved`}
+          >
             <span aria-hidden="true" className="material-symbols-outlined text-sm">
               check_circle
             </span>
@@ -297,6 +302,8 @@ IncidentCard.propTypes = {
  * Smart Broadcast Widget
  */
 const SmartBroadcastWidget = memo(function SmartBroadcastWidget() {
+  const { contextData } = useStadiumContext();
+  const { requestInsight: requestBroadcast } = useAIInsight(contextData);
   const [message, setMessage] = useState('');
   const [isBroadcasting, setIsBroadcasting] = useState(false);
   const [broadcasted, setBroadcasted] = useState(false);
@@ -304,6 +311,7 @@ const SmartBroadcastWidget = memo(function SmartBroadcastWidget() {
   const handleBroadcast = () => {
     if (!message.trim()) return;
     setIsBroadcasting(true);
+    requestBroadcast(`Translate this stadium announcement to 7 languages (EN, ES, FR, AR, PT, JA, HI) and return the translations. Announcement: "${message}". Return the translations in a bullet list.`, '');
     setTimeout(() => {
       setIsBroadcasting(false);
       setBroadcasted(true);
@@ -370,6 +378,7 @@ const SmartBroadcastWidget = memo(function SmartBroadcastWidget() {
     </div>
   );
 });
+SmartBroadcastWidget.propTypes = {};
 
 function CommandCenter() {
   const { contextData, resolveIncident } = useStadiumContext();

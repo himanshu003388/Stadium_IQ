@@ -3,15 +3,18 @@ import { describe, it, expect, vi } from 'vitest';
 import { axe } from 'jest-axe';
 import Sidebar from './Sidebar';
 import { StadiumProvider } from '../context/StadiumContext';
+import { AppProvider } from '../context/AppContext';
 
 describe('Sidebar Component', () => {
-  const renderSidebar = (activeView = 'command') => {
+  const renderSidebar = (activeView = 'dashboard') => {
     const setActiveView = vi.fn();
     return {
       setActiveView,
       ...render(
         <StadiumProvider>
-          <Sidebar activeView={activeView} setActiveView={setActiveView} />
+          <AppProvider>
+            <Sidebar activeView={activeView} setActiveView={setActiveView} />
+          </AppProvider>
         </StadiumProvider>,
       ),
     };
@@ -19,17 +22,17 @@ describe('Sidebar Component', () => {
 
   it('renders all navigation links with aria-labels', () => {
     renderSidebar();
-    expect(screen.getAllByLabelText(/WC 26 Ops Center/i).length).toBeGreaterThan(0);
-    expect(screen.getAllByLabelText(/GenAI Assistant/i).length).toBeGreaterThan(0);
-    expect(screen.getAllByLabelText(/Crowd & Navigation/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByLabelText(/Command Center/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByLabelText(/AI Assistant/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByLabelText(/Crowd Map/i).length).toBeGreaterThan(0);
     expect(screen.getAllByLabelText(/Volunteer Dispatch/i).length).toBeGreaterThan(0);
     expect(screen.getAllByLabelText(/Transport Hub/i).length).toBeGreaterThan(0);
     expect(screen.getAllByLabelText(/Sustainability/i).length).toBeGreaterThan(0);
   });
 
   it('marks active nav item with aria-current="page"', () => {
-    renderSidebar('ai');
-    const activeLinks = screen.getAllByRole('button', { name: /GenAI Assistant/i });
+    renderSidebar('assistant');
+    const activeLinks = screen.getAllByRole('button', { name: /AI Assistant/i });
     activeLinks.forEach((link) => {
       if (link.getAttribute('aria-current') === 'page') {
         expect(link).toHaveAttribute('aria-current', 'page');
@@ -62,16 +65,15 @@ describe('Sidebar Component', () => {
 
   it('shows badge counts for critical items', () => {
     renderSidebar();
-    // With mock data, should have incident badges
     const badges = screen.getAllByLabelText(/\d+ alerts/);
     expect(badges.length).toBeGreaterThan(0);
   });
 
   it('calls setActiveView when a nav item is clicked', () => {
     const { setActiveView } = renderSidebar();
-    const crowdBtn = screen.getAllByLabelText(/Crowd & Navigation/i)[0];
+    const crowdBtn = screen.getAllByLabelText(/Crowd Map/i)[0];
     fireEvent.click(crowdBtn);
-    expect(setActiveView).toHaveBeenCalledWith('crowd');
+    expect(setActiveView).toHaveBeenCalledWith('crowdmap');
   });
 
   it('has no accessibility violations', async () => {
@@ -82,9 +84,9 @@ describe('Sidebar Component', () => {
 
   it('renders all NAV_ITEMS with labels', () => {
     renderSidebar();
-    expect(screen.getAllByLabelText(/WC 26 Ops Center/i).length).toBeGreaterThan(0);
-    expect(screen.getAllByLabelText(/GenAI Assistant/i).length).toBeGreaterThan(0);
-    expect(screen.getAllByLabelText(/Crowd & Navigation/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByLabelText(/Command Center/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByLabelText(/AI Assistant/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByLabelText(/Crowd Map/i).length).toBeGreaterThan(0);
     expect(screen.getAllByLabelText(/Volunteer Dispatch/i).length).toBeGreaterThan(0);
     expect(screen.getAllByLabelText(/Transport Hub/i).length).toBeGreaterThan(0);
     expect(screen.getAllByLabelText(/Sustainability/i).length).toBeGreaterThan(0);

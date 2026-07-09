@@ -124,14 +124,40 @@ const TaskCard = memo(function TaskCard({ task, volunteers, onAssign, onResolve 
     [volunteers, task.requiredLanguage, task.requiredSkill],
   );
 
-  const suggestBestVolunteer = useCallback(() => {
+  const suggestBestVolunteer = useCallback(async () => {
     setAssigning(true);
-    setTimeout(() => {
+    try {
+      const csrfRes = await fetch('/api/csrf-token');
+      if (!csrfRes.ok) throw new Error('CSRF fetch failed');
+      const { csrfToken } = await csrfRes.json();
+
+      const res = await fetch('/api/ai/volunteer-dispatch', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': csrfToken,
+        },
+        body: JSON.stringify({ task, volunteers }),
+      });
+
+      if (!res.ok) throw new Error('API dispatch failed');
+      const data = await res.json();
+      if (data.suggestion) {
+        const found = volunteers.find((v) => v.id === data.suggestion.volunteerId);
+        if (found) {
+          setAiSuggestion({ ...found, customReason: data.suggestion.reason });
+          setAssigning(false);
+          return;
+        }
+      }
+      throw new Error('No suggestions returned');
+    } catch (err) {
       const best = eligibleVols.toSorted((a, b) => a.currentLoad - b.currentLoad)[0];
-      setAiSuggestion(best || null);
+      setAiSuggestion(best ? { ...best, customReason: `${best.name} matches required skill (${task.requiredSkill}) and language (fallback).` } : null);
+    } finally {
       setAssigning(false);
-    }, 900);
-  }, [eligibleVols]);
+    }
+  }, [task, volunteers, eligibleVols]);
 
   return (
     <div
@@ -205,27 +231,36 @@ const TaskCard = memo(function TaskCard({ task, volunteers, onAssign, onResolve 
       {/* AI Suggestion */}
       {aiSuggestion && (
         <div
-          className="flex items-center gap-2 mb-2 p-2 rounded-lg animate-fade-in-up"
+          className="flex items-start gap-2 mb-2 p-3 rounded-lg animate-fade-in-up flex-col sm:flex-row"
           style={{ background: COLORS.primaryFixed, border: `1px solid ${COLORS.outlineVariant}` }}
         >
-          <span
-            aria-hidden="true"
-            className="material-symbols-outlined text-sm"
-            style={{ color: COLORS.primaryContainer, fontVariationSettings: "'FILL' 1" }}
-          >
-            smart_toy
-          </span>
-          <div className="flex-1 text-xs" style={{ color: COLORS.primaryContainer }}>
-            <span className="font-semibold">AI Suggests: </span>
-            {aiSuggestion.name} — {aiSuggestion.currentLoad}/{aiSuggestion.maxLoad} tasks, speaks{' '}
-            {aiSuggestion.languages.join(', ').toUpperCase()}
+          <div className="flex items-start gap-2 flex-1">
+            <span
+              aria-hidden="true"
+              className="material-symbols-outlined text-sm shrink-0 mt-0.5"
+              style={{ color: COLORS.primaryContainer, fontVariationSettings: "'FILL' 1" }}
+            >
+              smart_toy
+            </span>
+            <div className="text-xs" style={{ color: COLORS.primaryContainer }}>
+              <div>
+                <span className="font-semibold">AI Suggests: </span>
+                {aiSuggestion.name} — {aiSuggestion.currentLoad}/{aiSuggestion.maxLoad} tasks, speaks{' '}
+                {aiSuggestion.languages.join(', ').toUpperCase()}
+              </div>
+              {aiSuggestion.customReason && (
+                <p className="mt-1 opacity-90 italic leading-relaxed text-[11px]">
+                  💡 {aiSuggestion.customReason}
+                </p>
+              )}
+            </div>
           </div>
           <button
             onClick={() => {
               onAssign(task.id, aiSuggestion.id);
               setAiSuggestion(null);
             }}
-            className="text-xs font-bold px-2 py-1 rounded-lg"
+            className="text-xs font-bold px-3 py-1.5 rounded-lg shrink-0 w-full sm:w-auto"
             style={{ background: COLORS.primaryContainer, color: COLORS.onPrimary }}
             aria-label={`Assign to ${aiSuggestion.name}`}
           >

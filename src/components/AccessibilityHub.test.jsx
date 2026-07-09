@@ -1,8 +1,16 @@
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect } from 'vitest';
 import { axe } from 'jest-axe';
 import AccessibilityHub from './AccessibilityHub';
 import { StadiumProvider } from '../context/StadiumContext';
+
+beforeEach(() => {
+  global.fetch = vi.fn().mockResolvedValue({
+    ok: false,
+    status: 400,
+    json: () => Promise.resolve({ error: 'API Key is missing' }),
+  });
+});
 
 describe('AccessibilityHub', () => {
   const renderWithContext = () => {
@@ -28,12 +36,13 @@ describe('AccessibilityHub', () => {
     expect(screen.getByText('Available Services')).toBeInTheDocument();
   });
 
-  it('handles quick queries and shows AI tip', () => {
+  it('handles quick queries and shows AI tip', async () => {
     renderWithContext();
     const btn = screen.getByText('Wheelchair routes');
     fireEvent.click(btn);
-    // When the tip appears, the Ask something else button is rendered
-    expect(screen.getByText('Ask something else')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText('Ask something else')).toBeInTheDocument();
+    });
 
     const askSomethingElseBtn = screen.getByText('Ask something else');
     fireEvent.click(askSomethingElseBtn);

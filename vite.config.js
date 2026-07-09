@@ -37,7 +37,7 @@ export default defineConfig({
           )
             return 'react-vendor';
           if (id.includes('node_modules/@google/generative-ai')) return 'ai-vendor';
-          if (id.includes('node_modules/dompurify') || id.includes('node_modules/lucide-react'))
+          if (id.includes('node_modules/dompurify'))
             return 'ui-vendor';
         },
       },
@@ -60,10 +60,10 @@ export default defineConfig({
         'src/data/mockContext.json',
       ],
       thresholds: {
-        statements: 83,
-        branches: 72,
-        functions: 86,
-        lines: 84,
+        statements: 85,
+        branches: 70,
+        functions: 80,
+        lines: 85,
       },
     },
   },

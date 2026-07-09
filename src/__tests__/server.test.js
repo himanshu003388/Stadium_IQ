@@ -1,126 +1,22 @@
-/**
- * server.js Unit Tests
- * Tests core security and validation functions in isolation.
- *
- * These functions are exported for testing via the ESM test harness.
- * Run with: npm test (vitest)
- */
 import { describe, it, expect, vi } from 'vitest';
 import crypto from 'crypto';
+import { buildSafeContext } from '../../src/utils/contextFilter';
 
-// ─── Re-implement the pure functions under test ───────────────────────────────
-// This avoids spinning up a full Express server; we test the logic units directly.
+import { sanitizeInput, validateChatInput } from '../../server/utils/validation.js';
+import { generateCsrfToken as prodGenerateCsrfToken, validateCsrfToken as prodValidateCsrfToken } from '../../server/utils/csrf.js';
 
 const VALID_LANGUAGES = ['en', 'es', 'fr', 'ar', 'pt', 'ja', 'hi'];
 
-function sanitizeInput(input) {
-  return input
-    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
-    .replace(/<[^>]*>/g, '')
-    .replace(/[<>"'`]/g, '')
-    .trim();
-}
-
-function validateChatInput(body) {
-  const errors = [];
-  if (!body || typeof body !== 'object') {
-    errors.push('Request body is required');
-    return errors;
-  }
-  if (body.message !== undefined) {
-    if (typeof body.message !== 'string') {
-      errors.push('message must be a string');
-    } else if (body.message.length > 2000) {
-      errors.push('message must be max 2000 characters');
-    } else if (body.message.trim().length === 0) {
-      errors.push('message cannot be empty');
-    }
-  }
-  if (body.language !== undefined) {
-    if (!VALID_LANGUAGES.includes(body.language)) {
-      errors.push('language must be a valid 2-letter ISO code');
-    }
-  }
-  if (body.contextData !== undefined) {
-    if (typeof body.contextData !== 'object') {
-      errors.push('contextData must be an object');
-    } else {
-      const MAX_FIELD_LEN = 200;
-      const stadium = body.contextData?.stadium;
-      if (stadium) {
-        if (typeof stadium.name === 'string' && stadium.name.length > MAX_FIELD_LEN)
-          errors.push('contextData.stadium.name exceeds maximum length');
-        if (typeof stadium.homeTeam === 'string' && stadium.homeTeam.length > MAX_FIELD_LEN)
-          errors.push('contextData.stadium.homeTeam exceeds maximum length');
-        if (typeof stadium.awayTeam === 'string' && stadium.awayTeam.length > MAX_FIELD_LEN)
-          errors.push('contextData.stadium.awayTeam exceeds maximum length');
-        if (typeof stadium.matchPhase === 'string' && stadium.matchPhase.length > 20)
-          errors.push('contextData.stadium.matchPhase exceeds maximum length');
-      }
-    }
-  }
-  return errors;
-}
-
-function buildSafeContext(rawCtx) {
-  if (!rawCtx || typeof rawCtx !== 'object') return {};
-  return {
-    stadium: {
-      name: rawCtx.stadium?.name,
-      capacity: rawCtx.stadium?.capacity,
-      currentOccupancy: rawCtx.stadium?.currentOccupancy,
-      homeTeam: rawCtx.stadium?.homeTeam,
-      awayTeam: rawCtx.stadium?.awayTeam,
-      score: rawCtx.stadium?.score,
-      matchPhase: rawCtx.stadium?.matchPhase,
-      weather: rawCtx.stadium?.weather,
-    },
-    // Guard against non-array input (adversarial / malformed contextData)
-    gates: Array.isArray(rawCtx.gates)
-      ? rawCtx.gates.map((g) => ({
-          id: g.id,
-          direction: g.direction,
-          density: g.density,
-          waitTimeMinutes: g.waitTimeMinutes,
-          status: g.status,
-          accessible: g.accessible,
-        }))
-      : [],
-    activeIncidentCount: Array.isArray(rawCtx.incidents)
-      ? rawCtx.incidents.filter((i) => i.status === 'active').length
-      : 0,
-  };
-}
-
-const CSRF_SECRET = 'test-csrf-secret-for-unit-tests';
-const CSRF_TOKEN_EXPIRY = 3600;
+const mockReq = { headers: { cookie: 'session_id=1234567890abcdef' } };
+const mockRes = { setHeader: vi.fn(), cookie: vi.fn() };
 
 function generateCsrfToken() {
-  const payload = `${Date.now()}:${crypto.randomBytes(16).toString('hex')}`;
-  const sig = crypto.createHmac('sha256', CSRF_SECRET).update(payload).digest('hex');
-  return Buffer.from(`${payload}:${sig}`).toString('base64url');
+  return prodGenerateCsrfToken(mockReq, mockRes);
 }
 
-function validateCsrfToken(rawToken) {
-  if (!rawToken) return false;
-  try {
-    const decoded = Buffer.from(rawToken, 'base64url').toString();
-    const [ts, nonce, sig] = decoded.split(':');
-    if (!ts || !nonce || !sig) return false;
-    const payload = `${ts}:${nonce}`;
-    const expected = crypto.createHmac('sha256', CSRF_SECRET).update(payload).digest('hex');
-    const sigBuf = Buffer.from(sig, 'hex');
-    const expBuf = Buffer.from(expected, 'hex');
-    if (sigBuf.length !== expBuf.length) return false;
-    if (!crypto.timingSafeEqual(sigBuf, expBuf)) return false;
-    if ((Date.now() - parseInt(ts, 10)) / 1000 > CSRF_TOKEN_EXPIRY) return false;
-    return true;
-  } catch {
-    return false;
-  }
+function validateCsrfToken(token) {
+  return prodValidateCsrfToken(token, mockReq);
 }
-
-// ─── Test Suites ──────────────────────────────────────────────────────────────
 
 describe('sanitizeInput', () => {
   it('removes <script> tags', () => {
@@ -172,9 +68,7 @@ describe('validateChatInput', () => {
   });
 
   it('returns error when message exceeds 2000 characters', () => {
-    expect(validateChatInput({ message: 'a'.repeat(2001) })).toContain(
-      'message must be max 2000 characters',
-    );
+    expect(validateChatInput({ message: 'a'.repeat(2001) })).toContain('message must be max 2000 characters');
   });
 
   it('returns no error for a valid message', () => {
@@ -182,9 +76,7 @@ describe('validateChatInput', () => {
   });
 
   it('returns error for invalid language code', () => {
-    expect(validateChatInput({ message: 'Hi', language: 'xx' })).toContain(
-      'language must be a valid 2-letter ISO code',
-    );
+    expect(validateChatInput({ message: 'Hi', language: 'xx' })).toContain('language must be a valid 2-letter ISO code');
   });
 
   it('accepts all valid language codes', () => {
@@ -194,66 +86,31 @@ describe('validateChatInput', () => {
   });
 
   it('returns error for non-object contextData', () => {
-    expect(validateChatInput({ message: 'Hi', contextData: 'invalid' })).toContain(
-      'contextData must be an object',
-    );
+    expect(validateChatInput({ message: 'Hi', contextData: 'invalid' })).toContain('contextData must be an object');
   });
 
   it('returns error when stadium.name exceeds 200 chars', () => {
-    expect(
-      validateChatInput({
-        message: 'Hi',
-        contextData: { stadium: { name: 'A'.repeat(201) } },
-      }),
-    ).toContain('contextData.stadium.name exceeds maximum length');
+    expect(validateChatInput({ message: 'Hi', contextData: { stadium: { name: 'A'.repeat(201) } } })).toContain('contextData.stadium.name exceeds maximum length');
   });
 
   it('returns error when stadium.homeTeam exceeds 200 chars', () => {
-    expect(
-      validateChatInput({
-        message: 'Hi',
-        contextData: { stadium: { homeTeam: 'B'.repeat(201) } },
-      }),
-    ).toContain('contextData.stadium.homeTeam exceeds maximum length');
+    expect(validateChatInput({ message: 'Hi', contextData: { stadium: { homeTeam: 'B'.repeat(201) } } })).toContain('contextData.stadium.homeTeam exceeds maximum length');
   });
 
   it('returns error when stadium.awayTeam exceeds 200 chars', () => {
-    expect(
-      validateChatInput({
-        message: 'Hi',
-        contextData: { stadium: { awayTeam: 'C'.repeat(201) } },
-      }),
-    ).toContain('contextData.stadium.awayTeam exceeds maximum length');
+    expect(validateChatInput({ message: 'Hi', contextData: { stadium: { awayTeam: 'C'.repeat(201) } } })).toContain('contextData.stadium.awayTeam exceeds maximum length');
   });
 
   it('returns error when matchPhase exceeds 20 chars', () => {
-    expect(
-      validateChatInput({
-        message: 'Hi',
-        contextData: { stadium: { matchPhase: 'X'.repeat(21) } },
-      }),
-    ).toContain('contextData.stadium.matchPhase exceeds maximum length');
+    expect(validateChatInput({ message: 'Hi', contextData: { stadium: { matchPhase: 'X'.repeat(21) } } })).toContain('contextData.stadium.matchPhase exceeds maximum length');
   });
 
   it('accepts valid contextData within limits', () => {
-    expect(
-      validateChatInput({
-        message: 'Hi',
-        language: 'en',
-        contextData: {
-          stadium: {
-            name: 'AT&T Stadium',
-            homeTeam: 'Brazil',
-            awayTeam: 'France',
-            matchPhase: "67'",
-          },
-        },
-      }),
-    ).toHaveLength(0);
+    expect(validateChatInput({ message: 'Hi', language: 'en', contextData: { stadium: { name: 'AT&T Stadium', homeTeam: 'Brazil', awayTeam: 'France', matchPhase: "67'" } } })).toHaveLength(0);
   });
 });
 
-describe('buildSafeContext', () => {
+describe('buildSafeContext (shared module)', () => {
   const raw = {
     stadium: {
       name: 'AT&T Stadium',
@@ -264,7 +121,6 @@ describe('buildSafeContext', () => {
       score: '2 - 1',
       matchPhase: "67'",
       weather: { temperature: 32 },
-      // These fields should be STRIPPED
       internalAdminNotes: 'SECRET_DATA',
       securityCode: 'TOPSECRET',
     },
@@ -276,7 +132,7 @@ describe('buildSafeContext', () => {
         waitTimeMinutes: 5,
         status: 'normal',
         accessible: true,
-        // Should be stripped
+        accessibleFeatures: ['wheelchair_ramp', 'elevator'],
         staffPassword: 'HIDDEN',
       },
     ],
@@ -284,7 +140,6 @@ describe('buildSafeContext', () => {
       { id: 'I1', status: 'active' },
       { id: 'I2', status: 'resolved' },
     ],
-    // Should be stripped entirely
     volunteerPrivateData: { ssn: '123-45-6789' },
   };
 
@@ -295,10 +150,11 @@ describe('buildSafeContext', () => {
     expect(ctx.stadium.securityCode).toBeUndefined();
   });
 
-  it('only returns whitelisted gate fields', () => {
+  it('only returns whitelisted gate fields including accessibleFeatures', () => {
     const ctx = buildSafeContext(raw);
     expect(ctx.gates[0].id).toBe('A');
     expect(ctx.gates[0].staffPassword).toBeUndefined();
+    expect(ctx.gates[0].accessibleFeatures).toEqual(['wheelchair_ramp', 'elevator']);
   });
 
   it('strips volunteerPrivateData entirely', () => {
@@ -306,9 +162,10 @@ describe('buildSafeContext', () => {
     expect(ctx.volunteerPrivateData).toBeUndefined();
   });
 
-  it('counts only active incidents', () => {
+  it('only includes active incidents (max 10)', () => {
     const ctx = buildSafeContext(raw);
-    expect(ctx.activeIncidentCount).toBe(1);
+    expect(ctx.incidents).toHaveLength(1);
+    expect(ctx.incidents[0].id).toBe('I1');
   });
 
   it('handles null context gracefully', () => {
@@ -353,7 +210,6 @@ describe('CSRF Token Generation & Validation', () => {
   it('returns false for an expired token (simulated via Date manipulation)', () => {
     vi.useFakeTimers();
     const token = generateCsrfToken();
-    // Advance time by 2 hours (past the 1-hour expiry)
     vi.advanceTimersByTime(2 * 60 * 60 * 1000);
     expect(validateCsrfToken(token)).toBe(false);
     vi.useRealTimers();
@@ -366,13 +222,10 @@ describe('CSRF Token Generation & Validation', () => {
   });
 });
 
-// ─── Security Boundary Tests ─────────────────────────────────────────────────
-
 describe('Security boundary: validateChatInput edge cases', () => {
   it('rejects empty object body', () => {
-    // Empty body passes (message is not required unless sent), but missing message is not an error
     const errors = validateChatInput({});
-    expect(errors).toHaveLength(0); // no fields provided = no errors
+    expect(errors).toHaveLength(0);
   });
 
   it('rejects a message with only whitespace characters', () => {
@@ -388,9 +241,8 @@ describe('Security boundary: validateChatInput edge cases', () => {
   });
 
   it('rejects xss attempt in message as a string validation pass-through (sanitization is separate)', () => {
-    // validateChatInput only validates structure/length; sanitizeInput handles XSS stripping
     const errors = validateChatInput({ message: '<script>alert(1)</script>' });
-    expect(errors).toHaveLength(0); // short enough; sanitization done elsewhere
+    expect(errors).toHaveLength(0);
   });
 });
 
@@ -407,7 +259,6 @@ describe('Security boundary: buildSafeContext with adversarial input', () => {
     };
     const ctx = buildSafeContext(adversarial);
     expect(ctx.stadium.name).toBe('Test');
-    // Should not pollute Object prototype
     expect({}.polluted).toBeUndefined();
   });
 
@@ -418,11 +269,9 @@ describe('Security boundary: buildSafeContext with adversarial input', () => {
 
   it('handles non-array incidents gracefully', () => {
     const ctx = buildSafeContext({ stadium: {}, gates: [], incidents: 'not-an-array' });
-    expect(ctx.activeIncidentCount).toBe(0);
+    expect(ctx.incidents).toEqual([]);
   });
 });
-
-// ─── Security Middlewares ─────────────────────────────────────────────────
 
 function hppGuardTest(req, res, next) {
   if (req.query) {
@@ -436,8 +285,16 @@ function hppGuardTest(req, res, next) {
 }
 
 function antiPrototypePollutionTest(req, res, next) {
-  const bodyStr = JSON.stringify(req.body || {});
-  if (bodyStr.includes('"__proto__"') || bodyStr.includes('"constructor"')) {
+  function checkProto(obj, seen = new WeakSet()) {
+    if (!obj || typeof obj !== 'object') return false;
+    if (seen.has(obj)) return false;
+    seen.add(obj);
+    if (Object.getPrototypeOf(obj) !== Object.prototype) return true;
+    const keys = Object.keys(obj);
+    if (keys.includes('__proto__') || keys.includes('constructor')) return true;
+    return Object.values(obj).some(v => checkProto(v, seen));
+  }
+  if (checkProto(req.body)) {
     return res.status(400).json({ error: 'Invalid payload structure detected.' });
   }
   next();
@@ -488,5 +345,84 @@ describe('antiPrototypePollution', () => {
     const next = vi.fn();
     antiPrototypePollutionTest(req, res, next);
     expect(next).toHaveBeenCalled();
+  });
+
+  it('rejects payloads with nested constructor property', () => {
+    const req = { body: { nested: { constructor: { prototype: { polluted: true } } } } };
+    const res = { status: vi.fn().mockReturnThis(), json: vi.fn() };
+    const next = vi.fn();
+    antiPrototypePollutionTest(req, res, next);
+    expect(res.status).toHaveBeenCalledWith(400);
+  });
+});
+
+describe('JWT utilities', () => {
+  const JWT_SECRET = 'test-jwt-secret-for-unit-tests';
+
+  function signToken(payload) {
+    const header = Buffer.from(JSON.stringify({ alg: 'HS256', typ: 'JWT' })).toString('base64url');
+    const nonce = crypto.randomBytes(8).toString('hex');
+    const body = Buffer.from(JSON.stringify({ ...payload, nonce, iat: Math.floor(Date.now() / 1000), exp: Math.floor(Date.now() / 1000) + 3600 })).toString('base64url');
+    const sig = crypto.createHmac('sha256', JWT_SECRET).update(`${header}.${body}`).digest('base64url');
+    return `${header}.${body}.${sig}`;
+  }
+
+  function verifyToken(token) {
+    if (!token) return null;
+    try {
+      const parts = token.split('.');
+      if (parts.length !== 3) return null;
+      const [header, body, sig] = parts;
+      const expected = crypto.createHmac('sha256', JWT_SECRET).update(`${header}.${body}`).digest('base64url');
+      const sigBuf = Buffer.from(sig);
+      const expBuf = Buffer.from(expected);
+      if (sigBuf.length !== expBuf.length) return null;
+      if (!crypto.timingSafeEqual(sigBuf, expBuf)) return null;
+      const data = JSON.parse(Buffer.from(body, 'base64url').toString());
+      if (data.exp && Date.now() / 1000 > data.exp) return null;
+      return data;
+    } catch {
+      return null;
+    }
+  }
+
+  it('signs and verifies a valid token', () => {
+    const token = signToken({ sub: 'admin', role: 'admin' });
+    const payload = verifyToken(token);
+    expect(payload).not.toBeNull();
+    expect(payload.sub).toBe('admin');
+    expect(payload.role).toBe('admin');
+  });
+
+  it('returns null for null token', () => {
+    expect(verifyToken(null)).toBeNull();
+  });
+
+  it('returns null for empty string token', () => {
+    expect(verifyToken('')).toBeNull();
+  });
+
+  it('returns null for tampered token', () => {
+    const token = signToken({ sub: 'admin' });
+    const tampered = token.slice(0, -10) + 'a'.repeat(10);
+    expect(verifyToken(tampered)).toBeNull();
+  });
+
+  it('returns null for expired token', () => {
+    vi.useFakeTimers();
+    const token = signToken({ sub: 'admin' });
+    vi.advanceTimersByTime(2 * 3600 * 1000);
+    expect(verifyToken(token)).toBeNull();
+    vi.useRealTimers();
+  });
+
+  it('returns null for malformed token (less than 3 parts)', () => {
+    expect(verifyToken('header.body')).toBeNull();
+  });
+
+  it('generates unique tokens on successive calls', () => {
+    const t1 = signToken({ sub: 'admin' });
+    const t2 = signToken({ sub: 'admin' });
+    expect(t1).not.toBe(t2);
   });
 });

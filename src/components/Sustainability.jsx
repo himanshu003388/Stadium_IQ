@@ -13,10 +13,11 @@
  * @property {number} co2SavedKg - CO₂ saved in kg
  * @property {boolean} ecoModeActive - Whether eco mode is currently active
  */
-import React, { memo, useMemo } from 'react';
+import React, { memo, useMemo, useEffect } from 'react';
 import { useStadiumContext } from '../context/StadiumContext';
 import PropTypes from 'prop-types';
 import { COLORS } from '../utils/styles';
+import { useAIInsight } from '../hooks/useAIInsight';
 
 /**
  * SVG donut chart displaying a percentage with an optional label.
@@ -217,6 +218,7 @@ function Sustainability() {
   const { contextData, toggleEcoMode } = useStadiumContext();
   const { stadium } = contextData;
   const s = stadium.sustainability;
+  const { insight: sustainInsight, requestInsight: requestSustain } = useAIInsight(contextData);
 
   const netZeroColor =
     s.netZeroProgress >= 80
@@ -248,6 +250,12 @@ function Sustainability() {
     ],
     [],
   );
+
+  const sustainFallback = `Enabling Eco Mode could reduce energy draw by ~22% and save an additional 2,400 kg CO₂ for this event. Current renewable mix: ${s.renewablePercentage}%.`;
+  useEffect(() => {
+    requestSustain(`Give a concise sustainability insight for ${stadium.name}. Current energy draw: ${s.energyDrawMW}MW. Renewable: ${s.renewablePercentage}%. Waste diversion: ${s.wasteDiversionRate}%. Eco mode: ${s.ecoModeActive ? 'active' : 'inactive'}. CO2 saved today: ${s.co2SavedKg}kg. Keep to 2 sentences.`, sustainFallback);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div
@@ -480,8 +488,7 @@ function Sustainability() {
               </span>
               <p className="text-xs" style={{ color: 'rgba(255,255,255,0.8)' }}>
                 <span className="font-bold text-white">AI Insight: </span>
-                Enabling Eco Mode could reduce energy draw by ~22% and save an additional{' '}
-                <strong className="text-white">2,400 kg CO₂</strong> for this event.
+                {sustainInsight || sustainFallback}
               </p>
             </div>
           </div>

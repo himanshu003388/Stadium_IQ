@@ -6,6 +6,7 @@
  */
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { getDemoResponse } from '../utils/helpers';
+import { buildSafeContext } from '../utils/contextFilter';
 
 /** Maximum number of messages to retain in the chat history */
 const MAX_MESSAGES = 100;
@@ -174,9 +175,10 @@ export function useGemini(stadiumContext) {
       try {
         abortRef.current = new AbortController();
 
+        const safeCtx = buildSafeContext(contextRef.current);
         const body = {
           message: sanitized,
-          contextData: contextRef.current,
+          contextData: safeCtx,
           language: languageRef.current,
         };
 

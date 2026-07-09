@@ -8,6 +8,18 @@ import { useStadiumContext } from '../context/StadiumContext';
 import { useAppContext } from '../context/AppContext';
 import { COLORS, NAV_ITEMS } from '../utils/styles';
 
+const MOBILE_LABEL_MAP = {
+  dashboard: 'Ops Center',
+  assistant: 'AI',
+  crowdmap: 'Crowd',
+  volunteers: 'Dispatch',
+  transport: 'Transport',
+  sustainability: 'Sustain',
+  accessibility: 'Access',
+  vendors: 'Concessions',
+  'volunteer-mobile': 'Tasks',
+};
+
 /**
  * Returns a badge count for a nav item based on active alerts
  * @param {string} id - Navigation item ID
@@ -17,19 +29,10 @@ import { COLORS, NAV_ITEMS } from '../utils/styles';
  * @returns {number|null} Badge count or null
  */
 const getBadge = (id, activeIncidents, criticalGates, openTasks) => {
-  if (id === 'command' && activeIncidents > 0) return activeIncidents;
-  if (id === 'crowd' && criticalGates > 0) return criticalGates;
+  if (id === 'dashboard' && activeIncidents > 0) return activeIncidents;
+  if (id === 'crowdmap' && criticalGates > 0) return criticalGates;
   if (id === 'volunteers' && openTasks > 0) return openTasks;
   return null;
-};
-
-/**
- * Skip link style setter utility
- * @param {HTMLElement} el - Target element
- * @param {object} styles - Inline styles to apply
- */
-const setSkipStyles = (el, styles) => {
-  Object.assign(el.style, styles);
 };
 
 /**
@@ -62,44 +65,6 @@ function Sidebar({ activeView, setActiveView }) {
 
   return (
     <>
-      <a
-        href="#main-content"
-        className="skip-link"
-        style={{
-          position: 'absolute',
-          left: '-9999px',
-          width: '1px',
-          height: '1px',
-          overflow: 'hidden',
-        }}
-        onFocus={(e) =>
-          setSkipStyles(e.target, {
-            position: 'fixed',
-            top: '0',
-            left: '0',
-            width: 'auto',
-            height: 'auto',
-            padding: '8px 16px',
-            background: COLORS.primary,
-            color: COLORS.onPrimary,
-            zIndex: '9999',
-            fontSize: '14px',
-            fontWeight: 'bold',
-            textDecoration: 'none',
-          })
-        }
-        onBlur={(e) =>
-          setSkipStyles(e.target, {
-            position: 'absolute',
-            left: '-9999px',
-            width: '1px',
-            height: '1px',
-            overflow: 'hidden',
-          })
-        }
-      >
-        Skip to main content
-      </a>
 
       {/* Desktop Sidebar */}
       <aside
@@ -224,7 +189,7 @@ function Sidebar({ activeView, setActiveView }) {
                 className="text-xs"
                 style={{ fontSize: '9px', fontWeight: activeView === item.id ? 700 : 400 }}
               >
-                {item.label.split(' ')[0]}
+                {MOBILE_LABEL_MAP[item.id] || item.label}
               </span>
               {badge && (
                 <span

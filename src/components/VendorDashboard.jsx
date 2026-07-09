@@ -2,7 +2,7 @@ import React, { memo } from 'react';
 import { useStadiumContext } from '../context/StadiumContext';
 import { COLORS } from '../utils/styles';
 
-const VendorDashboard = () => {
+function VendorDashboard() {
   const { contextData } = useStadiumContext();
   const { vendors, gates } = contextData;
 
@@ -45,8 +45,9 @@ const VendorDashboard = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {(vendors || []).map((vendor, i) => {
-          // Find the density of the nearest gate/zone for AI context
-          const nearestGate = gates.find((g) => vendor.zone.includes(g.direction)) || gates[0];
+          const nearestGate = gates.find((g) =>
+            vendor.zone.toLowerCase().startsWith(g.direction.toLowerCase())
+          ) || gates[0];
           const density = nearestGate ? nearestGate.density : 0.5;
 
           return (
@@ -135,4 +136,5 @@ const VendorDashboard = () => {
   );
 };
 
+VendorDashboard.propTypes = {};
 export default memo(VendorDashboard);

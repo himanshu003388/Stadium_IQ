@@ -3,11 +3,12 @@
  * Post-match departure options with AI recommendations, eco sorting, and navigation.
  * @module TransportHub
  */
-import React, { useState, useMemo, useCallback, memo } from 'react';
+import React, { useState, useMemo, useCallback, memo, useEffect } from 'react';
 import { useStadiumContext } from '../context/StadiumContext';
 import { COLORS, TRANSPORT_ICONS } from '../utils/styles';
 import { ECO_SCORE_THRESHOLDS } from '../utils/constants';
 import { getCO2Color, getCapacityColor } from '../utils/helpers';
+import { useAIInsight } from '../hooks/useAIInsight';
 
 /**
  * @typedef {object} TransportOption
@@ -83,6 +84,7 @@ function TransportHub() {
   const { transportOptions, stadium } = contextData;
   const [sortBy, setSortBy] = useState('recommended');
   const [sortAnnouncement, setSortAnnouncement] = useState('');
+  const { insight: depRecommendation, requestInsight: requestDep } = useAIInsight(contextData);
 
   const handleSortChange = useCallback((key, label) => {
     setSortBy(key);
@@ -110,6 +112,12 @@ function TransportHub() {
     [transportOptions],
   );
 
+  const depFallback = `With ${Math.round((stadium.currentOccupancy / stadium.capacity) * 100)}% capacity and match ending soon, expect heavy foot traffic. Take the ${bestEco?.type} (${bestEco?.line}) for the greenest option, or the ${fastest?.type} for speed.`;
+  useEffect(() => {
+    requestDep(`Give a concise departure recommendation for fans at ${stadium.name}. Best eco option: ${bestEco?.type} (${bestEco?.co2e}g CO2). Fastest: ${fastest?.type} (${fastest?.etaMinutes}min). Occupancy: ${Math.round((stadium.currentOccupancy / stadium.capacity) * 100)}%. Keep to 2 sentences.`, depFallback);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   /**
    * Opens Google Maps navigation to the stadium with a deep-link.
    * Falls back to a generic maps search if coordinates are unavailable.
@@ -125,7 +133,7 @@ function TransportHub() {
     const query = encodeURIComponent(`${type} ${line} to AT&T Stadium Arlington TX`);
 
     // Use Google Maps directions on mobile/desktop, falling back to query search
-    const isMobile = /Mobi|Android/i.test(navigator.userAgent);
+    const isMobile = window.matchMedia('(pointer:coarse)').matches;
     const url = isMobile
       ? `https://maps.google.com/?saddr=My+Location&daddr=${destination}&mode=transit`
       : `https://www.google.com/maps/dir/?api=1&destination=${STADIUM_NAME}&travelmode=transit&q=${query}`;
@@ -181,7 +189,7 @@ function TransportHub() {
         </div>
       </div>
 
-      {/* AI Departure Tip */}
+      {/* AI Departure Tip — GenAI powered */}
       <div
         className="card p-4 animate-fade-in-up"
         style={{ background: COLORS.gradientNavy, border: 'none' }}
@@ -202,13 +210,7 @@ function TransportHub() {
           <div className="flex-1">
             <div className="font-bold text-sm text-white mb-1">AI Departure Recommendation</div>
             <p className="text-sm" style={{ color: 'rgba(168,202,255,0.9)' }}>
-              With {Math.round((stadium.currentOccupancy / stadium.capacity) * 100)}% capacity and
-              match ending soon, expect heavy foot traffic.{' '}
-              <strong className="text-white">Take the {bestEco.type}</strong> ({bestEco.line}) for
-              the greenest option, or the <strong className="text-white">{fastest.type}</strong> for
-              speed. Departure crowds will peak in approximately{' '}
-              <strong className="text-white">25 minutes</strong> — consider leaving early or staying
-              for post-match events.
+              {depRecommendation || depFallback}
             </p>
           </div>
         </div>
@@ -383,12 +385,13 @@ function TransportHub() {
               <button
                 onClick={() => handleNavigate(t.type, t.line)}
                 className="btn-primary text-xs py-1.5 px-3"
-                aria-label={`Get directions for ${t.type}`}
+                aria-label={`Get directions for ${t.type} (opens in new tab)`}
               >
                 <span aria-hidden="true" className="material-symbols-outlined text-sm">
                   directions
                 </span>
                 Navigate
+                <span className="sr-only">(opens in new tab)</span>
               </button>
             </div>
           </div>

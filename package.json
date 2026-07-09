@@ -11,12 +11,14 @@
     "lint:fix": "oxlint --fix && prettier --write .",
     "format": "prettier --write .",
     "preview": "vite preview",
-    "build:analyze": "vite build && open coverage/bundle-report.html",
+    "build:report-bundle": "echo 'Bundle size report available at coverage/bundle-report.html'",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:a11y": "vitest run -t a11y",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "a11y:audit": "node scripts/a11y-audit.mjs",
+    "load:test": "node scripts/load-test.js"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
@@ -28,7 +30,6 @@
     "express": "^5.2.1",
     "express-rate-limit": "^8.5.2",
     "helmet": "^8.0.0",
-    "lucide-react": "^1.23.0",
     "node-cache": "^5.1.2",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",

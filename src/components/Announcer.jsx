@@ -23,10 +23,9 @@ const Announcer = ({ activeView }) => {
 
   useEffect(() => {
     const title = viewTitles[activeView] || 'Page';
-    // Delay slightly so focus changes don't interrupt the announcement
     const timeout = setTimeout(() => {
       setMessage(`Navigated to ${title}`);
-    }, 500);
+    }, 100);
     return () => clearTimeout(timeout);
   }, [activeView]);
 

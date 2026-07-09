@@ -29,9 +29,9 @@ describe('Layout Component', () => {
 
   it('renders navigation', () => {
     render(<Layout />);
-    const opsLinks = screen.getAllByLabelText(/WC 26 Ops Center/i);
+    const opsLinks = screen.getAllByLabelText(/Command Center/i);
     expect(opsLinks.length).toBeGreaterThan(0);
-    const aiLinks = screen.getAllByLabelText(/GenAI Assistant/i);
+    const aiLinks = screen.getAllByLabelText(/AI Assistant/i);
     expect(aiLinks.length).toBeGreaterThan(0);
   });
 
@@ -55,9 +55,8 @@ describe('Layout Component', () => {
 
   it('updates active view when a nav link is clicked', () => {
     render(<Layout />);
-    const aiLink = screen.getAllByLabelText(/GenAI Assistant/i)[0];
+    const aiLink = screen.getAllByLabelText(/AI Assistant/i)[0];
     fireEvent.click(aiLink);
-    // Since AIAssistant is lazy loaded, we might not see it immediately, but it triggers setActiveView
     expect(aiLink).toBeInTheDocument();
   });
 
@@ -69,7 +68,7 @@ describe('Layout Component', () => {
 
   it('renders sidebar navigation links', () => {
     render(<Layout />);
-    expect(screen.getAllByLabelText(/WC 26 Ops Center/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByLabelText(/Command Center/i).length).toBeGreaterThan(0);
     expect(screen.getAllByLabelText(/Sustainability/i).length).toBeGreaterThan(0);
   });
 
