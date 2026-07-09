@@ -4,9 +4,7 @@ import { COLORS } from '../utils/styles';
 
 // Check browser support for Speech Recognition
 const SpeechRecognition =
-  typeof window !== 'undefined'
-    ? window.SpeechRecognition || window.webkitSpeechRecognition
-    : null;
+  typeof window !== 'undefined' ? window.SpeechRecognition || window.webkitSpeechRecognition : null;
 
 const LANG_BCP47 = {
   en: 'en-US',
@@ -109,9 +107,7 @@ const ChatInput = memo(function ChatInput({
               title={isListening ? 'Listening... click to stop' : 'Speak your question'}
               className="w-9 h-9 rounded-xl flex items-center justify-center transition-all hover:scale-105"
               style={{
-                background: isListening
-                  ? COLORS.error
-                  : COLORS.surfaceContainerHigh,
+                background: isListening ? COLORS.error : COLORS.surfaceContainerHigh,
                 color: isListening ? 'white' : COLORS.outline,
                 animation: isListening ? 'pulse 1s infinite' : 'none',
               }}

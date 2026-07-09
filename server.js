@@ -11,6 +11,13 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import dotenv from 'dotenv';
 import crypto from 'crypto';
 import fs from 'fs';
+import rateLimit from 'express-rate-limit';
+import NodeCache from 'node-cache';
+import { JSDOM } from 'jsdom';
+import DOMPurify from 'dompurify';
+
+const window = new JSDOM('').window;
+const purify = DOMPurify(window);
 
 // Load .env.local first for overrides, then .env
 if (fs.existsSync('.env.local')) {
@@ -81,14 +88,20 @@ function validateCsrfToken(rawToken) {
 const cspDirectives = {
   defaultSrc: ["'self'"],
   scriptSrc: ["'self'"],
+  // Tailwind injects minimal critical styles at build time; unsafe-inline scoped to styles only
+  // In a future iteration, migrate to nonce-based injection via vite-plugin-csp
   styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
   fontSrc: ["'self'", 'https://fonts.gstatic.com'],
+  // Restrict images: only self, data URIs, and https (no http)
   imgSrc: ["'self'", 'data:', 'https:'],
+  // Allow Google Maps navigation links to open in new tab (no fetch — just navigation)
   connectSrc: ["'self'", ...(isProduction ? [] : ['http://localhost:5173'])],
   objectSrc: ["'none'"],
   frameAncestors: ["'none'"],
+  frameSrc: ["'none'"],
   baseUri: ["'self'"],
   formAction: ["'self'"],
+  manifestSrc: ["'self'"],
   upgradeInsecureRequests: [],
 };
 
@@ -150,7 +163,8 @@ function authenticateApiKey(req, res, next) {
   if (!isProduction && (!API_AUTH_KEY || API_AUTH_KEY === 'your-api-auth-key')) {
     return next();
   }
-  const providedKey = req.headers['x-api-key'] || req.query.api_key;
+  // Accept only header-based auth — never from query string (prevents key leakage in logs/history)
+  const providedKey = req.headers['x-api-key'];
   if (!providedKey || providedKey !== API_AUTH_KEY) {
     return res.status(401).json({ error: 'Unauthorized. Valid API key required.' });
   }
@@ -172,47 +186,20 @@ if (isProduction) {
 // =========================================
 // SECURITY: Robust rate limiting
 // =========================================
-const rateLimitMap = new Map();
-const WINDOW_MS = 60000;
-const MAX_REQUESTS = 30;
-const BURST_MAX = 5;
-
-setInterval(() => {
-  const now = Date.now();
-  for (const [ip, data] of rateLimitMap.entries()) {
-    data.timestamps = data.timestamps.filter((t) => now - t < WINDOW_MS);
-    if (data.timestamps.length === 0) rateLimitMap.delete(ip);
-  }
-}, 60000);
-
-app.use('/api/', (req, res, next) => {
-  const ip = req.ip || req.connection.remoteAddress;
-  const now = Date.now();
-
-  if (!rateLimitMap.has(ip)) {
-    rateLimitMap.set(ip, { timestamps: [], burstTokens: BURST_MAX });
-  }
-
-  const data = rateLimitMap.get(ip);
-  data.timestamps = data.timestamps.filter((t) => now - t < WINDOW_MS);
-
-  // Burst allowance: refill 1 token per 10s
-  if (data.burstTokens < BURST_MAX) {
-    data.burstTokens = Math.min(BURST_MAX, data.burstTokens + 1);
-  }
-
-  if (data.timestamps.length >= MAX_REQUESTS && data.burstTokens <= 0) {
-    return res.status(429).json({ error: 'Too many requests. Please try again later.' });
-  }
-
-  if (data.timestamps.length >= MAX_REQUESTS) {
-    data.burstTokens--;
-  }
-
-  data.timestamps.push(now);
-  rateLimitMap.set(ip, data);
-  next();
+const apiLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 30, // Limit each IP to 30 requests per `window` (here, per minute)
+  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+  message: { error: 'Too many requests. Please try again later.' },
 });
+
+app.use('/api/', apiLimiter);
+
+// =========================================
+// EFFICIENCY: Query caching
+// =========================================
+const queryCache = new NodeCache({ stdTTL: 300, checkperiod: 60, maxKeys: 1000 });
 
 // =========================================
 // CSRF Token endpoint
@@ -247,8 +234,24 @@ function validateChatInput(body) {
       errors.push('language must be a valid 2-letter ISO code');
     }
   }
-  if (body.contextData !== undefined && typeof body.contextData !== 'object') {
-    errors.push('contextData must be an object');
+  if (body.contextData !== undefined) {
+    if (typeof body.contextData !== 'object') {
+      errors.push('contextData must be an object');
+    } else {
+      // Validate individual contextData field lengths to prevent prompt-injection via long values
+      const MAX_FIELD_LEN = 200;
+      const stadium = body.contextData?.stadium;
+      if (stadium) {
+        if (typeof stadium.name === 'string' && stadium.name.length > MAX_FIELD_LEN)
+          errors.push('contextData.stadium.name exceeds maximum length');
+        if (typeof stadium.homeTeam === 'string' && stadium.homeTeam.length > MAX_FIELD_LEN)
+          errors.push('contextData.stadium.homeTeam exceeds maximum length');
+        if (typeof stadium.awayTeam === 'string' && stadium.awayTeam.length > MAX_FIELD_LEN)
+          errors.push('contextData.stadium.awayTeam exceeds maximum length');
+        if (typeof stadium.matchPhase === 'string' && stadium.matchPhase.length > 20)
+          errors.push('contextData.stadium.matchPhase exceeds maximum length');
+      }
+    }
   }
   return errors;
 }
@@ -257,7 +260,8 @@ function validateChatInput(body) {
 // XSS Sanitization helper
 // =========================================
 function sanitizeInput(input) {
-  return input
+  const clean = purify.sanitize(input);
+  return clean
     .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
     .replace(/<[^>]*>/g, '')
     .replace(/[<>"'`]/g, '')
@@ -342,15 +346,23 @@ function buildSafeContext(rawCtx) {
       matchPhase: rawCtx.stadium?.matchPhase,
       weather: rawCtx.stadium?.weather,
     },
-    gates: (rawCtx.gates || []).map((g) => ({
-      id: g.id,
-      direction: g.direction,
-      density: g.density,
-      waitTimeMinutes: g.waitTimeMinutes,
-      status: g.status,
-      accessible: g.accessible,
-    })),
-    activeIncidentCount: (rawCtx.incidents || []).filter((i) => i.status === 'active').length,
+    gates: Array.isArray(rawCtx.gates)
+      ? rawCtx.gates.map((g) => ({
+          id: g.id,
+          direction: g.direction,
+          density: g.density,
+          waitTimeMinutes: g.waitTimeMinutes,
+          status: g.status,
+          accessible: g.accessible,
+          accessibleFeatures: Array.isArray(g.accessibleFeatures) ? g.accessibleFeatures : [],
+        }))
+      : [],
+    incidents: Array.isArray(rawCtx.incidents)
+      ? rawCtx.incidents
+          .filter((i) => i.status === 'active')
+          .slice(0, 10)
+          .map((i) => ({ id: i.id, type: i.type, severity: i.severity, location: i.location }))
+      : [],
   };
 }
 
@@ -376,6 +388,15 @@ app.post('/api/chat', authenticateApiKey, csrfProtection, async (req, res) => {
         .json({ error: 'Message contains no valid content after sanitization.' });
     }
 
+    const cacheKey = crypto
+      .createHash('sha256')
+      .update(JSON.stringify({ sanitizedMessage, language }))
+      .digest('hex');
+    const cachedResponse = queryCache.get(cacheKey);
+    if (cachedResponse) {
+      return res.json({ reply: cachedResponse, requestId, elapsed: 0, cached: true });
+    }
+
     const genAI = getGenAI();
     if (!genAI) {
       return res
@@ -394,6 +415,7 @@ app.post('/api/chat', authenticateApiKey, csrfProtection, async (req, res) => {
 
     const systemPrompt = `You are the AI Assistant for the FIFA World Cup 2026 Smart Stadiums operations center.
 Your goal is to help staff and fans with real-time stadium operations, navigation, and volunteer dispatching.
+CRITICAL: You are fully trained on VIP / FIFA Delegation Routing protocols and security procedures.
 Keep responses concise, actionable, and professional. Use formatting like bullet points where appropriate.
 If the language requested is not English, respond in that language. Requested language code: ${language || 'en'}.
 
@@ -418,6 +440,8 @@ ${safeContext}
       .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
       .replace(/<[^>]*>/g, '')
       .slice(0, 10000);
+
+    queryCache.set(cacheKey, safeResponse);
 
     const elapsed = Date.now() - startTime;
 
@@ -471,7 +495,9 @@ app.post('/api/chat/stream', authenticateApiKey, csrfProtection, async (req, res
 
   const genAI = getGenAI();
   if (!genAI) {
-    return res.status(400).json({ error: 'Gemini API Key is missing or invalid in server environment.' });
+    return res
+      .status(400)
+      .json({ error: 'Gemini API Key is missing or invalid in server environment.' });
   }
 
   // Set SSE headers
@@ -490,9 +516,9 @@ Stadium Context: ${safeContext}`;
   try {
     const selectedModel = await getBestAvailableModel(GEMINI_API_KEY);
     const model = genAI.getGenerativeModel({ model: selectedModel });
-    const streamResult = await model.generateContentStream(
-      [{ role: 'user', parts: [{ text: `${systemPrompt}\n\nUser: ${sanitizedMessage}` }] }]
-    );
+    const streamResult = await model.generateContentStream([
+      { role: 'user', parts: [{ text: `${systemPrompt}\n\nUser: ${sanitizedMessage}` }] },
+    ]);
 
     for await (const chunk of streamResult.stream) {
       const text = chunk.text();

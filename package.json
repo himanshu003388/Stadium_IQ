@@ -1,5 +1,5 @@
 {
-  "name": "pw4",
+  "name": "stadium-iq",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -25,11 +25,14 @@
     "dompurify": "^3.4.11",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
+    "express-rate-limit": "^8.5.2",
     "helmet": "^8.0.0",
     "lucide-react": "^1.23.0",
+    "node-cache": "^5.1.2",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
-    "react-router-dom": "^7.18.1"
+    "react-router-dom": "^7.18.1",
+    "jsdom": "^29.1.1"
   },
   "devDependencies": {
     "@playwright/test": "^1.61.1",
@@ -43,7 +46,6 @@
     "autoprefixer": "^10.5.2",
     "concurrently": "^10.0.3",
     "jest-axe": "^9.0.0",
-    "jsdom": "^29.1.1",
     "oxlint": "^1.71.0",
     "postcss": "^8.5.16",
     "prettier": "^3.4.2",

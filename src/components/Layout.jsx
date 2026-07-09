@@ -63,7 +63,7 @@ function LayoutInner() {
   return (
     <>
       <a href="#main-content" className="skip-to-content">
-        Skip to content
+        Skip to main content
       </a>
       <div
         className="min-h-screen flex flex-col"

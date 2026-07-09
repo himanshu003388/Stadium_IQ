@@ -1,7 +1,16 @@
 /**
  * Command Center Component - Real-time stadium operations dashboard
- * Displays KPIs, zone status, gate information, and active incidents
+ * Displays KPIs, zone status, gate information, and active incidents.
+ *
  * @component
+ * @typedef {object} Incident
+ * @property {string} id - Unique incident ID
+ * @property {string} description - Human-readable description
+ * @property {'critical'|'medium'|'low'} severity - Severity level
+ * @property {'active'|'resolved'} status - Current status
+ * @property {string} type - Incident category (crowd, medical, security, etc.)
+ * @property {string} timestamp - ISO timestamp
+ * @property {string} aiRecommendedAction - AI-suggested mitigation action
  */
 import React, { useMemo, memo } from 'react';
 import PropTypes from 'prop-types';
@@ -21,13 +30,18 @@ const SeverityBadge = memo(function SeverityBadge({ severity }) {
 SeverityBadge.propTypes = { severity: PropTypes.string.isRequired };
 
 /**
- * Status dot indicator component
+ * Status dot indicator component — uses color + accessible text label
+ * to satisfy WCAG 1.4.1 (Use of Color).
  * @param {object} props - Component props
  * @param {string} props.status - Status level
  */
 const StatusDot = memo(function StatusDot({ status }) {
   return (
-    <span className="relative flex items-center justify-center w-2.5 h-2.5 shrink-0">
+    <span
+      className="relative flex items-center justify-center w-2.5 h-2.5 shrink-0"
+      role="status"
+      aria-label={`Status: ${status}`}
+    >
       {status !== 'resolved' && (
         <span
           className="absolute w-full h-full rounded-full animate-ping opacity-50"
@@ -37,8 +51,11 @@ const StatusDot = memo(function StatusDot({ status }) {
       )}
       <span
         className="w-2 h-2 rounded-full"
+        aria-hidden="true"
         style={{ background: STATUS_DOT_COLORS[status] || COLORS.outline }}
       />
+      {/* Visually-hidden text: ensures status is not conveyed by color alone (WCAG 1.4.1) */}
+      <span className="sr-only">{status}</span>
     </span>
   );
 });
@@ -75,7 +92,7 @@ const KPICard = memo(function KPICard({ label, value, unit, icon, color, sub, de
           </span>
         </div>
       </div>
-      <div className="flex items-baseline gap-1">
+      <div className="flex items-baseline gap-1" aria-live="polite" aria-atomic="true">
         <span className="text-metric-lg animate-count-up" style={{ color }}>
           {value}
         </span>
@@ -483,7 +500,11 @@ function CommandCenter() {
             {activeIncidents.length} active
           </span>
         </div>
-        <div className="flex flex-col gap-3">
+        {/* Incident list — bounded height prevents layout thrashing with large incident volumes */}
+        <div
+          className="flex flex-col gap-3 overflow-y-auto custom-scrollbar"
+          style={{ maxHeight: '520px' }}
+        >
           {incidents.map((inc) => (
             <IncidentCard key={inc.id} incident={inc} onResolve={resolveIncident} />
           ))}

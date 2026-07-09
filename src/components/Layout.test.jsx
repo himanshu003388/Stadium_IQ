@@ -49,7 +49,7 @@ describe('Layout Component', () => {
 
   it('has a skip link with the skip-to-content class', () => {
     render(<Layout />);
-    const skipLink = screen.getAllByText('Skip to content')[0];
+    const skipLink = screen.getAllByText('Skip to main content')[0];
     expect(skipLink).toHaveClass('skip-to-content');
   });
 

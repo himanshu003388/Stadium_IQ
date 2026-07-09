@@ -33,12 +33,16 @@ function useMatchClock() {
 }
 
 /**
- * Custom Styled Role Selector Dropdown
+ * Custom Styled Role Selector Dropdown with full keyboard focus management.
+ * Supports: Escape to close, focus trap within list, focus return to trigger.
  */
 function RoleSelector({ role, setRole }) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
+  const triggerRef = useRef(null);
+  const listRef = useRef(null);
 
+  // Close on outside click
   useEffect(() => {
     function handleClickOutside(event) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -48,6 +52,42 @@ function RoleSelector({ role, setRole }) {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  // Focus first list item when dropdown opens
+  useEffect(() => {
+    if (isOpen && listRef.current) {
+      const firstBtn = listRef.current.querySelector('button');
+      firstBtn?.focus();
+    }
+  }, [isOpen]);
+
+  /**
+   * Handle keyboard events on the dropdown listbox.
+   * Escape → close & return focus to trigger
+   * Tab / Shift+Tab → cycle within listbox (focus trap)
+   * @param {React.KeyboardEvent} e
+   */
+  const handleListKeyDown = (e) => {
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      setIsOpen(false);
+      triggerRef.current?.focus();
+      return;
+    }
+    if (e.key === 'Tab') {
+      const focusable = Array.from(listRef.current?.querySelectorAll('button') ?? []);
+      if (focusable.length === 0) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      } else if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      }
+    }
+  };
 
   const roles = [
     { value: 'Organizer', icon: 'shield_person' },
@@ -59,7 +99,9 @@ function RoleSelector({ role, setRole }) {
   return (
     <div className="relative hidden sm:block" ref={dropdownRef}>
       <button
+        ref={triggerRef}
         onClick={() => setIsOpen(!isOpen)}
+        onKeyDown={(e) => e.key === 'Escape' && setIsOpen(false)}
         className="flex items-center gap-2 text-sm rounded-lg px-3 py-2 outline-none font-medium cursor-pointer transition-colors focus-visible:outline-2 focus-visible:outline-[#3b82f6]"
         style={{
           background: isOpen
@@ -89,6 +131,7 @@ function RoleSelector({ role, setRole }) {
 
       {isOpen && (
         <ul
+          ref={listRef}
           className="absolute right-0 top-full mt-2 w-48 rounded-xl overflow-hidden z-50 animate-fade-in-up"
           style={{
             background: 'var(--color-surface)',
@@ -96,6 +139,8 @@ function RoleSelector({ role, setRole }) {
             boxShadow: '0 8px 32px var(--shadow-base)',
           }}
           role="listbox"
+          aria-label="Select user role"
+          onKeyDown={handleListKeyDown}
         >
           {roles.map((r) => (
             <li key={r.value}>
@@ -112,6 +157,7 @@ function RoleSelector({ role, setRole }) {
                 onClick={() => {
                   setRole(r.value);
                   setIsOpen(false);
+                  triggerRef.current?.focus();
                 }}
                 role="option"
                 aria-selected={role === r.value}

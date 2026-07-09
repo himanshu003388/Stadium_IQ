@@ -172,7 +172,11 @@ function AccessibilityHub() {
             Ask about accessible routes, services, or get personalized assistance.
           </p>
         )}
-        <div className="flex gap-2 flex-wrap" role="group" aria-label="Accessibility quick questions">
+        <div
+          className="flex gap-2 flex-wrap"
+          role="group"
+          aria-label="Accessibility quick questions"
+        >
           {quickQueries.map((q) => (
             <button
               key={q.query}
@@ -193,9 +197,5 @@ function AccessibilityHub() {
     </div>
   );
 }
-
-AccessibilityHub.propTypes = {
-  // contextData and gates come from StadiumContext — validated internally
-};
 
 export default memo(AccessibilityHub);

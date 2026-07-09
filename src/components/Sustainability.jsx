@@ -1,3 +1,18 @@
+/**
+ * Sustainability Dashboard Component
+ * Live energy, water, waste, and environmental metrics for FIFA WC 2026.
+ * @module Sustainability
+ *
+ * @typedef {object} SustainabilityData
+ * @property {number} energyDrawMW - Current energy draw in MW
+ * @property {number} waterUsageKLH - Water usage in kL/h
+ * @property {number} wasteDiversionRate - Waste diverted percentage
+ * @property {number} solarPanelsMW - Solar output in MW
+ * @property {number} renewablePercentage - Renewable energy percentage
+ * @property {number} netZeroProgress - Net zero progress percentage
+ * @property {number} co2SavedKg - CO₂ saved in kg
+ * @property {boolean} ecoModeActive - Whether eco mode is currently active
+ */
 import React, { memo, useMemo } from 'react';
 import { useStadiumContext } from '../context/StadiumContext';
 import PropTypes from 'prop-types';
@@ -210,17 +225,19 @@ function Sustainability() {
         ? COLORS.secondaryContainer
         : COLORS.warning;
 
+  // Destructure primitives to give useMemo stable, scalar dependencies
+  const { solarPanelsMW, wasteDiversionRate } = s;
   const co2SavingsData = useMemo(
     () => [
-      { icon: 'solar_power', label: 'Solar panels', val: `${s.solarPanelsMW} MW active` },
+      { icon: 'solar_power', label: 'Solar panels', val: `${solarPanelsMW} MW active` },
       { icon: 'commute', label: 'Public transit', val: '68% fans used transit' },
       {
         icon: 'recycling',
         label: 'Waste reduction',
-        val: `${s.wasteDiversionRate}% diverted`,
+        val: `${wasteDiversionRate}% diverted`,
       },
     ],
-    [s.solarPanelsMW, s.wasteDiversionRate],
+    [solarPanelsMW, wasteDiversionRate],
   );
 
   const sustainabilityGoals = useMemo(

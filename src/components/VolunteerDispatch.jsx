@@ -420,7 +420,13 @@ function VolunteerDispatch() {
               {volunteers.length} total
             </span>
           </div>
-          <div className="flex flex-col gap-3" role="list" aria-label="Volunteer roster">
+          {/* Volunteer roster \u2014 bounded height prevents layout issues with large rosters */}
+          <div
+            className="flex flex-col gap-3 overflow-y-auto custom-scrollbar"
+            style={{ maxHeight: '480px' }}
+            role="list"
+            aria-label="Volunteer roster"
+          >
             {volunteers.map((vol) => (
               <VolunteerCard key={vol.id} vol={vol} />
             ))}

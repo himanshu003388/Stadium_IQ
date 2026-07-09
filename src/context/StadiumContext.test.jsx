@@ -2,9 +2,9 @@
  * StadiumContext Tests
  * Tests simulation tick, all context actions, and visibility-based pausing
  */
-import { render, screen, act, waitFor } from "@testing-library/react";
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { StadiumProvider, useStadiumData } from "./StadiumContext";
+import { render, screen, act, waitFor } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { StadiumProvider, useStadiumData } from './StadiumContext';
 
 function ContextConsumer({ onData }) {
   const data = useStadiumData();
@@ -12,12 +12,12 @@ function ContextConsumer({ onData }) {
   return (
     <div>
       <span data-testid="occupancy">{data.contextData.stadium.currentOccupancy}</span>
-      <span data-testid="simulating">{data.isSimulating ? "yes" : "no"}</span>
+      <span data-testid="simulating">{data.isSimulating ? 'yes' : 'no'}</span>
     </div>
   );
 }
 
-describe("StadiumContext", () => {
+describe('StadiumContext', () => {
   beforeEach(() => {
     vi.useFakeTimers();
   });
@@ -26,12 +26,16 @@ describe("StadiumContext", () => {
     vi.useRealTimers();
   });
 
-  it("provides initial context data", () => {
+  it('provides initial context data', () => {
     const ref = { current: null };
     render(
       <StadiumProvider>
-        <ContextConsumer onData={(d) => { ref.current = d; }} />
-      </StadiumProvider>
+        <ContextConsumer
+          onData={(d) => {
+            ref.current = d;
+          }}
+        />
+      </StadiumProvider>,
     );
     expect(ref.current).not.toBeNull();
     expect(ref.current.contextData.stadium).toBeDefined();
@@ -39,21 +43,25 @@ describe("StadiumContext", () => {
     expect(ref.current.contextData.incidents).toBeDefined();
   });
 
-  it("isSimulating starts as true", () => {
+  it('isSimulating starts as true', () => {
     render(
       <StadiumProvider>
         <ContextConsumer onData={() => {}} />
-      </StadiumProvider>
+      </StadiumProvider>,
     );
-    expect(screen.getByTestId("simulating").textContent).toBe("yes");
+    expect(screen.getByTestId('simulating').textContent).toBe('yes');
   });
 
-  it("simulation tick updates gate density after 8 seconds", async () => {
+  it('simulation tick updates gate density after 8 seconds', async () => {
     const ref = { current: null };
     render(
       <StadiumProvider>
-        <ContextConsumer onData={(d) => { ref.current = d; }} />
-      </StadiumProvider>
+        <ContextConsumer
+          onData={(d) => {
+            ref.current = d;
+          }}
+        />
+      </StadiumProvider>,
     );
 
     const initialDensities = ref.current.contextData.gates.map((g) => g.density);
@@ -68,34 +76,42 @@ describe("StadiumContext", () => {
     expect(changed).toBe(true);
   });
 
-  it("resolveIncident marks incident as resolved", () => {
+  it('resolveIncident marks incident as resolved', () => {
     const ref = { current: null };
     render(
       <StadiumProvider>
-        <ContextConsumer onData={(d) => { ref.current = d; }} />
-      </StadiumProvider>
+        <ContextConsumer
+          onData={(d) => {
+            ref.current = d;
+          }}
+        />
+      </StadiumProvider>,
     );
 
     const firstActiveIncident = ref.current.contextData.incidents.find(
-      (i) => i.status === "active"
+      (i) => i.status === 'active',
     );
     if (firstActiveIncident) {
       act(() => {
         ref.current.resolveIncident(firstActiveIncident.id);
       });
       const resolved = ref.current.contextData.incidents.find(
-        (i) => i.id === firstActiveIncident.id
+        (i) => i.id === firstActiveIncident.id,
       );
-      expect(resolved.status).toBe("resolved");
+      expect(resolved.status).toBe('resolved');
     }
   });
 
-  it("toggleEcoMode toggles ecoModeActive", () => {
+  it('toggleEcoMode toggles ecoModeActive', () => {
     const ref = { current: null };
     render(
       <StadiumProvider>
-        <ContextConsumer onData={(d) => { ref.current = d; }} />
-      </StadiumProvider>
+        <ContextConsumer
+          onData={(d) => {
+            ref.current = d;
+          }}
+        />
+      </StadiumProvider>,
     );
 
     const initialEco = ref.current.contextData.stadium.sustainability.ecoModeActive;
@@ -111,16 +127,20 @@ describe("StadiumContext", () => {
     expect(ref.current.contextData.stadium.sustainability.ecoModeActive).toBe(initialEco);
   });
 
-  it("assignVolunteer updates task and volunteer", () => {
+  it('assignVolunteer updates task and volunteer', () => {
     const ref = { current: null };
     render(
       <StadiumProvider>
-        <ContextConsumer onData={(d) => { ref.current = d; }} />
-      </StadiumProvider>
+        <ContextConsumer
+          onData={(d) => {
+            ref.current = d;
+          }}
+        />
+      </StadiumProvider>,
     );
 
-    const openTask = ref.current.contextData.tasks.find((t) => t.status === "open");
-    const availableVol = ref.current.contextData.volunteers.find((v) => v.status === "available");
+    const openTask = ref.current.contextData.tasks.find((t) => t.status === 'open');
+    const availableVol = ref.current.contextData.volunteers.find((v) => v.status === 'available');
 
     if (openTask && availableVol) {
       const prevLoad = availableVol.currentLoad;
@@ -129,18 +149,22 @@ describe("StadiumContext", () => {
       });
       const updatedTask = ref.current.contextData.tasks.find((t) => t.id === openTask.id);
       const updatedVol = ref.current.contextData.volunteers.find((v) => v.id === availableVol.id);
-      expect(updatedTask.status).toBe("in-progress");
+      expect(updatedTask.status).toBe('in-progress');
       expect(updatedTask.assignedTo).toBe(availableVol.id);
       expect(updatedVol.currentLoad).toBe(prevLoad + 1);
     }
   });
 
-  it("setIsSimulating stops the simulation", async () => {
+  it('setIsSimulating stops the simulation', async () => {
     const ref = { current: null };
     render(
       <StadiumProvider>
-        <ContextConsumer onData={(d) => { ref.current = d; }} />
-      </StadiumProvider>
+        <ContextConsumer
+          onData={(d) => {
+            ref.current = d;
+          }}
+        />
+      </StadiumProvider>,
     );
 
     act(() => {
@@ -156,11 +180,11 @@ describe("StadiumContext", () => {
     expect(densityBefore).toEqual(densityAfter);
   });
 
-  it("throws if useStadiumData is used outside StadiumProvider", () => {
-    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+  it('throws if useStadiumData is used outside StadiumProvider', () => {
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
     expect(() => {
       render(<ContextConsumer onData={() => {}} />);
-    }).toThrow("useStadiumData must be used within a StadiumProvider");
+    }).toThrow('useStadiumData must be used within a StadiumProvider');
     consoleError.mockRestore();
   });
 });

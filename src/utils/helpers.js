@@ -129,7 +129,6 @@ export function getDemoResponse(text, ctx, language = 'en') {
     },
   };
 
-
   // Language fallback
   const langResponses = responses[language] || responses.en;
 

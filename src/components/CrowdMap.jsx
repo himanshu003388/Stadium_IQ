@@ -1,7 +1,23 @@
 /**
  * Crowd & Navigation Map Component
- * Interactive SVG stadium map with keyboard navigation
+ * Interactive SVG stadium map with keyboard navigation and gate wayfinding.
  * @component
+ *
+ * @typedef {object} Zone
+ * @property {string} id - Zone identifier (north/south/east/west)
+ * @property {string} name - Display name
+ * @property {number} occupancy - Occupancy ratio 0–1
+ * @property {number} capacity - Maximum fan capacity
+ * @property {string} status - 'nominal' | 'moderate' | 'busy' | 'critical'
+ *
+ * @typedef {object} Gate
+ * @property {string} id - Gate letter (A–F)
+ * @property {string} direction - Compass direction
+ * @property {number} density - Crowd density 0–1
+ * @property {number} waitTimeMinutes - Estimated wait time
+ * @property {string} status - 'normal' | 'watch' | 'critical'
+ * @property {boolean} accessible - Wheelchair accessible
+ * @property {string[]} [accessibleFeatures] - List of accessibility features
  */
 import React, { useState, useEffect, useCallback, useMemo, memo } from 'react';
 import { useStadiumContext } from '../context/StadiumContext';
@@ -544,6 +560,7 @@ function CrowdMap() {
             <div className="flex flex-col gap-2">
               {gates.map((gate) => {
                 const color = GATE_STATUS_COLORS[gate.status]?.bg || COLORS.success;
+                const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent('AT&T Stadium, Arlington, TX')}&travelmode=walking&q=${encodeURIComponent(`Gate ${gate.id} AT&T Stadium Arlington TX`)}`;
                 return (
                   <div
                     key={gate.id}
@@ -594,6 +611,24 @@ function CrowdMap() {
                         hearing
                       </span>
                     )}
+                    {/* Navigate to Gate button */}
+                    <a
+                      href={mapsUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label={`Navigate to Gate ${gate.id} via Google Maps`}
+                      title={`Navigate to Gate ${gate.id}`}
+                      className="shrink-0 flex items-center justify-center w-6 h-6 rounded-md"
+                      style={{ background: `${COLORS.primary}22`, color: COLORS.primary }}
+                    >
+                      <span
+                        aria-hidden="true"
+                        className="material-symbols-outlined"
+                        style={{ fontSize: '14px', fontVariationSettings: "'FILL' 1" }}
+                      >
+                        directions
+                      </span>
+                    </a>
                   </div>
                 );
               })}

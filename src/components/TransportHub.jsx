@@ -1,8 +1,25 @@
+/**
+ * Transport Hub Component
+ * Post-match departure options with AI recommendations, eco sorting, and navigation.
+ * @module TransportHub
+ */
 import React, { useState, useMemo, useCallback, memo } from 'react';
 import { useStadiumContext } from '../context/StadiumContext';
 import { COLORS, TRANSPORT_ICONS } from '../utils/styles';
 import { ECO_SCORE_THRESHOLDS } from '../utils/constants';
 import { getCO2Color, getCapacityColor } from '../utils/helpers';
+
+/**
+ * @typedef {object} TransportOption
+ * @property {string} id - Unique transport option ID
+ * @property {string} type - Transport mode (e.g. 'Subway', 'Bus')
+ * @property {string} line - Route/line name
+ * @property {number} etaMinutes - Estimated departure time in minutes
+ * @property {number} co2e - CO₂ emissions in g/km
+ * @property {number} capacityLeft - Remaining seats
+ * @property {boolean} recommended - Whether AI recommends this option
+ * @property {string} [icon] - Material symbol icon name
+ */
 
 /**
  * Eco score badge based on CO₂ emissions.
@@ -93,9 +110,27 @@ function TransportHub() {
     [transportOptions],
   );
 
-  const handleNavigate = useCallback((_type, _line) => {
-    // Placeholder for directions/navigation functionality
-    // In production, this would open maps or provide turn-by-turn directions
+  /**
+   * Opens Google Maps navigation to the stadium with a deep-link.
+   * Falls back to a generic maps search if coordinates are unavailable.
+   * @param {string} type - Transport mode label
+   * @param {string} line - Route/line name
+   */
+  const handleNavigate = useCallback((type, line) => {
+    // AT&T Stadium, Arlington TX — hardcoded for FIFA WC 2026 quarter-final venue
+    const STADIUM_LAT = 32.7479;
+    const STADIUM_LNG = -97.0945;
+    const STADIUM_NAME = encodeURIComponent('AT&T Stadium, Arlington, TX');
+    const destination = `${STADIUM_LAT},${STADIUM_LNG}`;
+    const query = encodeURIComponent(`${type} ${line} to AT&T Stadium Arlington TX`);
+
+    // Use Google Maps directions on mobile/desktop, falling back to query search
+    const isMobile = /Mobi|Android/i.test(navigator.userAgent);
+    const url = isMobile
+      ? `https://maps.google.com/?saddr=My+Location&daddr=${destination}&mode=transit`
+      : `https://www.google.com/maps/dir/?api=1&destination=${STADIUM_NAME}&travelmode=transit&q=${query}`;
+
+    window.open(url, '_blank', 'noopener,noreferrer');
   }, []);
 
   return (
@@ -180,11 +215,7 @@ function TransportHub() {
       </div>
 
       {/* Accessibility: Sort order announcer for screen readers */}
-      <div
-        aria-live="polite"
-        aria-atomic="true"
-        className="sr-only"
-      >
+      <div aria-live="polite" aria-atomic="true" className="sr-only">
         {sortAnnouncement}
       </div>
 

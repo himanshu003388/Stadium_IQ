@@ -98,7 +98,7 @@ function Sidebar({ activeView, setActiveView }) {
           })
         }
       >
-        Skip to content
+        Skip to main content
       </a>
 
       {/* Desktop Sidebar */}

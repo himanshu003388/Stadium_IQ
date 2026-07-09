@@ -41,7 +41,10 @@ describe('useGemini Hook', () => {
     vi.clearAllMocks();
     vi.unstubAllEnvs();
 
-    // Default mock for Demo Mode tests
+    /**
+     * Default mock: CSRF token succeeds, streaming endpoint returns demo-mode 400,
+     * fallback /api/chat also returns 400 with API Key missing → triggers demo mode.
+     */
     fetch.mockImplementation((url) => {
       if (url === '/api/csrf-token') {
         return Promise.resolve({
@@ -49,10 +52,12 @@ describe('useGemini Hook', () => {
           json: () => Promise.resolve({ csrfToken: 'test-token' }),
         });
       }
+      // Both streaming and non-streaming endpoints return API-key-missing
       return Promise.resolve({
         ok: false,
         status: 400,
         json: () => Promise.resolve({ error: 'API Key is missing' }),
+        body: null, // streaming will fail → falls back to /api/chat
       });
     });
   });

@@ -50,7 +50,8 @@ function InnerProvider({ children }) {
             const delta = (Math.random() - 0.48) * 0.04;
             const newDensity = Math.max(0.05, Math.min(0.99, gate.density + delta));
             const newWait = Math.max(1, Math.round(newDensity * 30));
-            const newStatus = newDensity > 0.85 ? 'critical' : newDensity > 0.65 ? 'watch' : 'normal';
+            const newStatus =
+              newDensity > 0.85 ? 'critical' : newDensity > 0.65 ? 'watch' : 'normal';
             return {
               ...gate,
               density: parseFloat(newDensity.toFixed(2)),
