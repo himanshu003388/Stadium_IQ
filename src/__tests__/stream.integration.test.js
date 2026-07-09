@@ -43,7 +43,7 @@ describe('SSE Streaming Endpoint (/api/chat/stream)', () => {
     const contextData = {
       stadium: { name: 'Test Stadium', capacity: 100000 },
       gates: [],
-      incidents: []
+      incidents: [],
     };
 
     const response = await request(app)
@@ -51,7 +51,7 @@ describe('SSE Streaming Endpoint (/api/chat/stream)', () => {
       .send({
         message: 'Hello',
         language: 'en',
-        contextData
+        contextData,
       })
       .expect('Content-Type', /text\/event-stream/)
       .expect(200);
@@ -71,7 +71,7 @@ describe('SSE Streaming Endpoint (/api/chat/stream)', () => {
     const contextData = {
       stadium: { name: 'Test Stadium', capacity: 100000 },
       gates: [],
-      incidents: []
+      incidents: [],
     };
 
     const response = await request(app)
@@ -79,11 +79,11 @@ describe('SSE Streaming Endpoint (/api/chat/stream)', () => {
       .send({
         message: 'Hello',
         language: 'en',
-        contextData
+        contextData,
       })
       .expect('Content-Type', /text\/event-stream/)
       .expect(200);
-      
+
     expect(response.text).toContain('"error":"Stream failed"');
   });
 });

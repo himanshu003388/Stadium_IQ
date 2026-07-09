@@ -178,7 +178,7 @@ describe('AIAssistant Component', () => {
     renderAIAssistant();
     const select = screen.getByRole('button', { name: /Select language/i });
     fireEvent.click(select);
-    
+
     // Select Spanish
     const esOption = screen.getByText('Español');
     fireEvent.click(esOption);

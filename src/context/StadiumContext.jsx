@@ -315,7 +315,10 @@ function InnerProvider({ children }) {
           : SIMULATION_CONFIG.TICK_INTERVAL_NORMAL;
         if (intervalHandle && intervalHandle._targetInterval !== targetInterval) {
           clearInterval(intervalHandle.id);
-          intervalHandle = { id: setInterval(tick, targetInterval), _targetInterval: targetInterval };
+          intervalHandle = {
+            id: setInterval(tick, targetInterval),
+            _targetInterval: targetInterval,
+          };
         }
 
         return {

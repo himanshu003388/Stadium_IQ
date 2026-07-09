@@ -45,7 +45,11 @@ const DonutChart = memo(function DonutChart({
     >
       <div style={{ position: 'relative', width: size, height: size }}>
         <svg width={size} height={size} style={{ transform: 'rotate(-90deg)', display: 'block' }}>
-          {label && <title>{label} - {percentage}%</title>}
+          {label && (
+            <title>
+              {label} - {percentage}%
+            </title>
+          )}
           <circle
             cx={cx}
             cy={cy}
