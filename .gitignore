@@ -28,6 +28,10 @@ dist-ssr
 *.sln
 *.sw?
 
+# Service account keys
+*-sa-key.json
+*-service-account-key.json
+
 # Coverage reports
 coverage
 coverage/bundle-report.html
