@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import crypto from 'crypto';
 import { jwtAuth } from '../middleware/auth.js';
+import { getGenAI, getBestAvailableModel } from '../utils/genai.js';
 
 const router = Router();
 
@@ -78,8 +79,6 @@ function generateInsights(contextData) {
     },
   };
 }
-
-import { getGenAI, getBestAvailableModel } from '../utils/genai.js';
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
@@ -161,7 +160,7 @@ The JSON object must have EXACTLY the following structure (do not return any mar
     try {
       const insights = generateInsights(req.body.contextData);
       res.json({ insights, requestId, fallback: true });
-    } catch (fallbackErr) {
+    } catch {
       res.status(500).json({ error: 'Failed to generate predictive insights.', requestId });
     }
   }

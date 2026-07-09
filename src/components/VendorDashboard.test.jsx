@@ -11,20 +11,23 @@ vi.mock('../context/StadiumContext', async (importOriginal) => {
   const actual = await importOriginal();
   return {
     ...actual,
-    useStadiumContext: () => ({
-      contextData: {
-        gates: [
-          { id: 'A', density: 0.85, direction: 'North' },
-          { id: 'B', density: 0.4, direction: 'East' },
-        ],
-        vendors: [
-          { id: 'V1', name: 'Snack A', zone: 'North Stand', stockLevel: 15, status: 'critical' },
-          { id: 'V2', name: 'Drink B', zone: 'South Stand', stockLevel: 80, status: 'nominal' },
-          { id: 'V3', name: 'Hotdog C', zone: 'North Stand', stockLevel: 45, status: 'warning' },
-          { id: 'V4', name: 'Pretzel D', zone: 'East Stand', stockLevel: 49, status: 'unknown' },
-        ],
-      },
-    }),
+    useStadiumContext: (selector) => {
+      const state = {
+        contextData: {
+          gates: [
+            { id: 'A', density: 0.85, direction: 'North' },
+            { id: 'B', density: 0.4, direction: 'East' },
+          ],
+          vendors: [
+            { id: 'V1', name: 'Snack A', zone: 'North Stand', stockLevel: 15, status: 'critical' },
+            { id: 'V2', name: 'Drink B', zone: 'South Stand', stockLevel: 80, status: 'nominal' },
+            { id: 'V3', name: 'Hotdog C', zone: 'North Stand', stockLevel: 45, status: 'warning' },
+            { id: 'V4', name: 'Pretzel D', zone: 'East Stand', stockLevel: 49, status: 'unknown' },
+          ],
+        },
+      };
+      return selector ? selector(state) : state;
+    },
   };
 });
 

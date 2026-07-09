@@ -43,20 +43,18 @@ const getBadge = (id, activeIncidents, criticalGates, openTasks) => {
  * @returns {React.ReactElement}
  */
 function Sidebar({ activeView, setActiveView }) {
-  const { contextData } = useStadiumContext();
+  const gates = useStadiumContext((s) => s.contextData.gates);
+  const incidents = useStadiumContext((s) => s.contextData.incidents);
+  const tasks = useStadiumContext((s) => s.contextData.tasks);
+  const stadium = useStadiumContext((s) => s.contextData.stadium);
   const { role } = useAppContext();
-  const criticalGates = useMemo(
-    () => contextData.gates.filter((g) => g.status === 'critical').length,
-    [contextData.gates],
-  );
+
+  const criticalGates = useMemo(() => gates.filter((g) => g.status === 'critical').length, [gates]);
   const activeIncidents = useMemo(
-    () => contextData.incidents.filter((i) => i.status === 'active').length,
-    [contextData.incidents],
+    () => incidents.filter((i) => i.status === 'active').length,
+    [incidents],
   );
-  const openTasks = useMemo(
-    () => contextData.tasks.filter((t) => t.status === 'open').length,
-    [contextData.tasks],
-  );
+  const openTasks = useMemo(() => tasks.filter((t) => t.status === 'open').length, [tasks]);
 
   const allowedNavItems = useMemo(
     () => NAV_ITEMS.filter((item) => item.allowedRoles?.includes(role)),
@@ -82,10 +80,10 @@ function Sidebar({ activeView, setActiveView }) {
             VENUE
           </div>
           <div className="font-bold text-sm" style={{ color: COLORS.primary }}>
-            {contextData.stadium.name}
+            {stadium.name}
           </div>
           <div className="text-xs" style={{ color: COLORS.outline }}>
-            {contextData.stadium.city}
+            {stadium.city}
           </div>
           <div className="flex items-center gap-1.5 mt-2">
             <span
@@ -96,7 +94,7 @@ function Sidebar({ activeView, setActiveView }) {
               LIVE
             </span>
             <span className="text-xs" style={{ color: COLORS.outline }}>
-              — {contextData.stadium.matchPhase}
+              — {stadium.matchPhase}
             </span>
           </div>
         </div>
@@ -148,10 +146,8 @@ function Sidebar({ activeView, setActiveView }) {
             </span>
           </div>
           <div className="text-xs" style={{ color: COLORS.outline }}>
-            {Math.round(
-              (contextData.stadium.currentOccupancy / contextData.stadium.capacity) * 100,
-            )}
-            % capacity &bull; {contextData.stadium.sustainability.renewablePercentage}% renewable
+            {Math.round((stadium.currentOccupancy / stadium.capacity) * 100)}% capacity &bull;{' '}
+            {stadium.sustainability.renewablePercentage}% renewable
           </div>
         </div>
       </aside>

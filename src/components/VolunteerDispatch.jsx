@@ -151,7 +151,7 @@ const TaskCard = memo(function TaskCard({ task, volunteers, onAssign, onResolve 
         }
       }
       throw new Error('No suggestions returned');
-    } catch (err) {
+    } catch {
       const best = eligibleVols.toSorted((a, b) => a.currentLoad - b.currentLoad)[0];
       setAiSuggestion(
         best
@@ -326,8 +326,10 @@ const TaskCard = memo(function TaskCard({ task, volunteers, onAssign, onResolve 
  * Volunteer Dispatch panel — AI-powered task assignment and volunteer roster.
  */
 function VolunteerDispatch() {
-  const { contextData, assignVolunteer, resolveTask } = useStadiumContext();
-  const { volunteers, tasks } = contextData;
+  const tasks = useStadiumContext((s) => s.contextData.tasks);
+  const volunteers = useStadiumContext((s) => s.contextData.volunteers);
+  const assignVolunteer = useStadiumContext((s) => s.assignVolunteer);
+  const resolveTask = useStadiumContext((s) => s.resolveTask);
 
   const openTasks = useMemo(() => tasks.filter((t) => t.status === 'open'), [tasks]);
   const inProgressTasks = useMemo(() => tasks.filter((t) => t.status === 'in-progress'), [tasks]);

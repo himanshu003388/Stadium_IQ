@@ -215,9 +215,10 @@ ProgressBar.propTypes = {
  * Sustainability Dashboard — live energy, water, waste, and environmental metrics.
  */
 function Sustainability() {
-  const { contextData, toggleEcoMode } = useStadiumContext();
-  const { stadium } = contextData;
-  const s = stadium.sustainability;
+  const contextData = useStadiumContext((state) => state.contextData);
+  const stadium = useStadiumContext((state) => state.contextData.stadium);
+  const s = useStadiumContext((state) => state.contextData.stadium.sustainability);
+  const toggleEcoMode = useStadiumContext((state) => state.toggleEcoMode);
   const { insight: sustainInsight, requestInsight: requestSustain } = useAIInsight(contextData);
 
   const netZeroColor =
@@ -332,6 +333,33 @@ function Sustainability() {
           </div>
         </div>
       )}
+
+      {/* AI Proactive Recommendation — GenAI powered */}
+      <div
+        className="card p-4 animate-fade-in-up"
+        style={{ background: COLORS.gradientNavy, border: 'none' }}
+      >
+        <div className="flex items-start gap-3">
+          <div
+            className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
+            style={{ background: 'rgba(61,196,122,0.2)', border: '1px solid rgba(61,196,122,0.4)' }}
+          >
+            <span
+              aria-hidden="true"
+              className="material-symbols-outlined"
+              style={{ color: COLORS.success, fontVariationSettings: "'FILL' 1" }}
+            >
+              smart_toy
+            </span>
+          </div>
+          <div className="flex-1">
+            <div className="font-bold text-sm text-white mb-1">AI Sustainability Insight</div>
+            <p className="text-sm animate-fade-in" style={{ color: 'rgba(168,202,255,0.9)' }}>
+              {sustainInsight || sustainFallback}
+            </p>
+          </div>
+        </div>
+      </div>
 
       {/* KPI Metrics */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">

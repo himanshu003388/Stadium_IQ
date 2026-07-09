@@ -20,7 +20,7 @@ export async function getBestAvailableModel(apiKey) {
     });
     if (!res.ok) return 'gemini-1.5-flash';
     const data = await res.json();
-    const flashModels = data.models
+    const flashModels = (data.models || [])
       .filter(
         (m) =>
           m.supportedGenerationMethods?.includes('generateContent') && m.name.includes('flash'),

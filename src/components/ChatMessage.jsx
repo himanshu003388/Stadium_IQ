@@ -26,7 +26,10 @@ const ChatMessage = memo(function ChatMessage({ msg, index }) {
           </span>
         </div>
       )}
-      <div className={msg.role === 'user' ? 'chat-bubble-user' : 'chat-bubble-ai'}>
+      <div
+        className={msg.role === 'user' ? 'chat-bubble-user' : 'chat-bubble-ai'}
+        aria-hidden={msg.isStreaming ? 'true' : undefined}
+      >
         {msg.role === 'ai' ? (
           <div className="text-sm">
             <MarkdownRenderer text={msg.text} />

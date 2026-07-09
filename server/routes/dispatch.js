@@ -6,6 +6,11 @@ import { getGenAI, getBestAvailableModel } from '../utils/genai.js';
 const router = Router();
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
+/** Maximum number of volunteers accepted per dispatch request to cap Gemini prompt size */
+const MAX_VOLUNTEERS = 50;
+/** Maximum character length for task description field */
+const MAX_TASK_DESC_LENGTH = 500;
+
 function fallbackDispatch(task, volunteers) {
   const eligible = volunteers.filter(
     (v) =>
@@ -37,6 +42,14 @@ router.post('/api/ai/volunteer-dispatch', authenticateApiKey, csrfProtection, as
       .status(400)
       .json({ error: 'Task object and volunteers array are required.', requestId });
   }
+  if (typeof task.description === 'string' && task.description.length > MAX_TASK_DESC_LENGTH) {
+    return res.status(400).json({
+      error: `Task description exceeds maximum length of ${MAX_TASK_DESC_LENGTH} characters.`,
+      requestId,
+    });
+  }
+  // Cap volunteers array to prevent Gemini prompt bloat
+  const cappedVolunteers = volunteers.slice(0, MAX_VOLUNTEERS);
 
   try {
     const genAI = getGenAI();
@@ -51,7 +64,7 @@ Incident details:
 ${JSON.stringify(task)}
 
 List of available volunteers:
-${JSON.stringify(volunteers)}
+${JSON.stringify(cappedVolunteers)}
 
 Choose the best volunteer. Output ONLY a valid JSON object with the volunteer's ID and a concise 1-sentence reason. Do not return any markdown markers or formatting, just the raw JSON text:
 {
@@ -70,11 +83,11 @@ Choose the best volunteer. Output ONLY a valid JSON object with the volunteer's 
     }
 
     // Fallback
-    const fallback = fallbackDispatch(task, volunteers);
+    const fallback = fallbackDispatch(task, cappedVolunteers);
     res.json({ suggestion: fallback, requestId, fallback: true });
   } catch (err) {
     console.error(`[${requestId}] AI Dispatch suggestion error:`, err);
-    const fallback = fallbackDispatch(task, volunteers);
+    const fallback = fallbackDispatch(task, cappedVolunteers);
     res.json({ suggestion: fallback, requestId, fallback: true });
   }
 });

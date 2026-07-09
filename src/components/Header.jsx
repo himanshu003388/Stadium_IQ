@@ -5,16 +5,22 @@
  */
 import React, { useState, useEffect, useRef, memo, useMemo } from 'react';
 import PropTypes from 'prop-types';
-import { useStadiumData } from '../context/StadiumContext';
+import { useStadiumContext } from '../context/StadiumContext';
 import { useAppContext } from '../context/AppContext';
 import { COLORS } from '../utils/styles';
 
 /**
  * Match clock simulation
  */
+/**
+ * Starting match time for the simulation — mid-second-half for a dramatic
+ * demo feel where incidents and crowd dynamics are at their peak.
+ */
+const INITIAL_MATCH_TIME = "67'";
+
 function useMatchClock() {
   const [currentTime, setCurrentTime] = useState(new Date());
-  const [matchTime, setMatchTime] = useState("67'");
+  const [matchTime, setMatchTime] = useState(INITIAL_MATCH_TIME);
 
   useEffect(() => {
     const tick = setInterval(() => {
@@ -74,11 +80,12 @@ function RoleSelector({ role, setRole }) {
       triggerRef.current?.focus();
       return;
     }
+    const focusable = Array.from(listRef.current?.querySelectorAll('button') ?? []);
+    if (focusable.length === 0) return;
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+
     if (e.key === 'Tab') {
-      const focusable = Array.from(listRef.current?.querySelectorAll('button') ?? []);
-      if (focusable.length === 0) return;
-      const first = focusable[0];
-      const last = focusable[focusable.length - 1];
       if (!e.shiftKey && document.activeElement === last) {
         e.preventDefault();
         first.focus();
@@ -86,6 +93,16 @@ function RoleSelector({ role, setRole }) {
         e.preventDefault();
         last.focus();
       }
+    } else if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      const currIdx = focusable.indexOf(document.activeElement);
+      const nextIdx = (currIdx + 1) % focusable.length;
+      focusable[nextIdx].focus();
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      const currIdx = focusable.indexOf(document.activeElement);
+      const prevIdx = (currIdx - 1 + focusable.length) % focusable.length;
+      focusable[prevIdx].focus();
     }
   };
 
@@ -194,14 +211,14 @@ function RoleSelector({ role, setRole }) {
  * @returns {React.ReactElement}
  */
 function Header({ setActiveView }) {
-  const { contextData } = useStadiumData();
+  const stadium = useStadiumContext((s) => s.contextData.stadium);
+  const incidents = useStadiumContext((s) => s.contextData.incidents);
   const { theme, toggleTheme, role, setRole } = useAppContext();
-  const { stadium } = contextData;
   const { currentTime, matchTime } = useMatchClock();
 
   const activeIncidents = useMemo(
-    () => contextData.incidents.filter((i) => i.status === 'active').length,
-    [contextData.incidents],
+    () => incidents.filter((i) => i.status === 'active').length,
+    [incidents],
   );
 
   return (

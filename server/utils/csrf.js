@@ -1,6 +1,14 @@
 import crypto from 'crypto';
 
-const CSRF_SECRET = process.env.CSRF_SECRET || 'development-csrf-secret-fallback-stadium-iq';
+let CSRF_SECRET = process.env.CSRF_SECRET;
+if (!CSRF_SECRET) {
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error(
+      'FATAL SECURITY ERROR: CSRF_SECRET environment variable must be defined in production.',
+    );
+  }
+  CSRF_SECRET = 'development-csrf-secret-fallback-stadium-iq';
+}
 const CSRF_TOKEN_EXPIRY = 3600;
 
 function parseCookies(cookieHeader) {

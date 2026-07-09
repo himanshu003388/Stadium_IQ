@@ -14,8 +14,9 @@ const ACCENT_COLORS = [
 ];
 
 function AccessibilityHub() {
-  const { contextData } = useStadiumContext();
-  const { accessibilityServices, gates } = contextData;
+  const contextData = useStadiumContext((s) => s.contextData);
+  const gates = useStadiumContext((s) => s.contextData.gates);
+  const accessibilityServices = useStadiumContext((s) => s.contextData.accessibilityServices);
 
   const accessibleGates = useMemo(() => gates.filter((g) => g.accessible), [gates]);
   const {

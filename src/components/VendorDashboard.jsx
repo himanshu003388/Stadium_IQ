@@ -1,23 +1,11 @@
 import React, { memo } from 'react';
 import { useStadiumContext } from '../context/StadiumContext';
 import { COLORS } from '../utils/styles';
+import { getStatusColor } from '../utils/helpers';
 
 function VendorDashboard() {
-  const { contextData } = useStadiumContext();
-  const { vendors, gates } = contextData;
-
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'critical':
-        return COLORS.error;
-      case 'warning':
-        return COLORS.warning;
-      case 'nominal':
-        return COLORS.success;
-      default:
-        return COLORS.info;
-    }
-  };
+  const vendors = useStadiumContext((s) => s.contextData.vendors);
+  const gates = useStadiumContext((s) => s.contextData.gates);
 
   const getAIRecommendation = (vendor, density) => {
     if (vendor.stockLevel < 20) {
@@ -136,5 +124,8 @@ function VendorDashboard() {
   );
 }
 
+/**
+ * VendorDashboard takes no direct props — reads all data from StadiumContext.
+ */
 VendorDashboard.propTypes = {};
 export default memo(VendorDashboard);

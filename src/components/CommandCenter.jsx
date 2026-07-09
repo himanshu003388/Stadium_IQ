@@ -15,6 +15,7 @@
 import React, { useMemo, useState, memo } from 'react';
 import PropTypes from 'prop-types';
 import { useStadiumContext } from '../context/StadiumContext';
+import { useNotifications } from '../context/NotificationContext';
 import { COLORS, ZONE_COLORS } from '../utils/styles';
 import { SEVERITY_BADGE_MAP, STATUS_DOT_COLORS, INCIDENT_ICON_MAP } from '../utils/constants';
 import { timeAgo, getDensityColor, getStatusColor, getSeverityColor } from '../utils/helpers';
@@ -207,6 +208,7 @@ GateRow.propTypes = {
  * @param {function} props.onResolve - Resolve callback
  */
 const IncidentCard = memo(function IncidentCard({ incident, onResolve }) {
+  const { addNotification } = useNotifications();
   const severityColor = getSeverityColor(incident.severity);
   const severityBg =
     incident.severity === 'critical'
@@ -268,9 +270,48 @@ const IncidentCard = memo(function IncidentCard({ incident, onResolve }) {
         </div>
       </div>
       {incident.status === 'active' && (
-        <div className="mt-3 flex justify-end">
+        <div
+          className="mt-3 flex justify-between items-center flex-wrap gap-2 pt-3 border-t border-dashed"
+          style={{ borderColor: COLORS.outlineVariant }}
+        >
+          <div className="flex gap-2">
+            <button
+              onClick={() => {
+                addNotification({
+                  title: 'Medical Dispatched',
+                  message: `Rapid response medical unit dispatched to zone matching ${incident.id}.`,
+                  severity: 'critical',
+                });
+              }}
+              className="px-2 py-1 rounded text-[10px] font-bold flex items-center gap-1 cursor-pointer transition-colors hover:opacity-90"
+              style={{ background: COLORS.errorContainer, color: COLORS.onErrorContainer }}
+              aria-label="Dispatch Medical Team"
+            >
+              <span aria-hidden="true" className="material-symbols-outlined text-xs">
+                medical_services
+              </span>
+              Dispatch Medical
+            </button>
+            <button
+              onClick={() => {
+                addNotification({
+                  title: 'Security Dispatched',
+                  message: `Security patrol squad routed to secure area around ${incident.id}.`,
+                  severity: 'medium',
+                });
+              }}
+              className="px-2 py-1 rounded text-[10px] font-bold flex items-center gap-1 cursor-pointer transition-colors hover:opacity-90"
+              style={{ background: COLORS.infoContainer, color: COLORS.info }}
+              aria-label="Dispatch Security Team"
+            >
+              <span aria-hidden="true" className="material-symbols-outlined text-xs">
+                local_police
+              </span>
+              Alert Security
+            </button>
+          </div>
           <button
-            className="btn-ghost text-xs py-1.5 px-3"
+            className="btn-ghost text-xs py-1.5 px-3 cursor-pointer"
             onClick={() => onResolve(incident.id)}
             aria-label={`Mark incident ${incident.id} as resolved`}
           >
@@ -302,25 +343,30 @@ IncidentCard.propTypes = {
  * Smart Broadcast Widget
  */
 const SmartBroadcastWidget = memo(function SmartBroadcastWidget() {
-  const { contextData } = useStadiumContext();
-  const { requestInsight: requestBroadcast } = useAIInsight(contextData);
+  const contextData = useStadiumContext((s) => s.contextData);
+  const {
+    insight,
+    isLoading: isBroadcasting,
+    requestInsight: requestBroadcast,
+  } = useAIInsight(contextData);
   const [message, setMessage] = useState('');
-  const [isBroadcasting, setIsBroadcasting] = useState(false);
   const [broadcasted, setBroadcasted] = useState(false);
 
-  const handleBroadcast = () => {
+  const handleBroadcast = async () => {
     if (!message.trim()) return;
-    setIsBroadcasting(true);
-    requestBroadcast(
+    setBroadcasted(false);
+
+    // Set a fallback message in case the network/API request fails or is mocked
+    const fallbackText = `• EN: ${message}\n• ES: "${message}" (Traducido al Español)\n• FR: "${message}" (Traduit en Français)\n• AR: "${message}" (مترجم إلى العربية)\n• PT: "${message}" (Traduzido para o Português)\n• JA: "${message}" (日本語に翻訳)\n• HI: "${message}" (हिंदी में अनुवादित)`;
+
+    await requestBroadcast(
       `Translate this stadium announcement to 7 languages (EN, ES, FR, AR, PT, JA, HI) and return the translations. Announcement: "${message}". Return the translations in a bullet list.`,
-      '',
+      fallbackText,
     );
-    setTimeout(() => {
-      setIsBroadcasting(false);
-      setBroadcasted(true);
-      setTimeout(() => setBroadcasted(false), 5000);
-      setMessage('');
-    }, 1500);
+
+    setBroadcasted(true);
+    setMessage('');
+    setTimeout(() => setBroadcasted(false), 5000);
   };
 
   return (
@@ -341,7 +387,15 @@ const SmartBroadcastWidget = memo(function SmartBroadcastWidget() {
         Enter an announcement in English. The AI will instantly translate and push audio to all zone
         PA systems in 7 languages.
       </p>
+      <label
+        htmlFor="broadcast-message"
+        className="text-xs mb-1 block font-medium"
+        style={{ color: COLORS.outline }}
+      >
+        Announcement text
+      </label>
       <textarea
+        id="broadcast-message"
         className="w-full bg-transparent border rounded-xl p-3 text-sm focus:outline-none focus:border-primary mb-3"
         style={{ borderColor: COLORS.surfaceDim, color: COLORS.onSurface }}
         rows="2"
@@ -350,12 +404,12 @@ const SmartBroadcastWidget = memo(function SmartBroadcastWidget() {
         value={message}
         onChange={(e) => setMessage(e.target.value)}
       />
-      <div className="flex justify-between items-center">
-        <div className="flex gap-2 text-xs">
+      <div className="flex justify-between items-center mb-3">
+        <div className="flex gap-2 text-xs flex-wrap">
           {['EN', 'ES', 'FR', 'AR', 'PT', 'JA', 'HI'].map((lang) => (
             <span
               key={lang}
-              className="px-1.5 py-0.5 rounded"
+              className="px-1.5 py-0.5 rounded text-[10px] font-bold"
               style={{ background: COLORS.surfaceDim, color: COLORS.outline }}
             >
               {lang}
@@ -378,14 +432,43 @@ const SmartBroadcastWidget = memo(function SmartBroadcastWidget() {
               : 'Generate & Broadcast'}
         </button>
       </div>
+
+      {insight && (
+        <div
+          className="p-3 rounded-xl border text-xs animate-fade-in-up"
+          style={{
+            background: COLORS.surfaceDim,
+            borderColor: COLORS.outlineVariant,
+            color: COLORS.onSurface,
+          }}
+        >
+          <div
+            className="font-bold mb-2 flex items-center gap-1.5"
+            style={{ color: COLORS.secondary }}
+          >
+            <span aria-hidden="true" className="material-symbols-outlined text-sm">
+              translate
+            </span>
+            Active Audio Broadcast Transcripts:
+          </div>
+          <div className="whitespace-pre-line leading-relaxed font-mono text-[11px] max-h-36 overflow-y-auto custom-scrollbar">
+            {insight}
+          </div>
+        </div>
+      )}
     </div>
   );
 });
+/**
+ * SmartBroadcastWidget reads all data from StadiumContext and accepts no direct props.
+ */
 SmartBroadcastWidget.propTypes = {};
 
 function CommandCenter() {
-  const { contextData, resolveIncident } = useStadiumContext();
-  const { gates, stadium, incidents } = contextData;
+  const gates = useStadiumContext((s) => s.contextData.gates);
+  const stadium = useStadiumContext((s) => s.contextData.stadium);
+  const incidents = useStadiumContext((s) => s.contextData.incidents);
+  const resolveIncident = useStadiumContext((s) => s.resolveIncident);
 
   const avgDensity = useMemo(
     () => Math.round((gates.reduce((s, g) => s + g.density, 0) / gates.length) * 100),
@@ -558,6 +641,14 @@ function CommandCenter() {
                   key={zone.id}
                   className="p-3 rounded-xl"
                   style={{ background: `${zColor.fill}12`, border: `1.5px solid ${zColor.fill}30` }}
+                  role="article"
+                  tabIndex={0}
+                  aria-label={`${zone.name} zone — ${Math.round(zone.occupancy * 100)}% occupancy, status: ${zone.status}`}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.currentTarget.click();
+                    }
+                  }}
                 >
                   <div className="flex justify-between items-center mb-1">
                     <span

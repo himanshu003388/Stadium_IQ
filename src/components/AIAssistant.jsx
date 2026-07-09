@@ -8,7 +8,7 @@ import ChatMessage from './ChatMessage';
 import ChatInput from './ChatInput';
 
 function AIAssistant() {
-  const { contextData } = useStadiumContext();
+  const contextData = useStadiumContext((s) => s.contextData);
   const { setUiLanguage } = useAppContext();
   const { messages, isLoading, language, setLanguage, sendMessage } = useGemini(contextData);
   const [input, setInput] = useState('');
@@ -163,5 +163,8 @@ function AIAssistant() {
   );
 }
 
+/**
+ * AIAssistant reads all data via context hooks and accepts no direct props.
+ */
 AIAssistant.propTypes = {};
 export default memo(AIAssistant);

@@ -12,26 +12,29 @@ vi.mock('../context/StadiumContext', async (importOriginal) => {
   const actual = await importOriginal();
   return {
     ...actual,
-    useStadiumContext: () => ({
-      resolveTask: mockResolveTask,
-      contextData: {
-        volunteers: [{ id: 'V1', name: 'Elena Vargas', zone: 'North', avatar: 'EV' }],
-        tasks: [
-          {
-            id: 'T1',
-            assignedTo: 'V1',
-            status: 'in-progress',
-            description: 'Help fan at Gate A',
-            zone: 'North',
-            requiredLanguage: 'es',
-            priority: 'high',
+    useStadiumContext: (selector) => {
+      const state = {
+        resolveTask: mockResolveTask,
+        contextData: {
+          volunteers: [{ id: 'V1', name: 'Elena Vargas', zone: 'North', avatar: 'EV' }],
+          tasks: [
+            {
+              id: 'T1',
+              assignedTo: 'V1',
+              status: 'in-progress',
+              description: 'Help fan at Gate A',
+              zone: 'North',
+              requiredLanguage: 'es',
+              priority: 'high',
+            },
+          ],
+          stadium: {
+            currentOccupancy: 68,
           },
-        ],
-        stadium: {
-          currentOccupancy: 68,
         },
-      },
-    }),
+      };
+      return selector ? selector(state) : state;
+    },
   };
 });
 

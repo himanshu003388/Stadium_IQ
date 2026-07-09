@@ -21,6 +21,28 @@ const isProduction = process.env.NODE_ENV === 'production';
 const server = app.listen(PORT, () => {
   console.log(`[${new Date().toISOString()}] Stadium IQ server running on port ${PORT}`);
   console.log(`Environment: ${isProduction ? 'production' : 'development'}`);
+
+  // Environment Verification Logs
+  if (isProduction) {
+    if (!process.env.CSRF_SECRET) {
+      console.warn(
+        `[SECURITY WARNING] CSRF_SECRET is not defined in production environment. A default fallback will be used, posing security risks!`,
+      );
+    }
+    if (!process.env.API_AUTH_KEY) {
+      console.warn(
+        `[INFO] API_AUTH_KEY is not defined in production. Proxy routes will rely solely on CSRF token validation.`,
+      );
+    }
+  }
+
+  if (!process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEY === 'YOUR_GEMINI_API_KEY') {
+    console.log(
+      `[INFO] GEMINI_API_KEY is missing or set to placeholder. Express server will run with offline mock fallbacks.`,
+    );
+  } else {
+    console.log(`[INFO] GEMINI_API_KEY detected. Gemini AI endpoints are active.`);
+  }
 });
 
 server.keepAliveTimeout = 60000;

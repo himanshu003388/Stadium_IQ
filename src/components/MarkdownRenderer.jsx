@@ -4,7 +4,6 @@ import PropTypes from 'prop-types';
 function parseMarkdown(text) {
   const lines = text.split('\n');
   const elements = [];
-  let inList = false;
   let listItems = [];
 
   function flushList() {
@@ -17,7 +16,6 @@ function parseMarkdown(text) {
         </ul>,
       );
       listItems = [];
-      inList = false;
     }
   }
 
@@ -25,7 +23,6 @@ function parseMarkdown(text) {
     const line = lines[i];
     const bulletMatch = line.match(/^• (.+)$/);
     if (bulletMatch) {
-      inList = true;
       const boldProcessed = bulletMatch[1]
         .split(/\*\*(.*?)\*\*/)
         .map((part, j) => (j % 2 === 1 ? <strong key={j}>{part}</strong> : part));

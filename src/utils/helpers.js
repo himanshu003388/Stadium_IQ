@@ -10,45 +10,6 @@ export function timeAgo(ts) {
   return `${Math.floor(diff / 1440)}d ago`;
 }
 
-const DEMO_TEMPLATES = {
-  gate: (g) => ({
-    en: `🚪 The least congested gate right now is **Gate ${g.id}** (${g.direction} side) with only a **${g.waitTimeMinutes}-minute wait** and ${Math.round(g.density * 100)}% density. ${g.accessible ? '♿ It is wheelchair accessible.' : ''}`,
-    es: `🚪 La puerta menos congestionada ahora es **Puerta ${g.id}** (lado ${g.direction === 'North' ? 'Norte' : g.direction === 'South' ? 'Sur' : g.direction}) con solo **${g.waitTimeMinutes} minutos de espera** y ${Math.round(g.density * 100)}% de densidad.`,
-    fr: `🚪 La porte la moins encombrée en ce moment est la **Porte ${g.id}** (côté ${g.direction === 'North' ? 'Nord' : g.direction === 'South' ? 'Sud' : g.direction}) avec seulement **${g.waitTimeMinutes} minutes d'attente** et ${Math.round(g.density * 100)}% de densité.`,
-    ar: `🚪 البوابة الأقل ازدحاماً الآن هي **البوابة ${g.id}** (الجانب ${g.direction === 'North' ? 'الشمالي' : g.direction === 'South' ? 'الجنوبي' : g.direction}) مع انتظار **${g.waitTimeMinutes} دقيقة فقط** وكثافة ${Math.round(g.density * 100)}%.`,
-    pt: `🚪 O portão menos congestionado agora é o **Portão ${g.id}** (lado ${g.direction === 'North' ? 'Norte' : g.direction === 'South' ? 'Sul' : g.direction}) com apenas **${g.waitTimeMinutes} minutos de espera** e ${Math.round(g.density * 100)}% de densidade.`,
-    ja: `🚪 現在最も混雑が少ないゲートは **ゲート${g.id}** (${g.direction === 'North' ? '北' : g.direction === 'South' ? '南' : g.direction}側) です。待ち時間はわずか **${g.waitTimeMinutes}分**、混雑度${Math.round(g.density * 100)}%です。${g.accessible ? '♿ 車椅子対応です。' : ''}`,
-    hi: `🚪 अभी सबसे कम भीड़ वाला गेट **गेट ${g.id}** (${g.direction === 'North' ? 'उत्तर' : g.direction === 'South' ? 'दक्षिण' : g.direction} दिशा) है, जहाँ केवल **${g.waitTimeMinutes} मिनट का इंतज़ार** है और घनत्व ${Math.round(g.density * 100)}% है।`,
-  }),
-  transport: (t) => ({
-    en: `🚌 Best post-match option: **${t.type}** (${t.line}) — arrives in **${t.etaMinutes} minutes** with ${t.capacityLeft} spots. CO₂: only ${t.co2e}g/km — eco-friendly choice! 🌱`,
-    es: `🚌 La mejor opción tras el partido: **${t.type}** (${t.line}) — llega en **${t.etaMinutes} minutos** con ${t.capacityLeft} plazas. CO₂: solo ${t.co2e}g/km — ¡opción ecológica! 🌱`,
-    fr: `🚌 Meilleure option après le match : **${t.type}** (${t.line}) — arrive dans **${t.etaMinutes} minutes** avec ${t.capacityLeft} places. CO₂ : seulement ${t.co2e}g/km — choix écologique ! 🌱`,
-    ar: `🚌 أفضل خيار بعد المباراة: **${t.type}** (${t.line}) — يصل خلال **${t.etaMinutes} دقيقة** مع ${t.capacityLeft} مقعداً. CO₂: ${t.co2e}غ/كم فقط — خيار صديق للبيئة! 🌱`,
-    pt: `🚌 Melhor opção pós-jogo: **${t.type}** (${t.line}) — chega em **${t.etaMinutes} minutos** com ${t.capacityLeft} vagas. CO₂: apenas ${t.co2e}g/km — escolha ecológica! 🌱`,
-    ja: `🚌 試合後のベスト移動手段: **${t.type}** (${t.line}) — **${t.etaMinutes}分後**到着、空席${t.capacityLeft}席。CO₂排出量わずか${t.co2e}g/km — エコな選択です! 🌱`,
-    hi: `🚌 मैच के बाद सबसे अच्छा विकल्प: **${t.type}** (${t.line}) — **${t.etaMinutes} मिनट** में आएगा, ${t.capacityLeft} सीटें उपलब्ध। CO₂: केवल ${t.co2e}g/km — पर्यावरण-अनुकूल! 🌱`,
-  }),
-  weather: (w, s) => ({
-    en: `🌤️ Currently **${w?.temperature}°C** (feels like ${w?.feelsLike}°C), ${w?.conditions} skies with ${w?.humidity}% humidity. Stay hydrated — water stations are at every gate entrance!`,
-    es: `🌤️ Actualmente **${w?.temperature}°C** (sensación de ${w?.feelsLike}°C), cielo ${w?.conditions} con ${w?.humidity}% de humedad. ¡Mantente hidratado!`,
-    fr: `🌤️ Actuellement **${w?.temperature}°C** (ressenti ${w?.feelsLike}°C), ciel ${w?.conditions} avec ${w?.humidity}% d'humidité. Restez hydraté !`,
-    ar: `🌤️ حالياً **${w?.temperature}°م** (الإحساس ${w?.feelsLike}°م)، سماء ${w?.conditions} مع ${w?.humidity}% رطوبة. حافظ على ترطيب جسمك!`,
-    pt: `🌤️ Atualmente **${w?.temperature}°C** (sensação de ${w?.feelsLike}°C), céu ${w?.conditions} com ${w?.humidity}% de umidade. Mantenha-se hidratado!`,
-    ja: `🌤️ 現在 **${w?.temperature}℃** (体感${w?.feelsLike}℃)、${w?.conditions}空、湿度${w?.humidity}%。各ゲート入口の給水ポイントで水分補給を！`,
-    hi: `🌤️ अभी **${w?.temperature}°C** (महसूस होता है ${w?.feelsLike}°C), ${w?.conditions} आसमान, नमी ${w?.humidity}%। हाइड्रेटेड रहें — हर गेट पर पानी के स्टेशन हैं!`,
-  }),
-  crowd: (s) => ({
-    en: `📊 Stadium is at **${Math.round((s.currentOccupancy / s.capacity) * 100)}% capacity** (${s.currentOccupancy?.toLocaleString()} fans). East Wing is the busiest zone. For comfort, try the **North Stand** area.`,
-    es: `📊 El estadio está al **${Math.round((s.currentOccupancy / s.capacity) * 100)}% de capacidad** (${s.currentOccupancy?.toLocaleString()} aficionados). La zona Este es la más concurrida. Para mayor comodidad, prueba la **Tribuna Norte**.`,
-    fr: `📊 Le stade est à **${Math.round((s.currentOccupancy / s.capacity) * 100)}% de sa capacité** (${s.currentOccupancy?.toLocaleString()} supporters). L'aile Est est la plus fréquentée. Pour plus de confort, essayez la **Tribune Nord**.`,
-    ar: `📊 الملعب عند **${Math.round((s.currentOccupancy / s.capacity) * 100)}% من طاقته** (${s.currentOccupancy?.toLocaleString()} مشجع). الجناح الشرقي هو الأكثر ازدحاماً. للراحة، جرب **المدرج الشمالي**.`,
-    pt: `📊 O estádio está a **${Math.round((s.currentOccupancy / s.capacity) * 100)}% da capacidade** (${s.currentOccupancy?.toLocaleString()} torcedores). A ala Leste é a mais movimentada. Para mais conforto, tente a **Arquibancada Norte**.`,
-    ja: `📊 スタジアムは**定員の${Math.round((s.currentOccupancy / s.capacity) * 100)}%**が入場中(${s.currentOccupancy?.toLocaleString()}人)。東スタンドが最も混雑しています。快適にご観戦するなら**北スタンド**エリアをお試しください。`,
-    hi: `📊 स्टेडियम **${Math.round((s.currentOccupancy / s.capacity) * 100)}% क्षमता** पर है (${s.currentOccupancy?.toLocaleString()} दर्शक)। पूर्वी विंग सबसे व्यस्त है। आराम के लिए **उत्तरी स्टैंड** क्षेत्र आज़माएँ।`,
-  }),
-};
-
 const DEMO_RESPONSE_TEMPLATES = {
   en: {
     accessible: (a) =>
@@ -60,7 +21,7 @@ const DEMO_RESPONSE_TEMPLATES = {
       "🛍️ **Official Merchandise Stands:**\n• Main Concourse: Jerseys, scarves, FIFA 2026 memorabilia\n• East Wing: Team-specific merchandise\n• West Wing: Eco-friendly apparel \n• Family Zone (North Stand): Kid's merchandise",
     transport: (t) =>
       `🚌 Best post-match option: **${t.type}** (${t.line}) — arrives in **${t.etaMinutes} minutes** with ${t.capacityLeft} spots. CO₂: only ${t.co2e}g/km — eco-friendly choice! 🌱`,
-    weather: (w, s) =>
+    weather: (w) =>
       `🌤️ Currently **${w?.temperature}°C** (feels like ${w?.feelsLike}°C), ${w?.conditions} skies with ${w?.humidity}% humidity. Stay hydrated — water stations are at every gate entrance!`,
     crowd: (s) =>
       `📊 Stadium is at **${Math.round((s.currentOccupancy / s.capacity) * 100)}% capacity** (${s.currentOccupancy?.toLocaleString()} fans). East Wing is the busiest zone. For comfort, try the **North Stand** area.`,
@@ -216,7 +177,7 @@ export function getDemoResponse(text, ctx, language = 'en') {
             case 'transport':
               return template(bestTransport);
             case 'weather':
-              return template(stadium.weather, stadium);
+              return template(stadium.weather);
             case 'crowd':
               return template(stadium);
             case 'eco':

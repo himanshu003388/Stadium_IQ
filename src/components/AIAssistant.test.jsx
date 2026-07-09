@@ -133,4 +133,42 @@ describe('AIAssistant Component', () => {
     const log = screen.getByRole('log');
     expect(log).toHaveAttribute('aria-live', 'polite');
   });
+
+  it('handles streaming chat response correctly', async () => {
+    fetch.mockImplementation((url) => {
+      if (url === '/api/csrf-token') {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({ csrfToken: 'test-token' }),
+        });
+      }
+      if (url === '/api/chat/stream') {
+        const stream = new ReadableStream({
+          start(controller) {
+            controller.enqueue(new TextEncoder().encode('data: {"chunk": "Hello "}\n\n'));
+            controller.enqueue(new TextEncoder().encode('data: {"chunk": "world!"}\n\n'));
+            controller.enqueue(new TextEncoder().encode('data: {"done": true}\n\n'));
+            controller.close();
+          },
+        });
+        return Promise.resolve({
+          ok: true,
+          body: stream,
+        });
+      }
+      return Promise.resolve({ ok: false });
+    });
+
+    renderAIAssistant();
+    const input = screen.getByPlaceholderText(/Ask Stadium IQ/i);
+    await act(async () => {
+      fireEvent.change(input, { target: { value: 'Hi there' } });
+      const sendBtn = screen.getByRole('button', { name: /send/i });
+      fireEvent.click(sendBtn);
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText(/Hello world!/i)).toBeInTheDocument();
+    });
+  });
 });

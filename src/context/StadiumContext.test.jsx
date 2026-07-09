@@ -184,7 +184,7 @@ describe('StadiumContext', () => {
     const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
     expect(() => {
       render(<ContextConsumer onData={() => {}} />);
-    }).toThrow('useStadiumData must be used within a StadiumProvider');
+    }).toThrow('useStadiumContext must be used within a StadiumProvider');
     consoleError.mockRestore();
   });
 });

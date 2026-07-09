@@ -7,37 +7,37 @@
 import React, {
   createContext,
   useContext,
-  useState,
   useEffect,
-  useCallback,
-  useMemo,
   useRef,
+  useSyncExternalStore,
 } from 'react';
 import initialMockContext from '../data/mockContext.json';
 import { useAppContext, AppProvider } from './AppContext';
 import { NotificationProvider, useNotifications } from './NotificationContext';
 
-const StadiumDataContext = createContext(null);
+const StadiumStoreContext = createContext(null);
 
 /**
- * Hook to access stadium simulation data (gates, incidents, etc.)
- * @returns {object} Stadium data and actions
+ * Minimum simulated occupancy floor
  */
-export const useStadiumData = () => {
-  const ctx = useContext(StadiumDataContext);
-  if (!ctx) throw new Error('useStadiumData must be used within a StadiumProvider');
-  return ctx;
+const MIN_OCCUPANCY_SIMULATION = 80000;
+
+/**
+ * Hook to access stadium simulation data using a selector
+ * @param {function} selector - Function to select specific state slice
+ * @returns {any} Selected data
+ */
+export const useStadiumContext = (selector = (s) => s) => {
+  const store = useContext(StadiumStoreContext);
+  if (!store) throw new Error('useStadiumContext must be used within a StadiumProvider');
+
+  // Use React 18 native useSyncExternalStore for fine-grained reactivity
+  return useSyncExternalStore(store.subscribe, () => selector(store.getState()));
 };
 
-/**
- * Combined hook for backward compat — merges data + app context
- * Prefer useStadiumData() / useAppContext() for targeted subscriptions
- * @returns {object} Full context
- */
-export const useStadiumContext = () => {
-  const data = useStadiumData();
-  const app = useAppContext();
-  return useMemo(() => ({ ...data, ...app }), [data, app]);
+// Deprecated: keeping for backwards compatibility until refactor is complete
+export const useStadiumData = (selector = (s) => s) => {
+  return useStadiumContext(selector);
 };
 
 const SIMULATION_VIEWS = new Set([
@@ -49,23 +49,148 @@ const SIMULATION_VIEWS = new Set([
 ]);
 
 function InnerProvider({ children }) {
-  const [contextData, setContextData] = useState(initialMockContext);
-  const [isSimulating, setIsSimulating] = useState(true);
   const { activeView } = useAppContext();
   const { addNotification } = useNotifications();
   const prevCriticalRef = useRef(0);
   const notificationCooldownRef = useRef({});
 
+  // Initialize the pub-sub store once
+  const storeRef = useRef(null);
+  if (!storeRef.current) {
+    const listeners = new Set();
+    let state = {
+      contextData: initialMockContext,
+      isSimulating: true,
+    };
+
+    // Store API
+    const getState = () => state;
+    const subscribe = (listener) => {
+      listeners.add(listener);
+      return () => listeners.delete(listener);
+    };
+    const setState = (updater) => {
+      const nextState = typeof updater === 'function' ? updater(state) : updater;
+      if (nextState !== state) {
+        state = nextState;
+        listeners.forEach((l) => l());
+      }
+    };
+
+    // Actions
+    const assignVolunteer = (taskId, volunteerId) => {
+      setState((prev) => ({
+        ...prev,
+        contextData: {
+          ...prev.contextData,
+          tasks: prev.contextData.tasks.map((t) =>
+            t.id === taskId ? { ...t, assignedTo: volunteerId, status: 'in-progress' } : t,
+          ),
+          volunteers: prev.contextData.volunteers.map((v) =>
+            v.id === volunteerId
+              ? { ...v, currentLoad: Math.min(v.maxLoad, v.currentLoad + 1) }
+              : v,
+          ),
+        },
+      }));
+    };
+
+    const resolveTask = (taskId) => {
+      setState((prev) => {
+        const task = prev.contextData.tasks.find((t) => t.id === taskId);
+        return {
+          ...prev,
+          contextData: {
+            ...prev.contextData,
+            tasks: prev.contextData.tasks.map((t) =>
+              t.id === taskId ? { ...t, status: 'resolved' } : t,
+            ),
+            volunteers: prev.contextData.volunteers.map((v) =>
+              v.id === task?.assignedTo ? { ...v, currentLoad: Math.max(0, v.currentLoad - 1) } : v,
+            ),
+          },
+        };
+      });
+    };
+
+    const toggleEcoMode = () => {
+      setState((prev) => ({
+        ...prev,
+        contextData: {
+          ...prev.contextData,
+          stadium: {
+            ...prev.contextData.stadium,
+            sustainability: {
+              ...prev.contextData.stadium.sustainability,
+              ecoModeActive: !prev.contextData.stadium.sustainability.ecoModeActive,
+              energyDrawMW: !prev.contextData.stadium.sustainability.ecoModeActive
+                ? parseFloat(
+                    (prev.contextData.stadium.sustainability.energyDrawMW * 0.78).toFixed(1),
+                  )
+                : parseFloat(
+                    (prev.contextData.stadium.sustainability.energyDrawMW / 0.78).toFixed(1),
+                  ),
+            },
+          },
+        },
+      }));
+    };
+
+    const resolveIncident = (incidentId) => {
+      setState((prev) => ({
+        ...prev,
+        contextData: {
+          ...prev.contextData,
+          incidents: prev.contextData.incidents.map((i) =>
+            i.id === incidentId ? { ...i, status: 'resolved' } : i,
+          ),
+        },
+      }));
+    };
+
+    const setIsSimulating = (isSimulating) => {
+      setState((prev) => ({ ...prev, isSimulating }));
+    };
+
+    storeRef.current = {
+      getState,
+      subscribe,
+      setState,
+      // Inject actions directly into state so they can be selected
+      actions: {
+        assignVolunteer,
+        resolveTask,
+        toggleEcoMode,
+        resolveIncident,
+        setIsSimulating,
+      },
+    };
+
+    // Inject actions into initial state for easier selection
+    state = {
+      ...state,
+      assignVolunteer,
+      resolveTask,
+      toggleEcoMode,
+      resolveIncident,
+      setIsSimulating,
+    };
+  }
+
+  // Simulation engine
   useEffect(() => {
-    if (!isSimulating) return;
+    const currentState = storeRef.current.getState();
+    if (!currentState.isSimulating) return;
     if (!SIMULATION_VIEWS.has(activeView)) return;
 
     let interval = null;
 
     function startInterval() {
       interval = setInterval(() => {
-        setContextData((prev) => {
-          const newGates = prev.gates.map((gate) => {
+        storeRef.current.setState((prev) => {
+          if (!prev.isSimulating) return prev;
+          const prevData = prev.contextData;
+          const newGates = prevData.gates.map((gate) => {
             const delta = (Math.random() - 0.48) * 0.04;
             const newDensity = Math.max(0.05, Math.min(0.99, gate.density + delta));
             const newWait = Math.max(1, Math.round(newDensity * 30));
@@ -82,14 +207,14 @@ function InnerProvider({ children }) {
           });
 
           const newOccupancy = Math.max(
-            80000,
+            MIN_OCCUPANCY_SIMULATION,
             Math.min(
-              prev.stadium.capacity,
-              prev.stadium.currentOccupancy + Math.round((Math.random() - 0.5) * 200),
+              prevData.stadium.capacity,
+              prevData.stadium.currentOccupancy + Math.round((Math.random() - 0.5) * 200),
             ),
           );
 
-          const newVendors = (prev.vendors || []).map((vendor) => {
+          const newVendors = (prevData.vendors || []).map((vendor) => {
             const depletion = Math.round(Math.random() * 3);
             const newStock = Math.max(0, vendor.stockLevel - depletion);
             return {
@@ -121,9 +246,12 @@ function InnerProvider({ children }) {
 
           return {
             ...prev,
-            gates: newGates,
-            stadium: { ...prev.stadium, currentOccupancy: newOccupancy },
-            vendors: newVendors,
+            contextData: {
+              ...prevData,
+              gates: newGates,
+              stadium: { ...prevData.stadium, currentOccupancy: newOccupancy },
+              vendors: newVendors,
+            },
           };
         });
       }, 8000);
@@ -136,89 +264,27 @@ function InnerProvider({ children }) {
       }
     }
 
-    // Pause simulation when tab is hidden to save CPU
     function handleVisibilityChange() {
       if (document.visibilityState === 'hidden') {
         stopInterval();
       } else {
-        stopInterval(); // clear any stale interval first
+        stopInterval();
         startInterval();
       }
     }
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
-    startInterval(); // start immediately
+    startInterval();
 
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       stopInterval();
     };
-  }, [isSimulating, activeView, addNotification]);
+  }, [activeView, addNotification]); // isSimulating is checked on tick
 
-  const assignVolunteer = useCallback((taskId, volunteerId) => {
-    setContextData((prev) => ({
-      ...prev,
-      tasks: prev.tasks.map((t) =>
-        t.id === taskId ? { ...t, assignedTo: volunteerId, status: 'in-progress' } : t,
-      ),
-      volunteers: prev.volunteers.map((v) =>
-        v.id === volunteerId ? { ...v, currentLoad: Math.min(v.maxLoad, v.currentLoad + 1) } : v,
-      ),
-    }));
-  }, []);
-
-  const resolveTask = useCallback((taskId) => {
-    setContextData((prev) => {
-      const task = prev.tasks.find((t) => t.id === taskId);
-      return {
-        ...prev,
-        tasks: prev.tasks.map((t) => (t.id === taskId ? { ...t, status: 'resolved' } : t)),
-        volunteers: prev.volunteers.map((v) =>
-          v.id === task?.assignedTo ? { ...v, currentLoad: Math.max(0, v.currentLoad - 1) } : v,
-        ),
-      };
-    });
-  }, []);
-
-  const toggleEcoMode = useCallback(() => {
-    setContextData((prev) => ({
-      ...prev,
-      stadium: {
-        ...prev.stadium,
-        sustainability: {
-          ...prev.stadium.sustainability,
-          ecoModeActive: !prev.stadium.sustainability.ecoModeActive,
-          energyDrawMW: !prev.stadium.sustainability.ecoModeActive
-            ? parseFloat((prev.stadium.sustainability.energyDrawMW * 0.78).toFixed(1))
-            : parseFloat((prev.stadium.sustainability.energyDrawMW / 0.78).toFixed(1)),
-        },
-      },
-    }));
-  }, []);
-
-  const resolveIncident = useCallback((incidentId) => {
-    setContextData((prev) => ({
-      ...prev,
-      incidents: prev.incidents.map((i) =>
-        i.id === incidentId ? { ...i, status: 'resolved' } : i,
-      ),
-    }));
-  }, []);
-
-  const value = useMemo(
-    () => ({
-      contextData,
-      isSimulating,
-      setIsSimulating,
-      assignVolunteer,
-      resolveTask,
-      toggleEcoMode,
-      resolveIncident,
-    }),
-    [contextData, isSimulating, assignVolunteer, resolveTask, toggleEcoMode, resolveIncident],
+  return (
+    <StadiumStoreContext.Provider value={storeRef.current}>{children}</StadiumStoreContext.Provider>
   );
-
-  return <StadiumDataContext.Provider value={value}>{children}</StadiumDataContext.Provider>;
 }
 
 export function StadiumProvider({ children }) {

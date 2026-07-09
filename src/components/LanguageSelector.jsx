@@ -82,7 +82,8 @@ const LanguageSelector = memo(function LanguageSelector({ language, setLanguage 
           {LANGUAGES.map((lang) => (
             <button
               key={lang.code}
-              aria-pressed={lang.code === language}
+              role="option"
+              aria-selected={lang.code === language}
               onClick={() => selectLang(lang.code)}
               className="w-full flex items-center gap-2 px-3 py-2 text-sm transition-colors text-left"
               style={{

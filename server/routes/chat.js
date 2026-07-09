@@ -3,16 +3,21 @@ import crypto from 'crypto';
 import { JSDOM } from 'jsdom';
 import DOMPurify from 'dompurify';
 import { authenticateApiKey, csrfProtection } from '../middleware/auth.js';
-import { validateChatInput, sanitizeInput } from '../utils/validation.js';
+import { validateChatInput } from '../utils/validation.js';
 import { getGenAI, getBestAvailableModel, buildSystemPrompt } from '../utils/genai.js';
 import { queryCache } from '../utils/cache.js';
 
 const window = new JSDOM('').window;
 const purify = DOMPurify(window);
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
 const router = Router();
 
+/**
+ * Sanitizes user-supplied input using DOMPurify, then strips any residual
+ * script tags and angle-bracket characters.
+ * @param {string} input - Raw user input
+ * @returns {string} Sanitised, trimmed string
+ */
 function doPurify(input) {
   const clean = purify.sanitize(input);
   return clean
@@ -22,6 +27,20 @@ function doPurify(input) {
     .trim();
 }
 
+/**
+ * Sanitizes AI response output — strips scripts and HTML tags, then truncates.
+ * Extracted to eliminate duplication between stream and non-stream handlers.
+ * @param {string} text - Raw AI response text
+ * @param {number} [maxLen=10000] - Maximum character length
+ * @returns {string} Safe, truncated response
+ */
+function sanitizeOutput(text, maxLen = 10000) {
+  return text
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+    .replace(/<[^>]*>/g, '')
+    .slice(0, maxLen);
+}
+
 router.post('/api/chat', authenticateApiKey, csrfProtection, async (req, res) => {
   const requestId = crypto.randomBytes(4).toString('hex');
   const startTime = Date.now();
@@ -29,7 +48,7 @@ router.post('/api/chat', authenticateApiKey, csrfProtection, async (req, res) =>
   try {
     const validationErrors = validateChatInput(req.body);
     if (validationErrors.length > 0) {
-      return res.status(400).json({ error: validationErrors.join('; ') });
+      return res.status(400).json({ error: validationErrors.join('; '), requestId });
     }
 
     const { message, contextData, language } = req.body;
@@ -37,7 +56,7 @@ router.post('/api/chat', authenticateApiKey, csrfProtection, async (req, res) =>
     if (!sanitizedMessage) {
       return res
         .status(400)
-        .json({ error: 'Message contains no valid content after sanitization.' });
+        .json({ error: 'Message contains no valid content after sanitization.', requestId });
     }
 
     const normalizedMessage = sanitizedMessage.toLowerCase().replace(/\s+/g, ' ').trim();
@@ -85,10 +104,7 @@ router.post('/api/chat', authenticateApiKey, csrfProtection, async (req, res) =>
 
     const result = await chat.sendMessage(sanitizedMessage);
     const responseText = result.response.text();
-    const safeResponse = responseText
-      .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
-      .replace(/<[^>]*>/g, '')
-      .slice(0, 10000);
+    const safeResponse = sanitizeOutput(responseText);
 
     queryCache.set(cacheKey, safeResponse);
     const elapsed = Date.now() - startTime;
@@ -130,6 +146,9 @@ router.post('/api/chat/stream', authenticateApiKey, csrfProtection, async (req, 
       JSON.stringify({
         message: normalizedMessage,
         language: (language || 'en').toLowerCase(),
+        contextDigest: contextData
+          ? crypto.createHash('sha256').update(JSON.stringify(contextData)).digest('hex')
+          : '',
       }),
     )
     .digest('hex');
@@ -168,7 +187,7 @@ router.post('/api/chat/stream', authenticateApiKey, csrfProtection, async (req, 
   const systemPrompt = buildSystemPrompt(safeContext, language);
 
   try {
-    const selectedModel = await getBestAvailableModel(GEMINI_API_KEY);
+    const selectedModel = await getBestAvailableModel(process.env.GEMINI_API_KEY);
     const model = genAI.getGenerativeModel({ model: selectedModel });
     const streamResult = await model.generateContentStream([
       { role: 'user', parts: [{ text: `${systemPrompt}\n\nUser: ${sanitizedMessage}` }] },
@@ -178,9 +197,7 @@ router.post('/api/chat/stream', authenticateApiKey, csrfProtection, async (req, 
     for await (const chunk of streamResult.stream) {
       const text = chunk.text();
       if (text) {
-        const safeChunk = text
-          .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
-          .replace(/<[^>]*>/g, '');
+        const safeChunk = sanitizeOutput(text, Infinity);
         fullText += safeChunk;
         safeWrite(`data: ${JSON.stringify({ chunk: safeChunk, requestId })}\n\n`);
       }

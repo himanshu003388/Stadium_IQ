@@ -1,6 +1,14 @@
 import crypto from 'crypto';
 
-const JWT_SECRET = process.env.JWT_SECRET || crypto.randomBytes(64).toString('hex');
+let JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error(
+      'FATAL SECURITY ERROR: JWT_SECRET environment variable must be defined in production.',
+    );
+  }
+  JWT_SECRET = crypto.randomBytes(64).toString('hex');
+}
 const JWT_EXPIRY = 3600;
 
 export function signToken(payload) {

@@ -4,11 +4,14 @@ import { COLORS } from '../utils/styles';
 import { useAIInsight } from '../hooks/useAIInsight';
 
 function VolunteerMobile() {
-  const { contextData, resolveTask } = useStadiumContext();
-  const { volunteers, tasks } = contextData;
+  const contextData = useStadiumContext((s) => s.contextData);
+  const volunteers = useStadiumContext((s) => s.contextData.volunteers);
+  const tasks = useStadiumContext((s) => s.contextData.tasks);
+  const resolveTask = useStadiumContext((s) => s.resolveTask);
 
-  // Simulate logging in as the first volunteer (Elena Vargas)
-  const currentVolunteer = volunteers[0];
+  // Dynamic simulated volunteer login
+  const [selectedVolId, setSelectedVolId] = useState(volunteers[0]?.id || '');
+  const currentVolunteer = volunteers.find((v) => v.id === selectedVolId) || volunteers[0];
 
   // Find their active task
   const activeTask =
@@ -28,7 +31,7 @@ function VolunteerMobile() {
       );
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTask?.id]);
+  }, [activeTask?.id, currentVolunteer.id]);
 
   const handleTranslate = async () => {
     if (!customPhrase.trim()) return;
@@ -64,7 +67,7 @@ function VolunteerMobile() {
       const data = await res.json();
       setTranslatedPhrase(data.translatedText);
       setCustomPhrase('');
-    } catch (err) {
+    } catch {
       setTranslatedPhrase(
         `"${customPhrase}" (Translated to ${(activeTask?.requiredLanguage || 'en').toUpperCase()})`,
       );
@@ -141,9 +144,32 @@ function VolunteerMobile() {
               </div>
             </div>
           </div>
-          <span className="material-symbols-outlined" style={{ color: COLORS.outline }}>
-            notifications
-          </span>
+          <div className="flex flex-col items-end gap-0.5">
+            <label
+              htmlFor="volunteer-simulator-select"
+              className="text-[9px] uppercase font-bold tracking-wider"
+              style={{ color: COLORS.outline }}
+            >
+              Simulate Login
+            </label>
+            <select
+              id="volunteer-simulator-select"
+              value={selectedVolId}
+              onChange={(e) => setSelectedVolId(e.target.value)}
+              className="text-xs border rounded-lg px-2 py-1 outline-none font-medium cursor-pointer"
+              style={{
+                background: COLORS.surfaceDim,
+                color: COLORS.onSurface,
+                borderColor: COLORS.outlineVariant,
+              }}
+            >
+              {volunteers.map((v) => (
+                <option key={v.id} value={v.id}>
+                  {v.name} ({v.zone})
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
 
         <div

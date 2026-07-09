@@ -45,7 +45,7 @@ test.describe('Stadium IQ Application', () => {
 
   test('should navigate to Transport Hub', async ({ page }) => {
     await page.locator('button[aria-label="Transport Hub"]:visible').click();
-    await expect(page.getByText(/Post-match departure options/)).toBeVisible();
+    await expect(page.getByRole('tab', { name: 'Post-Match Departure' })).toBeVisible();
   });
 
   test('should navigate to Sustainability Dashboard', async ({ page }) => {
@@ -221,5 +221,63 @@ test.describe('Stadium IQ Application', () => {
     await page.getByRole('option', { name: /Volunteer/ }).click();
     await page.locator('button[aria-label="Volunteer Mobile"]:visible').click();
     await expect(page.getByText(/Active Mission/).first()).toBeVisible();
+  });
+
+  test('should generate and broadcast translated PA announcements', async ({ page }) => {
+    const textarea = page.locator('textarea#broadcast-message');
+    await textarea.fill('Weather advisory: heavy rain expected.');
+
+    const broadcastBtn = page.getByRole('button', { name: /Generate & Broadcast/i });
+    await broadcastBtn.click();
+
+    await expect(page.getByText('Active Audio Broadcast Transcripts:')).toBeVisible();
+    await expect(page.getByText(/Weather advisory/)).toBeVisible();
+  });
+
+  test('should display proactive AI Sustainability recommendations and eco mode status', async ({
+    page,
+  }) => {
+    await page.locator('button[aria-label="Sustainability"]:visible').click();
+    await expect(page.getByText(/AI Sustainability Insight/)).toBeVisible();
+  });
+
+  test('should support indoor wayfinding navigation paths for gates on CrowdMap', async ({
+    page,
+  }) => {
+    await page.locator('button[aria-label="Crowd Map"]:visible').click();
+    await expect(page.getByText(/Live stadium map/)).toBeVisible();
+
+    const indoorNavButtons = page.locator('button[aria-label^="Show indoor wayfinding for Gate"]');
+    const count = await indoorNavButtons.count();
+    expect(count).toBeGreaterThan(0);
+
+    // Toggle indoor navigation on the first gate (Gate A)
+    await indoorNavButtons.first().click();
+
+    // Verify wayfinding instructions card displays
+    await expect(page.getByText(/Indoor Navigation from Gate A/)).toBeVisible();
+    await expect(page.getByText(/Enter through Gate A/)).toBeVisible();
+
+    // Close indoor navigation
+    await page.getByLabel('Close indoor navigation').click();
+    await expect(page.getByText(/Indoor Navigation from Gate A/)).not.toBeVisible();
+  });
+
+  test('should allow switching volunteer simulated logins in volunteer mobile view', async ({
+    page,
+  }) => {
+    await page.locator('button[aria-label^="Select User Role"]').waitFor({ state: 'visible' });
+    await page.locator('button[aria-label^="Select User Role"]').click();
+    await page.getByRole('option', { name: /Volunteer/ }).click();
+    await page.locator('button[aria-label="Volunteer Mobile"]:visible').click();
+
+    // Check initial volunteer name (use first() to avoid dropdown option match)
+    await expect(page.getByText('Elena Vargas').first()).toBeVisible();
+
+    // Select Marcus Dupont (ID: V2)
+    await page.locator('#volunteer-simulator-select').selectOption('V2');
+
+    // Check updated volunteer name
+    await expect(page.getByText('Marcus Dupont').first()).toBeVisible();
   });
 });
