@@ -13,6 +13,8 @@ import {
   getLoadBarColor,
   getDensityColor,
   getStatusColor,
+  DEMO_RESPONSE_TEMPLATES,
+  getMatcherRegex,
 } from '../helpers';
 
 // ─────────────────────────────────────────────
@@ -349,6 +351,21 @@ describe('getDemoResponse — multilingual responses', () => {
     const res = getDemoResponse('parking lot', BASE_CTX, 'es');
     expect(res).toContain('Aparcamiento');
   });
+
+  it('returns Spanish accessibility response', () => {
+    const res = getDemoResponse('wheelchair', BASE_CTX, 'es');
+    expect(res).toContain('Servicios de Accesibilidad');
+  });
+
+  it('falls back to default function in getDemoResponse switch statement when template is a function but matcher.res is not matched', () => {
+    DEMO_RESPONSE_TEMPLATES.custom_test_lang = {
+      food: () => 'custom food fallback value',
+      default: (s) => 'default fallback',
+    };
+    const res = getDemoResponse('food options', BASE_CTX, 'custom_test_lang');
+    expect(res).toBe('custom food fallback value');
+    delete DEMO_RESPONSE_TEMPLATES.custom_test_lang;
+  });
 });
 
 // ─────────────────────────────────────────────
@@ -493,5 +510,44 @@ describe('getStatusColor — all branches', () => {
 describe('getSeverityColor — all branches', () => {
   it('handles unexpected severity as info', () => {
     expect(getSeverityColor('unknown')).toBe('var(--color-info)');
+  });
+});
+
+describe('helpers.js — extra branch coverage', () => {
+  it('handles duplicate keyword requests for regex compilation cache', () => {
+    const regex1 = getMatcherRegex('test_cache_keyword');
+    const regex2 = getMatcherRegex('test_cache_keyword');
+    expect(regex1).toBe(regex2);
+  });
+
+  it('handles falsy accessibility services list', () => {
+    const res = getDemoResponse('wheelchair', { ...BASE_CTX, accessibilityServices: null });
+    expect(res).toContain('Accessibility Services');
+  });
+
+  it('handles non-array accessibility service locations', () => {
+    const res = getDemoResponse('wheelchair', {
+      ...BASE_CTX,
+      accessibilityServices: [
+        { type: 'Wheelchair', locations: 'Gate A', description: 'Ramps available' },
+      ],
+    });
+    expect(res).toContain('Accessibility Services');
+  });
+
+  it('handles falsy accessibility service description', () => {
+    const res = getDemoResponse('wheelchair', {
+      ...BASE_CTX,
+      accessibilityServices: [
+        { type: 'Wheelchair', locations: ['Gate A'] },
+      ],
+    });
+    expect(res).toContain('Accessibility Services');
+  });
+
+  it('falls back to default language template when matcher key is missing in custom language', () => {
+    // 'es' template lacks 'transport' key
+    const res = getDemoResponse('metro', BASE_CTX, 'es');
+    expect(res).toContain('Bienvenido');
   });
 });

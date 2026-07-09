@@ -15,7 +15,7 @@ export function timeAgo(ts) {
   return `${Math.floor(diff / 1440)}d ago`;
 }
 
-const DEMO_RESPONSE_TEMPLATES = {
+export const DEMO_RESPONSE_TEMPLATES = {
   en: {
     accessible: (a) =>
       `♿ **Accessibility Services Available:**\n\n${a}\n\nNeed specific directions? Ask me about any accessibility service! ♿`,
@@ -106,7 +106,7 @@ const DEMO_RESPONSE_TEMPLATES = {
 };
 
 const COMPILED_KEYWORDS = {};
-function getMatcherRegex(keyword) {
+export function getMatcherRegex(keyword) {
   if (!COMPILED_KEYWORDS[keyword]) {
     COMPILED_KEYWORDS[keyword] = new RegExp(
       `\\b${keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`,
@@ -150,7 +150,6 @@ const MATCHER_CONFIGS = [
 const MATCHERS = MATCHER_CONFIGS.map((cfg) => ({
   regexps: cfg.keys.map(getMatcherRegex),
   res: cfg.res,
-  getResponse: (langRes) => langRes[cfg.res],
 }));
 
 function getAccessibilityInfo(services) {
