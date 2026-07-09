@@ -200,7 +200,9 @@
       "co2e": 5,
       "capacityLeft": 200,
       "icon": "subway",
-      "recommended": true
+      "recommended": true,
+      "status": "on-time",
+      "delayMessage": null
     },
     {
       "id": "TR2",
@@ -210,7 +212,9 @@
       "co2e": 12,
       "capacityLeft": 5,
       "icon": "directions_bus",
-      "recommended": false
+      "recommended": false,
+      "status": "on-time",
+      "delayMessage": null
     },
     {
       "id": "TR3",
@@ -220,7 +224,9 @@
       "co2e": 45,
       "capacityLeft": 3,
       "icon": "local_taxi",
-      "recommended": false
+      "recommended": false,
+      "status": "delayed",
+      "delayMessage": "Surge pricing and high traffic"
     },
     {
       "id": "TR4",
@@ -230,7 +236,9 @@
       "co2e": 8,
       "capacityLeft": 150,
       "icon": "train",
-      "recommended": true
+      "recommended": true,
+      "status": "delayed",
+      "delayMessage": "Signal failure at Union Station (20 min delay)"
     },
     {
       "id": "TR5",
@@ -240,7 +248,9 @@
       "co2e": 0,
       "capacityLeft": 30,
       "icon": "pedal_bike",
-      "recommended": false
+      "recommended": false,
+      "status": "on-time",
+      "delayMessage": null
     }
   ],
   "stadium": {
@@ -354,6 +364,36 @@
       "locations": ["Gate A", "Gate D", "Command Center"],
       "available": true,
       "description": "ASL interpreters available on request at guest services desks."
+    }
+  ],
+  "vendors": [
+    {
+      "id": "VEND-01",
+      "name": "North Concourse Snacks",
+      "zone": "North Stand",
+      "stockLevel": 85,
+      "status": "nominal"
+    },
+    {
+      "id": "VEND-02",
+      "name": "East Wing Refreshments",
+      "zone": "East Wing",
+      "stockLevel": 15,
+      "status": "critical"
+    },
+    {
+      "id": "VEND-03",
+      "name": "South Stand Grill",
+      "zone": "South Stand",
+      "stockLevel": 45,
+      "status": "warning"
+    },
+    {
+      "id": "VEND-04",
+      "name": "West Wing Beverages",
+      "zone": "West Wing",
+      "stockLevel": 90,
+      "status": "nominal"
     }
   ],
   "incidents": [

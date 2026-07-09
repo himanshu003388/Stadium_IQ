@@ -250,6 +250,20 @@ const NAV_ITEMS = [
     desc: 'Inclusive access info',
     allowedRoles: ['Organizer', 'Staff', 'Volunteer', 'Fan'],
   },
+  {
+    id: 'vendor',
+    label: 'Smart Concessions',
+    icon: 'storefront',
+    desc: 'AI vendor supply',
+    allowedRoles: ['Organizer', 'Staff'],
+  },
+  {
+    id: 'volunteer_mobile',
+    label: 'Volunteer Mobile',
+    icon: 'smartphone',
+    desc: 'Mobile tasks view',
+    allowedRoles: ['Organizer', 'Volunteer'],
+  },
 ];
 
 export {

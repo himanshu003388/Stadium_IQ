@@ -9,6 +9,7 @@ import { StadiumProvider } from '../context/StadiumContext';
 import { useAppContext } from '../context/AppContext';
 import { COLORS, NAV_ITEMS } from '../utils/styles';
 import { ErrorBoundary } from './ErrorBoundary';
+import Announcer from './Announcer';
 
 const CommandCenter = React.lazy(() => import('./CommandCenter'));
 const AIAssistant = React.lazy(() => import('./AIAssistant'));
@@ -17,6 +18,8 @@ const VolunteerDispatch = React.lazy(() => import('./VolunteerDispatch'));
 const TransportHub = React.lazy(() => import('./TransportHub'));
 const Sustainability = React.lazy(() => import('./Sustainability'));
 const AccessibilityHub = React.lazy(() => import('./AccessibilityHub'));
+const VendorDashboard = React.lazy(() => import('./VendorDashboard'));
+const VolunteerMobile = React.lazy(() => import('./VolunteerMobile'));
 
 const VIEWS = {
   command: CommandCenter,
@@ -26,6 +29,8 @@ const VIEWS = {
   transport: TransportHub,
   sustain: Sustainability,
   accessibility: AccessibilityHub,
+  vendor: VendorDashboard,
+  volunteer_mobile: VolunteerMobile,
 };
 
 /**
@@ -65,6 +70,7 @@ function LayoutInner() {
       <a href="#main-content" className="skip-to-content">
         Skip to main content
       </a>
+      <Announcer activeView={activeView} />
       <div
         className="min-h-screen flex flex-col"
         style={{ background: COLORS.background, color: COLORS.onBackground }}

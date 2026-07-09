@@ -12,7 +12,7 @@
  * @property {string} timestamp - ISO timestamp
  * @property {string} aiRecommendedAction - AI-suggested mitigation action
  */
-import React, { useMemo, memo } from 'react';
+import React, { useMemo, useState, memo } from 'react';
 import PropTypes from 'prop-types';
 import { useStadiumContext } from '../context/StadiumContext';
 import { COLORS, ZONE_COLORS } from '../utils/styles';
@@ -187,6 +187,18 @@ const GateRow = memo(function GateRow({ gate }) {
   );
 });
 
+GateRow.propTypes = {
+  gate: PropTypes.shape({
+    status: PropTypes.string.isRequired,
+    density: PropTypes.number.isRequired,
+    id: PropTypes.string.isRequired,
+    direction: PropTypes.string.isRequired,
+    waitTimeMinutes: PropTypes.number.isRequired,
+    accessible: PropTypes.bool,
+    accessibleFeatures: PropTypes.arrayOf(PropTypes.string),
+  }).isRequired,
+};
+
 /**
  * Incident card component
  * @param {object} props - Component props
@@ -268,6 +280,97 @@ const IncidentCard = memo(function IncidentCard({ incident, onResolve }) {
   );
 });
 
+IncidentCard.propTypes = {
+  incident: PropTypes.shape({
+    id: PropTypes.string.isRequired,
+    severity: PropTypes.string.isRequired,
+    status: PropTypes.string.isRequired,
+    type: PropTypes.string.isRequired,
+    timestamp: PropTypes.instanceOf(Date).isRequired,
+    description: PropTypes.string.isRequired,
+    aiRecommendedAction: PropTypes.string,
+  }).isRequired,
+  onResolve: PropTypes.func.isRequired,
+};
+
+/**
+ * Smart Broadcast Widget
+ */
+const SmartBroadcastWidget = memo(function SmartBroadcastWidget() {
+  const [message, setMessage] = useState('');
+  const [isBroadcasting, setIsBroadcasting] = useState(false);
+  const [broadcasted, setBroadcasted] = useState(false);
+
+  const handleBroadcast = () => {
+    if (!message.trim()) return;
+    setIsBroadcasting(true);
+    setTimeout(() => {
+      setIsBroadcasting(false);
+      setBroadcasted(true);
+      setTimeout(() => setBroadcasted(false), 5000);
+      setMessage('');
+    }, 1500);
+  };
+
+  return (
+    <div className="card p-5 animate-fade-in-up stagger-5">
+      <div className="flex items-center gap-2 mb-3">
+        <span
+          aria-hidden="true"
+          className="material-symbols-outlined"
+          style={{ color: COLORS.secondary, fontVariationSettings: "'FILL' 1" }}
+        >
+          record_voice_over
+        </span>
+        <h2 className="font-bold text-sm" style={{ color: COLORS.onSurface }}>
+          Smart PA System (GenAI Multilingual Broadcast)
+        </h2>
+      </div>
+      <p className="text-xs mb-3" style={{ color: COLORS.outline }}>
+        Enter an announcement in English. The AI will instantly translate and push audio to all zone
+        PA systems in 7 languages.
+      </p>
+      <textarea
+        className="w-full bg-transparent border rounded-xl p-3 text-sm focus:outline-none focus:border-primary mb-3"
+        style={{ borderColor: COLORS.surfaceDim, color: COLORS.onSurface }}
+        rows="2"
+        aria-label="Enter broadcast announcement"
+        placeholder="e.g., Gate C is temporarily closed. Please use Gate D."
+        value={message}
+        onChange={(e) => setMessage(e.target.value)}
+      />
+      <div className="flex justify-between items-center">
+        <div className="flex gap-2 text-xs">
+          {['EN', 'ES', 'FR', 'AR', 'PT', 'JA', 'HI'].map((lang) => (
+            <span
+              key={lang}
+              className="px-1.5 py-0.5 rounded"
+              style={{ background: COLORS.surfaceDim, color: COLORS.outline }}
+            >
+              {lang}
+            </span>
+          ))}
+        </div>
+        <button
+          onClick={handleBroadcast}
+          disabled={!message.trim() || isBroadcasting}
+          className="btn-primary py-2 px-4 text-xs flex items-center gap-2"
+          style={broadcasted ? { background: COLORS.success, color: COLORS.onSuccess } : {}}
+        >
+          <span className="material-symbols-outlined text-sm">
+            {broadcasted ? 'check_circle' : isBroadcasting ? 'autorenew' : 'campaign'}
+          </span>
+          {broadcasted
+            ? 'Broadcast Sent'
+            : isBroadcasting
+              ? 'Translating...'
+              : 'Generate & Broadcast'}
+        </button>
+      </div>
+    </div>
+  );
+});
+
 function CommandCenter() {
   const { contextData, resolveIncident } = useStadiumContext();
   const { gates, stadium, incidents } = contextData;
@@ -285,6 +388,10 @@ function CommandCenter() {
     [incidents],
   );
   const criticalGates = useMemo(() => gates.filter((g) => g.status === 'critical'), [gates]);
+  const predictiveGates = useMemo(
+    () => gates.filter((g) => g.predictedDensity > 0.85 && g.status !== 'critical'),
+    [gates],
+  );
   const recommendedGatesText = useMemo(() => {
     return gates
       .filter((g) => g.status === 'normal')
@@ -324,6 +431,37 @@ function CommandCenter() {
             </p>
             <p className="text-white text-xs opacity-80">
               AI recommends redirecting fans to Gates {recommendedGatesText}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Predictive Alert Banner */}
+      {predictiveGates.length > 0 && (
+        <div
+          className="rounded-xl p-3.5 flex items-center gap-3 animate-slide-right"
+          role="alert"
+          aria-live="polite"
+          style={{
+            background: COLORS.warningContainer,
+            border: `1px solid ${COLORS.warning}`,
+          }}
+        >
+          <span
+            aria-hidden="true"
+            className="material-symbols-outlined"
+            style={{ color: COLORS.warning, fontVariationSettings: "'FILL' 1" }}
+          >
+            insights
+          </span>
+          <div>
+            <p className="font-bold text-sm" style={{ color: COLORS.onWarningContainer }}>
+              🧠 PROACTIVE: Gate{predictiveGates.length > 1 ? 's' : ''}{' '}
+              {predictiveGates.map((g) => g.id).join(', ')} predicted to hit critical density in 15
+              mins.
+            </p>
+            <p className="text-xs opacity-80" style={{ color: COLORS.onWarningContainer }}>
+              AI recommends opening auxiliary stanchions or redirecting approaching traffic now.
             </p>
           </div>
         </div>
@@ -476,6 +614,9 @@ function CommandCenter() {
           </div>
         </div>
       </div>
+
+      {/* Smart Broadcast */}
+      <SmartBroadcastWidget />
 
       {/* Incident Feed */}
       <div

@@ -1,4 +1,4 @@
-import { render, screen, act } from '@testing-library/react';
+import { render, screen, act, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import { axe } from 'jest-axe';
 import Header from './Header';
@@ -119,6 +119,29 @@ describe('Header Component', () => {
     renderHeader();
     const themeBtn = screen.getByLabelText(/Switch to/i);
     themeBtn.click();
-    // In our test, theme toggles, but we just verify it doesn't crash since AppContext handles it.
+    // Verify it doesn't crash
+  });
+
+  it('allows changing the user role', () => {
+    renderHeader();
+    const roleBtn = screen.getByRole('button', { name: /Select User Role/i });
+    fireEvent.click(roleBtn); // open the dropdown
+
+    const staffOption = screen.getByRole('option', { name: /Staff/i });
+    fireEvent.click(staffOption); // select staff
+
+    // After click it should close the dropdown (or at least no longer show the option)
+    expect(screen.queryByRole('listbox', { name: 'Select user role' })).not.toBeInTheDocument();
+  });
+
+  it('allows closing role dropdown with Escape key', () => {
+    renderHeader();
+    const roleBtn = screen.getByRole('button', { name: /Select User Role/i });
+    fireEvent.click(roleBtn); // open
+
+    expect(screen.getByRole('listbox')).toBeInTheDocument();
+
+    fireEvent.keyDown(roleBtn, { key: 'Escape', code: 'Escape' });
+    expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
   });
 });

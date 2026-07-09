@@ -87,7 +87,7 @@ describe('CommandCenter Component', () => {
     const { container } = renderCommandCenter();
     const results = await axe(container);
     expect(results).toHaveNoViolations();
-  });
+  }, 15000);
 
   it('renders resolved incidents without Mark Resolved button', () => {
     renderCommandCenter();

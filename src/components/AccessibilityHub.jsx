@@ -1,4 +1,4 @@
-import React, { useState, useMemo, memo } from 'react';
+import React, { useState, useMemo, memo, useEffect } from 'react';
 import { useStadiumContext } from '../context/StadiumContext';
 import { COLORS } from '../utils/styles';
 import { getDemoResponse } from '../utils/helpers';
@@ -24,6 +24,35 @@ function AccessibilityHub() {
     setAiTip(response);
   };
 
+  const [highContrast, setHighContrast] = useState(
+    () =>
+      typeof document !== 'undefined' &&
+      document.documentElement.classList.contains('high-contrast'),
+  );
+  const [dyslexiaMode, setDyslexiaMode] = useState(
+    () =>
+      typeof document !== 'undefined' &&
+      document.documentElement.classList.contains('dyslexia-mode'),
+  );
+
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    if (highContrast) {
+      document.documentElement.classList.add('high-contrast');
+    } else {
+      document.documentElement.classList.remove('high-contrast');
+    }
+  }, [highContrast]);
+
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    if (dyslexiaMode) {
+      document.documentElement.classList.add('dyslexia-mode');
+    } else {
+      document.documentElement.classList.remove('dyslexia-mode');
+    }
+  }, [dyslexiaMode]);
+
   const quickQueries = [
     { label: 'Wheelchair routes', query: 'accessible wheelchair route' },
     { label: 'Sign language', query: 'sign language interpreter' },
@@ -39,6 +68,49 @@ function AccessibilityHub() {
         <p className="text-sm" style={{ color: COLORS.outline }}>
           Inclusive access information & AI-powered assistance
         </p>
+      </div>
+
+      {/* Global Accessibility Settings */}
+      <div className="card p-4" role="region" aria-label="Global Vision Settings">
+        <div className="flex items-center gap-2 mb-3">
+          <span
+            aria-hidden="true"
+            className="material-symbols-outlined"
+            style={{ color: COLORS.primary, fontVariationSettings: "'FILL' 1" }}
+          >
+            settings_accessibility
+          </span>
+          <h3 className="font-bold text-sm" style={{ color: COLORS.onSurface }}>
+            Global Vision Settings
+          </h3>
+        </div>
+        <div className="flex flex-col sm:flex-row gap-4">
+          <label className="flex items-center gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              className="w-5 h-5 accent-blue-600 cursor-pointer"
+              checked={highContrast}
+              onChange={(e) => setHighContrast(e.target.checked)}
+              aria-label="Toggle High Contrast Mode"
+            />
+            <span className="text-sm font-medium" style={{ color: COLORS.onSurface }}>
+              High Contrast Mode
+            </span>
+          </label>
+
+          <label className="flex items-center gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              className="w-5 h-5 accent-blue-600 cursor-pointer"
+              checked={dyslexiaMode}
+              onChange={(e) => setDyslexiaMode(e.target.checked)}
+              aria-label="Toggle Dyslexia-Friendly Font"
+            />
+            <span className="text-sm font-medium" style={{ color: COLORS.onSurface }}>
+              Dyslexia-Friendly Font
+            </span>
+          </label>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">

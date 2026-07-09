@@ -1,7 +1,22 @@
 import React from 'react';
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+
+// Mock SpeechRecognition before importing ChatInput
+const mockSpeechRecognition = {
+  start: vi.fn(),
+  stop: vi.fn(),
+  onresult: null,
+  onend: null,
+  onerror: null,
+};
+global.SpeechRecognition = class {
+  constructor() {
+    return mockSpeechRecognition;
+  }
+};
+
 import ChatInput from '../ChatInput';
 
 describe('ChatInput', () => {
@@ -60,5 +75,56 @@ describe('ChatInput', () => {
   it('enables send button when input has text', () => {
     render(<ChatInput {...defaultProps} input="hello" />);
     expect(screen.getByLabelText('Send message')).not.toBeDisabled();
+  });
+
+  describe('Voice Input', () => {
+    beforeEach(() => {
+      vi.clearAllMocks();
+    });
+
+    it('toggles voice recognition on and off', () => {
+      render(<ChatInput {...defaultProps} />);
+      const micBtn = screen.getByLabelText(/voice/i);
+
+      // Start listening
+      fireEvent.click(micBtn);
+      expect(mockSpeechRecognition.start).toHaveBeenCalled();
+
+      // Stop listening
+      fireEvent.click(micBtn);
+      expect(mockSpeechRecognition.stop).toHaveBeenCalled();
+    });
+
+    it('updates input when speech result is received', () => {
+      const setInput = vi.fn();
+      render(<ChatInput {...defaultProps} setInput={setInput} input="Hello" />);
+      const micBtn = screen.getByLabelText(/voice/i);
+
+      fireEvent.click(micBtn);
+
+      // Simulate speech result
+      const onresult = mockSpeechRecognition.onresult;
+      if (onresult) {
+        onresult({
+          results: [[{ transcript: 'world' }]],
+        });
+      }
+
+      // Check if setInput was called (prev state function is passed)
+      expect(setInput).toHaveBeenCalled();
+
+      // Simulate onend to stop listening
+      if (mockSpeechRecognition.onend) mockSpeechRecognition.onend();
+    });
+
+    it('handles speech error gracefully', () => {
+      render(<ChatInput {...defaultProps} />);
+      const micBtn = screen.getByLabelText(/voice/i);
+
+      fireEvent.click(micBtn);
+
+      // Simulate error
+      if (mockSpeechRecognition.onerror) mockSpeechRecognition.onerror();
+    });
   });
 });

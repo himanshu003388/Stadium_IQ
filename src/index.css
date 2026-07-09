@@ -594,6 +594,50 @@
 }
 
 /* =========================================
+   ACCESSIBILITY MODES
+   ========================================= */
+@layer base {
+  html.high-contrast {
+    --color-background: #000000;
+    --color-surface: #000000;
+    --color-surface-dim: #1a1a1a;
+    --color-surface-container: #111111;
+    --color-surface-container-high: #222222;
+
+    --color-on-background: #ffffff;
+    --color-on-surface: #ffffff;
+    --color-on-surface-variant: #ffff00;
+
+    --color-primary: #ffff00;
+    --color-on-primary: #000000;
+    --color-primary-container: #ffff00;
+    --color-on-primary-container: #000000;
+    --color-inverse-primary: #ffff00;
+
+    --color-outline: #ffffff;
+    --color-outline-variant: #ffffff;
+
+    --color-header-bg: #000000;
+    --color-header-text: #ffff00;
+  }
+
+  html.high-contrast * {
+    border-color: #ffffff !important;
+  }
+
+  html.dyslexia-mode {
+    --font-body-md: 'OpenDyslexic', 'Comic Sans MS', sans-serif;
+    --font-body-lg: 'OpenDyslexic', 'Comic Sans MS', sans-serif;
+    --font-headline-md: 'OpenDyslexic', 'Comic Sans MS', sans-serif;
+    --font-headline-lg: 'OpenDyslexic', 'Comic Sans MS', sans-serif;
+
+    letter-spacing: 0.05em;
+    word-spacing: 0.1em;
+    line-height: 1.8;
+  }
+}
+
+/* =========================================
    ANIMATIONS
    ========================================= */
 @keyframes fadeInUp {

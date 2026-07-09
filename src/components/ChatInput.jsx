@@ -2,8 +2,8 @@ import React, { memo, useState, useCallback, useRef } from 'react';
 import PropTypes from 'prop-types';
 import { COLORS } from '../utils/styles';
 
-// Check browser support for Speech Recognition
-const SpeechRecognition =
+// Check browser support for Speech Recognition dynamically
+const getSpeechRecognition = () =>
   typeof window !== 'undefined' ? window.SpeechRecognition || window.webkitSpeechRecognition : null;
 
 const LANG_BCP47 = {
@@ -16,7 +16,7 @@ const LANG_BCP47 = {
   hi: 'hi-IN',
 };
 
-const ChatInput = memo(function ChatInput({
+const ChatInput = function ChatInput({
   input,
   setInput,
   handleSend,
@@ -26,6 +26,8 @@ const ChatInput = memo(function ChatInput({
 }) {
   const [isListening, setIsListening] = useState(false);
   const recognitionRef = useRef(null);
+
+  const SpeechRecognition = getSpeechRecognition();
 
   const handleKey = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -63,7 +65,7 @@ const ChatInput = memo(function ChatInput({
     recognitionRef.current = recognition;
     recognition.start();
     setIsListening(true);
-  }, [isListening, language, setInput]);
+  }, [isListening, language, setInput, SpeechRecognition]);
 
   return (
     <div
@@ -160,7 +162,7 @@ const ChatInput = memo(function ChatInput({
       </div>
     </div>
   );
-});
+};
 
 ChatInput.propTypes = {
   input: PropTypes.string.isRequired,
@@ -171,4 +173,4 @@ ChatInput.propTypes = {
   inputRef: PropTypes.shape({ current: PropTypes.any }).isRequired,
 };
 
-export default ChatInput;
+export default memo(ChatInput);

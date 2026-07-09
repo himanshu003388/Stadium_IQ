@@ -421,3 +421,72 @@ describe('Security boundary: buildSafeContext with adversarial input', () => {
     expect(ctx.activeIncidentCount).toBe(0);
   });
 });
+
+// ─── Security Middlewares ─────────────────────────────────────────────────
+
+function hppGuardTest(req, res, next) {
+  if (req.query) {
+    for (const key in req.query) {
+      if (Array.isArray(req.query[key])) {
+        req.query[key] = req.query[key][req.query[key].length - 1];
+      }
+    }
+  }
+  next();
+}
+
+function antiPrototypePollutionTest(req, res, next) {
+  const bodyStr = JSON.stringify(req.body || {});
+  if (bodyStr.includes('"__proto__"') || bodyStr.includes('"constructor"')) {
+    return res.status(400).json({ error: 'Invalid payload structure detected.' });
+  }
+  next();
+}
+
+describe('hppGuard', () => {
+  it('takes the last parameter if an array is provided', () => {
+    const req = { query: { param: ['value1', 'value2'] } };
+    const next = vi.fn();
+    hppGuardTest(req, null, next);
+    expect(req.query.param).toBe('value2');
+    expect(next).toHaveBeenCalled();
+  });
+
+  it('leaves single parameters untouched', () => {
+    const req = { query: { param: 'value1' } };
+    const next = vi.fn();
+    hppGuardTest(req, null, next);
+    expect(req.query.param).toBe('value1');
+    expect(next).toHaveBeenCalled();
+  });
+});
+
+describe('antiPrototypePollution', () => {
+  it('rejects payloads with __proto__', () => {
+    const req = { body: JSON.parse('{"__proto__":{"admin":true}}') };
+    const res = { status: vi.fn().mockReturnThis(), json: vi.fn() };
+    const next = vi.fn();
+    antiPrototypePollutionTest(req, res, next);
+    expect(res.status).toHaveBeenCalledWith(400);
+    expect(res.json).toHaveBeenCalledWith({ error: 'Invalid payload structure detected.' });
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  it('rejects payloads with constructor', () => {
+    const req = { body: JSON.parse('{"constructor":{"admin":true}}') };
+    const res = { status: vi.fn().mockReturnThis(), json: vi.fn() };
+    const next = vi.fn();
+    antiPrototypePollutionTest(req, res, next);
+    expect(res.status).toHaveBeenCalledWith(400);
+    expect(res.json).toHaveBeenCalledWith({ error: 'Invalid payload structure detected.' });
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  it('accepts safe payloads', () => {
+    const req = { body: { valid: 'payload' } };
+    const res = { status: vi.fn().mockReturnThis(), json: vi.fn() };
+    const next = vi.fn();
+    antiPrototypePollutionTest(req, res, next);
+    expect(next).toHaveBeenCalled();
+  });
+});

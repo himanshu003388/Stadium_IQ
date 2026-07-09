@@ -214,6 +214,50 @@ function TransportHub() {
         </div>
       </div>
 
+      {/* Smart Transit Broker Alert */}
+      {transportOptions.filter((t) => t.status === 'delayed').length > 0 && (
+        <div
+          className="card p-4 animate-fade-in-up mt-2"
+          style={{ background: COLORS.errorContainer, border: `1px solid ${COLORS.error}` }}
+        >
+          <div className="flex items-start gap-3">
+            <div
+              className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
+              style={{ background: COLORS.surface }}
+            >
+              <span
+                aria-hidden="true"
+                className="material-symbols-outlined"
+                style={{ color: COLORS.error, fontVariationSettings: "'FILL' 1" }}
+              >
+                transit_enterexit
+              </span>
+            </div>
+            <div className="flex-1">
+              <div className="font-bold text-sm mb-1" style={{ color: COLORS.onErrorContainer }}>
+                Smart Transit Broker Alert
+              </div>
+              <ul
+                className="text-sm list-disc list-inside"
+                style={{ color: COLORS.onErrorContainer }}
+              >
+                {transportOptions
+                  .filter((t) => t.status === 'delayed')
+                  .map((t) => (
+                    <li key={t.id}>
+                      {t.type} {t.line}: {t.delayMessage}
+                    </li>
+                  ))}
+              </ul>
+              <p className="text-sm font-semibold mt-2" style={{ color: COLORS.onErrorContainer }}>
+                AI Recommendation: Avoid delayed routes. Redirecting fans to {bestEco.type} and{' '}
+                {fastest.type}.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Accessibility: Sort order announcer for screen readers */}
       <div aria-live="polite" aria-atomic="true" className="sr-only">
         {sortAnnouncement}
@@ -296,6 +340,12 @@ function TransportHub() {
                 </div>
               </div>
             </div>
+
+            {t.status === 'delayed' && (
+              <div className="mb-3 p-2 rounded bg-red-100 text-red-700 text-xs font-bold border border-red-300">
+                ⚠️ DELAYED: {t.delayMessage}
+              </div>
+            )}
 
             <div className="grid grid-cols-2 gap-3 mb-4">
               <div className="p-2.5 rounded-xl text-center" style={{ background: COLORS.surface }}>

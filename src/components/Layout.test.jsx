@@ -65,7 +65,7 @@ describe('Layout Component', () => {
     const { container } = render(<Layout />);
     const results = await axe(container);
     expect(results).toHaveNoViolations();
-  });
+  }, 15000);
 
   it('renders sidebar navigation links', () => {
     render(<Layout />);

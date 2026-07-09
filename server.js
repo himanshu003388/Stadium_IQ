@@ -31,6 +31,38 @@ const PORT = process.env.PORT || 3001;
 const isProduction = process.env.NODE_ENV === 'production';
 
 // =========================================
+// SECURITY: Redaction Logger
+// Intercepts console logs to mask sensitive keys
+// =========================================
+const originalLog = console.log;
+const originalError = console.error;
+
+function redact(args) {
+  return args.map((arg) => {
+    if (typeof arg === 'string') {
+      return arg.replace(/AIza[0-9A-Za-z-_]{35}/g, 'AIza[REDACTED]');
+    }
+    if (typeof arg === 'object' && arg !== null) {
+      try {
+        let str = JSON.stringify(arg);
+        str = str.replace(/AIza[0-9A-Za-z-_]{35}/g, 'AIza[REDACTED]');
+        return JSON.parse(str);
+      } catch {
+        return arg;
+      }
+    }
+    return arg;
+  });
+}
+
+console.log = function (...args) {
+  originalLog.apply(console, redact(args));
+};
+console.error = function (...args) {
+  originalError.apply(console, redact(args));
+};
+
+// =========================================
 // EFFICIENCY: Single GoogleGenerativeAI instance (module scope)
 // Re-used across all requests — not instantiated per-call
 // =========================================
@@ -107,6 +139,8 @@ const cspDirectives = {
   baseUri: ["'self'"],
   formAction: ["'self'"],
   manifestSrc: ["'self'"],
+  mediaSrc: ["'none'"],
+  workerSrc: ["'none'"],
   upgradeInsecureRequests: [],
 };
 
@@ -150,6 +184,34 @@ app.use(
 // =========================================
 app.use(express.json({ limit: '10kb' }));
 app.use(express.urlencoded({ extended: false, limit: '10kb' }));
+
+// =========================================
+// SECURITY: Anti-Pollution Middlewares
+// =========================================
+function hppGuard(req, res, next) {
+  // Prevent HTTP Parameter Pollution (HPP) by normalizing query arrays
+  if (req.query) {
+    for (const key in req.query) {
+      if (Array.isArray(req.query[key])) {
+        // Only keep the last provided parameter
+        req.query[key] = req.query[key][req.query[key].length - 1];
+      }
+    }
+  }
+  next();
+}
+
+function antiPrototypePollution(req, res, next) {
+  // Scans incoming JSON body for prototype pollution vectors
+  const bodyStr = JSON.stringify(req.body || {});
+  if (bodyStr.includes('"__proto__"') || bodyStr.includes('"constructor"')) {
+    return res.status(400).json({ error: 'Invalid payload structure detected.' });
+  }
+  next();
+}
+
+app.use(hppGuard);
+app.use(antiPrototypePollution);
 
 // =========================================
 // SECURITY: API Key authentication middleware
@@ -627,9 +689,13 @@ if (isProduction) {
 }
 
 // =========================================
-// Server startup
+// Server startup with Slowloris mitigation
 // =========================================
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log(`[${new Date().toISOString()}] Stadium IQ server running on port ${PORT}`);
   console.log(`Environment: ${isProduction ? 'production' : 'development'}`);
 });
+
+// Protect against Slowloris attacks by enforcing strict connection timeouts
+server.keepAliveTimeout = 60000;
+server.headersTimeout = 61000;

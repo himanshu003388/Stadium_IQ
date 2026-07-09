@@ -52,9 +52,11 @@ function InnerProvider({ children }) {
             const newWait = Math.max(1, Math.round(newDensity * 30));
             const newStatus =
               newDensity > 0.85 ? 'critical' : newDensity > 0.65 ? 'watch' : 'normal';
+            const predictedDensity = parseFloat(Math.min(1.0, newDensity + 0.12).toFixed(2));
             return {
               ...gate,
               density: parseFloat(newDensity.toFixed(2)),
+              predictedDensity,
               waitTimeMinutes: newWait,
               status: newStatus,
             };
@@ -69,6 +71,16 @@ function InnerProvider({ children }) {
               ),
             ),
           },
+          vendors: (prev.vendors || []).map((vendor) => {
+            // Deplete stock based on some random factor
+            const depletion = Math.round(Math.random() * 3);
+            const newStock = Math.max(0, vendor.stockLevel - depletion);
+            return {
+              ...vendor,
+              stockLevel: newStock,
+              status: newStock < 20 ? 'critical' : newStock < 50 ? 'warning' : 'nominal',
+            };
+          }),
         }));
       }, 8000);
     }

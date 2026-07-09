@@ -45,4 +45,24 @@ describe('AccessibilityHub', () => {
     const results = await axe(container);
     expect(results).toHaveNoViolations();
   });
+
+  it('toggles global accessibility modes', () => {
+    renderWithContext();
+    const hcToggle = screen.getByLabelText('Toggle High Contrast Mode');
+    const dmxToggle = screen.getByLabelText('Toggle Dyslexia-Friendly Font');
+
+    expect(document.documentElement.classList.contains('high-contrast')).toBe(false);
+    expect(document.documentElement.classList.contains('dyslexia-mode')).toBe(false);
+
+    fireEvent.click(hcToggle);
+    expect(document.documentElement.classList.contains('high-contrast')).toBe(true);
+
+    fireEvent.click(dmxToggle);
+    expect(document.documentElement.classList.contains('dyslexia-mode')).toBe(true);
+
+    fireEvent.click(hcToggle);
+    fireEvent.click(dmxToggle);
+    expect(document.documentElement.classList.contains('high-contrast')).toBe(false);
+    expect(document.documentElement.classList.contains('dyslexia-mode')).toBe(false);
+  });
 });
