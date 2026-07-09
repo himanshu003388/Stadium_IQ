@@ -641,10 +641,11 @@ function CrowdMap() {
             </div>
             <div className="flex flex-col gap-2">
               {gates.map((gate) => {
-                const gateColorConfig = GATE_STATUS_COLORS[gate.status] || GATE_STATUS_COLORS.normal;
+                const gateColorConfig =
+                  GATE_STATUS_COLORS[gate.status] || GATE_STATUS_COLORS.normal;
                 const bgColor = gateColorConfig.bg;
                 const textColor = gateColorConfig.text;
-                const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent('AT&T Stadium, Arlington, TX')}&travelmode=walking&q=${encodeURIComponent(`Gate ${gate.id} AT&T Stadium Arlington TX`)}`;
+                const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent('AT&T Stadium, Arlington, TX')}&travelmode=walking&q=${encodeURIComponent(`Gate ${gate.id}`)}`;
                 return (
                   <div
                     key={gate.id}
