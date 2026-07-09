@@ -52,7 +52,8 @@ app.use(compression());
 // SECURITY: HMAC-signed CSRF tokens
 // Stateless — survives server restarts & scales across instances
 // =========================================
-const CSRF_SECRET = process.env.CSRF_SECRET || crypto.randomBytes(32).toString('hex');
+const CSRF_SECRET = process.env.CSRF_SECRET || 
+  (process.env.GEMINI_API_KEY ? crypto.createHash('sha256').update(process.env.GEMINI_API_KEY).digest('hex') : crypto.randomBytes(32).toString('hex'));
 const CSRF_TOKEN_EXPIRY = 3600; // seconds
 
 function generateCsrfToken() {
@@ -469,6 +470,14 @@ ${safeContext}
     });
   } catch (error) {
     console.error(`[${requestId}] Gemini API Error:`, error);
+    
+    if (error.status === 400 || error.status === 403 || (error.message && error.message.toLowerCase().includes('api key'))) {
+      return res.status(400).json({
+        error: 'Gemini API Key is missing or invalid in server environment.',
+        requestId,
+      });
+    }
+
     res.status(500).json({
       error: 'Failed to communicate with AI Assistant.',
       requestId,
@@ -575,7 +584,11 @@ Stadium Context: ${safeContext}`;
     res.write(`data: ${JSON.stringify({ done: true, requestId })}\n\n`);
   } catch (err) {
     console.error(`[${requestId}] Streaming error:`, err);
-    res.write(`data: ${JSON.stringify({ error: 'Stream failed', requestId })}\n\n`);
+    if (err.status === 400 || err.status === 403 || (err.message && err.message.toLowerCase().includes('api key'))) {
+      res.write(`data: ${JSON.stringify({ error: 'Gemini API Key is missing or invalid in server environment.', requestId })}\n\n`);
+    } else {
+      res.write(`data: ${JSON.stringify({ error: 'Stream failed', requestId })}\n\n`);
+    }
   } finally {
     res.end();
   }
