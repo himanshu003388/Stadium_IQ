@@ -21,6 +21,14 @@ import translateRouter from './routes/translate.js';
 import dispatchRouter from './routes/dispatch.js';
 
 const isProduction = process.env.NODE_ENV === 'production';
+
+// Startup guard: warn loudly if ALLOWED_ORIGINS is absent in production
+if (isProduction && !process.env.ALLOWED_ORIGINS) {
+  logger.warn(
+    '[SECURITY] ALLOWED_ORIGINS env var is not set in production. All cross-origin requests will be rejected by CORS. Set ALLOWED_ORIGINS to a comma-separated list of allowed origins.',
+  );
+}
+
 const app = express();
 
 app.use(compression());

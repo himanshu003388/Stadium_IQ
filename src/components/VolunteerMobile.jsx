@@ -30,8 +30,13 @@ function VolunteerMobile() {
         '',
       );
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTask?.id, currentVolunteer.id]);
+  }, [
+    activeTask,
+    currentVolunteer.name,
+    currentVolunteer.zone,
+    contextData.stadium.currentOccupancy,
+    requestRoute,
+  ]);
 
   const handleTranslate = async () => {
     if (!customPhrase.trim()) return;

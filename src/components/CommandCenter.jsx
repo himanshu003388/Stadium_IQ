@@ -7,8 +7,6 @@ import GateRow from './command-center/GateRow';
 import IncidentCard from './command-center/IncidentCard';
 import SmartBroadcastWidget from './command-center/SmartBroadcastWidget';
 
-const COLORS_MODULE = COLORS;
-
 function CommandCenter() {
   const gates = useStadiumContext((s) => s.contextData.gates);
   const stadium = useStadiumContext((s) => s.contextData.stadium);
@@ -52,7 +50,7 @@ function CommandCenter() {
           role="alert"
           aria-live="assertive"
           style={{
-            background: COLORS_MODULE.gradientCritical,
+            background: COLORS.gradientCritical,
             boxShadow: '0 4px 20px rgba(198,40,40,0.3)',
           }}
         >
@@ -81,24 +79,24 @@ function CommandCenter() {
           role="alert"
           aria-live="polite"
           style={{
-            background: COLORS_MODULE.warningContainer,
-            border: `1px solid ${COLORS_MODULE.warning}`,
+            background: COLORS.warningContainer,
+            border: `1px solid ${COLORS.warning}`,
           }}
         >
           <span
             aria-hidden="true"
             className="material-symbols-outlined"
-            style={{ color: COLORS_MODULE.warning, fontVariationSettings: "'FILL' 1" }}
+            style={{ color: COLORS.warning, fontVariationSettings: "'FILL' 1" }}
           >
             insights
           </span>
           <div>
-            <p className="font-bold text-sm" style={{ color: COLORS_MODULE.onWarningContainer }}>
+            <p className="font-bold text-sm" style={{ color: COLORS.onWarningContainer }}>
               PROACTIVE: Gate{predictiveGates.length > 1 ? 's' : ''}{' '}
               {predictiveGates.map((g) => g.id).join(', ')} predicted to hit critical density in 15
               mins.
             </p>
-            <p className="text-xs opacity-80" style={{ color: COLORS_MODULE.onWarningContainer }}>
+            <p className="text-xs opacity-80" style={{ color: COLORS.onWarningContainer }}>
               AI recommends opening auxiliary stanchions or redirecting approaching traffic now.
             </p>
           </div>
@@ -114,7 +112,7 @@ function CommandCenter() {
           value={avgDensity}
           unit="%"
           icon="groups"
-          color={COLORS_MODULE.primary}
+          color={COLORS.primary}
           delay={1}
           sub={`${criticalGates.length} critical gate${criticalGates.length !== 1 ? 's' : ''}`}
         />
@@ -123,7 +121,7 @@ function CommandCenter() {
           value={occupancyPct}
           unit="%"
           icon="people"
-          color={COLORS_MODULE.tertiary}
+          color={COLORS.tertiary}
           delay={2}
           sub={`${stadium.currentOccupancy.toLocaleString()} of ${stadium.capacity.toLocaleString()}`}
         />
@@ -131,7 +129,7 @@ function CommandCenter() {
           label="Active Incidents"
           value={activeIncidents.length}
           icon="emergency"
-          color={activeIncidents.length > 2 ? COLORS_MODULE.error : COLORS_MODULE.warning}
+          color={activeIncidents.length > 2 ? COLORS.error : COLORS.warning}
           delay={3}
           sub={`${incidents.filter((i) => i.status === 'resolved').length} resolved today`}
         />
@@ -140,7 +138,7 @@ function CommandCenter() {
           value={stadium.weather.temperature}
           unit="°C"
           icon="thermometer"
-          color={COLORS_MODULE.secondary}
+          color={COLORS.secondary}
           delay={4}
           sub={`${stadium.weather.conditions} · ${stadium.weather.humidity}% humidity`}
         />
@@ -156,7 +154,7 @@ function CommandCenter() {
             <span
               aria-hidden="true"
               className="material-symbols-outlined"
-              style={{ color: COLORS_MODULE.primaryContainer, fontVariationSettings: "'FILL' 1" }}
+              style={{ color: COLORS.primaryContainer, fontVariationSettings: "'FILL' 1" }}
             >
               grid_view
             </span>
@@ -225,14 +223,14 @@ function CommandCenter() {
             <span
               aria-hidden="true"
               className="material-symbols-outlined"
-              style={{ color: COLORS_MODULE.primaryContainer, fontVariationSettings: "'FILL' 1" }}
+              style={{ color: COLORS.primaryContainer, fontVariationSettings: "'FILL' 1" }}
             >
               sensor_door
             </span>
             <h2 className="font-bold text-sm color-on-surface">Gate Status</h2>
             <span
               className="ml-auto text-xs px-2 py-0.5 rounded-full font-mono"
-              style={{ background: COLORS_MODULE.warningContainer, color: COLORS_MODULE.warning }}
+              style={{ background: COLORS.warningContainer, color: COLORS.warning }}
             >
               Live
             </span>
@@ -241,7 +239,7 @@ function CommandCenter() {
             {gates.map((gate, idx) => (
               <div
                 key={gate.id}
-                style={{ borderTop: idx > 0 ? `1px solid ${COLORS_MODULE.surface}` : 'none' }}
+                style={{ borderTop: idx > 0 ? `1px solid ${COLORS.surface}` : 'none' }}
               >
                 <GateRow gate={gate} />
               </div>
@@ -263,7 +261,7 @@ function CommandCenter() {
           <span
             aria-hidden="true"
             className="material-symbols-outlined"
-            style={{ color: COLORS_MODULE.error, fontVariationSettings: "'FILL' 1" }}
+            style={{ color: COLORS.error, fontVariationSettings: "'FILL' 1" }}
           >
             emergency
           </span>

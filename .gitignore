@@ -28,9 +28,14 @@ dist-ssr
 *.sln
 *.sw?
 
-# Service account keys
+# Service account keys — NEVER commit credential files
 *-sa-key.json
 *-service-account-key.json
+*-credentials.json
+*-key.json
+service-account*.json
+gcp-key*.json
+firebase-adminsdk*.json
 
 # Coverage reports
 coverage

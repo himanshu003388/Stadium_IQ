@@ -171,4 +171,19 @@ describe('AIAssistant Component', () => {
       expect(screen.getByText(/Hello world!/i)).toBeInTheDocument();
     });
   });
+
+  it('updates app context language when chat language is changed', async () => {
+    // We need to access the AppContext setter to verify it's called.
+    // Instead of mocking, we can just check if the UI actually reflects the language change.
+    renderAIAssistant();
+    const select = screen.getByRole('button', { name: /Select language/i });
+    fireEvent.click(select);
+    
+    // Select Spanish
+    const esOption = screen.getByText('Español');
+    fireEvent.click(esOption);
+
+    // Verify chat placeholder changes to Spanish
+    expect(screen.getByPlaceholderText(/Escriba su mensaje/i)).toBeInTheDocument();
+  });
 });

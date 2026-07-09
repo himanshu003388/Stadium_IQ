@@ -130,6 +130,7 @@ function AIAssistant() {
               data-testid="quick-prompt-btn"
               onClick={() => sendMessage(q.text)}
               disabled={isLoading}
+              aria-label={`Ask: ${q.text}`}
               className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all hover:scale-105 disabled:opacity-50"
               style={{
                 background: COLORS.surfaceContainerLowest,

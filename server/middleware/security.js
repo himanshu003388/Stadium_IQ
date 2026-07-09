@@ -6,7 +6,7 @@ const cspDirectives = {
   defaultSrc: ["'self'"],
   scriptSrc: ["'self'"],
   styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
-  fontSrc: ["'self'", 'https://fonts.gstatic.com'],
+  fontSrc: ["'self'", 'https://fonts.gstatic.com', 'https://fonts.googleapis.com'],
   imgSrc: ["'self'", 'data:', 'https:'],
   connectSrc: ["'self'", ...(isProduction ? [] : ['http://localhost:5173'])],
   objectSrc: ["'none'"],

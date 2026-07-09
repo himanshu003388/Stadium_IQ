@@ -63,19 +63,35 @@ function VendorDashboard() {
                     </p>
                   </div>
                 </div>
-                <div
-                  className="px-2 py-1 rounded text-xs font-bold"
-                  style={{
-                    background: `${getStatusColor(vendor.status)}20`,
-                    color: getStatusColor(vendor.status),
-                  }}
-                >
-                  {vendor.stockLevel}% STOCK
+                <div className="flex flex-col items-end gap-1">
+                  <div
+                    className="px-2 py-1 rounded text-xs font-bold"
+                    style={{
+                      background: `${getStatusColor(vendor.status)}20`,
+                      color: getStatusColor(vendor.status),
+                    }}
+                  >
+                    {vendor.stockLevel}% STOCK
+                  </div>
+                  <span 
+                    className="text-[10px] font-bold uppercase tracking-wider" 
+                    style={{ color: getStatusColor(vendor.status) }}
+                  >
+                    {vendor.status === 'critical' ? 'Critical' : vendor.status === 'warning' ? 'Low' : 'Good'}
+                  </span>
                 </div>
               </div>
 
               <div className="mb-4">
-                <div className="density-bar mt-1.5" style={{ background: COLORS.surfaceDim }}>
+                <div 
+                  className="density-bar mt-1.5" 
+                  style={{ background: COLORS.surfaceDim }}
+                  role="progressbar"
+                  aria-valuenow={vendor.stockLevel}
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                  aria-label={`${vendor.name} stock level: ${vendor.stockLevel}%`}
+                >
                   <div
                     className="density-fill"
                     style={{

@@ -13,8 +13,6 @@ export function getGenAI() {
 
 let cachedModelName = null;
 let lastCheck = 0;
-/** In-flight deduplication: a single Promise shared by all concurrent cold-cache callers */
-let modelFetchInFlight = null;
 
 /**
  * Dynamically selects the best available Gemini model, with a 1-hour cache
@@ -31,33 +29,31 @@ export async function getBestAvailableModel() {
   }
 
   // If a fetch is already in flight, share it rather than making a duplicate request.
-  if (modelFetchInFlight) {
-    return modelFetchInFlight;
-  }
+  const genAI = getGenAI();
+  if (!genAI) return 'gemini-1.5-flash';
 
-  modelFetchInFlight = (async () => {
+  try {
+    let bestModel = 'gemini-1.5-flash';
     try {
-      const res = await fetch('https://generativelanguage.googleapis.com/v1beta/models', {
-        headers: { 'x-goog-api-key': process.env.GEMINI_API_KEY },
+      const testModel = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+      // Very short test prompt
+      await testModel.generateContent({
+        contents: [{ role: 'user', parts: [{ text: 'hi' }] }],
+        generationConfig: { maxOutputTokens: 1 },
       });
-      if (!res.ok) return 'gemini-1.5-flash';
-      const data = await res.json();
-
-      const has25 = (data.models || []).some((m) => m.name.includes('gemini-2.5-flash'));
-      cachedModelName = has25 ? 'gemini-2.5-flash' : 'gemini-1.5-flash';
-      lastCheck = Date.now();
-
-      logger.info(`[Auto-Select] Dynamically selected model: ${cachedModelName}`);
-      return cachedModelName;
-    } catch (err) {
-      logger.error('Failed to dynamically fetch models, using fallback', err);
-      return 'gemini-1.5-flash';
-    } finally {
-      modelFetchInFlight = null;
+      bestModel = 'gemini-2.5-flash';
+    } catch (e) {
+      logger.info('gemini-2.5-flash not available or failed test, falling back to 1.5-flash', e);
+      bestModel = 'gemini-1.5-flash';
     }
-  })();
 
-  return modelFetchInFlight;
+    modelCache.set('best-model', bestModel, SERVER_CONFIG.MODEL_CACHE_TTL_MS / 1000); // node-cache uses seconds
+    logger.info(`Best available model selected: ${bestModel} and cached.`);
+    return bestModel;
+  } catch (err) {
+    logger.error('Failed to dynamically fetch models, using fallback', err);
+    return 'gemini-1.5-flash';
+  }
 }
 
 export function buildSystemPrompt(safeContext, language) {

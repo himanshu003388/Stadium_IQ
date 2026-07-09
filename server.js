@@ -49,3 +49,4 @@ const server = app.listen(PORT, () => {
 
 server.keepAliveTimeout = 60000;
 server.headersTimeout = 61000;
+setInterval(() => {}, 10000);

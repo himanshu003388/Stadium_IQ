@@ -208,7 +208,8 @@ function InnerProvider({ children }) {
     if (!currentState.isSimulating) return;
     if (!SIMULATION_VIEWS.has(activeView)) return;
 
-    let interval = null;
+    // Wrap the numeric interval ID in an object so we can attach metadata
+    let intervalHandle = null; // { id: number, _targetInterval: number }
 
     function tick() {
       storeRef.current.setState((prev) => {
@@ -312,10 +313,9 @@ function InnerProvider({ children }) {
         const targetInterval = hasCritical
           ? SIMULATION_CONFIG.TICK_INTERVAL_CRITICAL
           : SIMULATION_CONFIG.TICK_INTERVAL_NORMAL;
-        if (interval && interval._targetInterval !== targetInterval) {
-          clearInterval(interval);
-          interval = setInterval(tick, targetInterval);
-          interval._targetInterval = targetInterval;
+        if (intervalHandle && intervalHandle._targetInterval !== targetInterval) {
+          clearInterval(intervalHandle.id);
+          intervalHandle = { id: setInterval(tick, targetInterval), _targetInterval: targetInterval };
         }
 
         return {
@@ -341,14 +341,13 @@ function InnerProvider({ children }) {
       const rate = hasCritical
         ? SIMULATION_CONFIG.TICK_INTERVAL_CRITICAL
         : SIMULATION_CONFIG.TICK_INTERVAL_NORMAL;
-      interval = setInterval(tick, rate);
-      interval._targetInterval = rate;
+      intervalHandle = { id: setInterval(tick, rate), _targetInterval: rate };
     }
 
     function stopInterval() {
-      if (interval) {
-        clearInterval(interval);
-        interval = null;
+      if (intervalHandle) {
+        clearInterval(intervalHandle.id);
+        intervalHandle = null;
       }
     }
 

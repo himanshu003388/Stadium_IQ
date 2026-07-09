@@ -25,9 +25,9 @@ function CrowdMap() {
   const selectedZoneData = selectedZone
     ? stadium.zones.find((z) => z.id === selectedZone)
     : undefined;
-  const bestGate = useMemo(() => gates.toSorted((a, b) => a.density - b.density)[0], [gates]);
+  const bestGate = useMemo(() => gates.slice().sort((a, b) => a.density - b.density)[0], [gates]);
   const worstZone = useMemo(
-    () => stadium.zones.toSorted((a, b) => b.occupancy - a.occupancy)[0],
+    () => stadium.zones.slice().sort((a, b) => b.occupancy - a.occupancy)[0],
     [stadium.zones],
   );
 
@@ -37,8 +37,16 @@ function CrowdMap() {
       `Give a concise navigation and crowd management tip for fans at ${stadium.name}. Current best gate: ${bestGate?.id}, wait time: ${bestGate?.waitTimeMinutes}min. Busiest zone: ${worstZone?.name} at ${Math.round((worstZone?.occupancy || 0) * 100)}% capacity. Current score: ${stadium.score}. Keep it to 2 sentences.`,
       navTipFallback,
     );
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [
+    stadium.name,
+    bestGate?.id,
+    bestGate?.waitTimeMinutes,
+    worstZone?.name,
+    worstZone?.occupancy,
+    stadium.score,
+    navTipFallback,
+    requestNavTip,
+  ]);
 
   return (
     <div
