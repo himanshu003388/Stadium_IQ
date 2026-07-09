@@ -53,7 +53,7 @@ app.use(compression());
 // Stateless — survives server restarts & scales across instances
 // =========================================
 const CSRF_SECRET = process.env.CSRF_SECRET || 
-  (process.env.GEMINI_API_KEY ? crypto.createHash('sha256').update(process.env.GEMINI_API_KEY).digest('hex') : crypto.randomBytes(32).toString('hex'));
+  (process.env.GEMINI_API_KEY ? crypto.createHash('sha256').update(process.env.GEMINI_API_KEY).digest('hex') : 'default-stateless-csrf-secret-fallback');
 const CSRF_TOKEN_EXPIRY = 3600; // seconds
 
 function generateCsrfToken() {
@@ -159,8 +159,11 @@ function authenticateApiKey(req, res, next) {
   if (isProduction && (!API_AUTH_KEY || API_AUTH_KEY === 'your-api-auth-key')) {
     // Fallback: allow requests from our web frontend with valid CSRF tokens
     const csrfToken = req.headers['x-csrf-token'];
-    if (csrfToken && validateCsrfToken(csrfToken)) {
-      return next();
+    if (csrfToken) {
+      if (validateCsrfToken(csrfToken)) {
+        return next();
+      }
+      return res.status(403).json({ error: 'Invalid CSRF token.' });
     }
     return res.status(503).json({
       error: 'Service temporarily unavailable. API authentication not configured.',
@@ -175,8 +178,11 @@ function authenticateApiKey(req, res, next) {
   if (!providedKey || providedKey !== API_AUTH_KEY) {
     // Fallback: allow requests from our web frontend with valid CSRF tokens
     const csrfToken = req.headers['x-csrf-token'];
-    if (csrfToken && validateCsrfToken(csrfToken)) {
-      return next();
+    if (csrfToken) {
+      if (validateCsrfToken(csrfToken)) {
+        return next();
+      }
+      return res.status(403).json({ error: 'Invalid CSRF token.' });
     }
     return res.status(401).json({ error: 'Unauthorized. Valid API key required.' });
   }
