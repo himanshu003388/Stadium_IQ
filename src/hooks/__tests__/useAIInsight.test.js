@@ -2,14 +2,24 @@
  * useAIInsight.js — enhanced branch & function coverage
  * Covers: cache hits, network errors, 403 CSRF refresh, fallback text,
  * loading guard, and clearInsight.
+ *
+ * NOTE: useAIInsight uses a module-level insightCache that persists between
+ * tests. Every requestInsight call must use a UNIQUE prompt string so that
+ * cache hits from prior tests do not interfere.
  */
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { useAIInsight } from '../useAIInsight';
 
 // ─────────────────────────────────────────────
 // Helpers
 // ─────────────────────────────────────────────
+let promptCounter = 0;
+/** Returns a globally unique prompt string to avoid module-level cache hits. */
+function uniquePrompt(base = 'prompt') {
+  return `${base}-${++promptCounter}-${Math.random()}`;
+}
+
 function makeFetchResponse(body, status = 200) {
   return Promise.resolve({
     ok: status >= 200 && status < 300,
@@ -19,6 +29,7 @@ function makeFetchResponse(body, status = 200) {
 }
 
 beforeEach(() => {
+  vi.restoreAllMocks();
   // Default: CSRF fetch succeeds, chat fetch succeeds
   global.fetch = vi.fn((url) => {
     if (url.includes('csrf-token')) {
@@ -28,11 +39,9 @@ beforeEach(() => {
   });
 });
 
-afterEach(() => {
-  vi.restoreAllMocks();
-});
-
-const MOCK_CTX = { stadium: { name: 'Test Stadium', capacity: 50000, currentOccupancy: 30000 } };
+const MOCK_CTX = {
+  stadium: { name: 'Test Stadium', capacity: 50000, currentOccupancy: 30000 },
+};
 
 // ─────────────────────────────────────────────
 // Initialisation
@@ -62,24 +71,25 @@ describe('useAIInsight — successful fetch', () => {
   it('sets insight after a successful API call', async () => {
     const { result } = renderHook(() => useAIInsight(MOCK_CTX));
     await act(async () => {
-      await result.current.requestInsight('crowd status', null);
+      await result.current.requestInsight(uniquePrompt('crowd'), null);
     });
     expect(result.current.insight).toBe('AI response here');
     expect(result.current.isLoading).toBe(false);
   });
 
-  it('does not trigger a second request for the same prompt (cache hit)', async () => {
+  it('does not trigger a second request for the same cached prompt', async () => {
+    const prompt = uniquePrompt('cached');
     const { result } = renderHook(() => useAIInsight(MOCK_CTX));
 
     await act(async () => {
-      await result.current.requestInsight('crowd status', null);
+      await result.current.requestInsight(prompt, null);
     });
     const callCount = global.fetch.mock.calls.length;
 
+    // Second call with same prompt — should hit cache
     await act(async () => {
-      await result.current.requestInsight('crowd status', null);
+      await result.current.requestInsight(prompt, null);
     });
-    // No additional fetch calls should have been made
     expect(global.fetch.mock.calls.length).toBe(callCount);
     expect(result.current.insight).toBe('AI response here');
   });
@@ -97,7 +107,7 @@ describe('useAIInsight — network error / fallback', () => {
 
     const { result } = renderHook(() => useAIInsight(MOCK_CTX));
     await act(async () => {
-      await result.current.requestInsight('crowd status', 'Fallback text');
+      await result.current.requestInsight(uniquePrompt('network-err'), 'Fallback text');
     });
     expect(result.current.insight).toBe('Fallback text');
     expect(result.current.isLoading).toBe(false);
@@ -111,7 +121,7 @@ describe('useAIInsight — network error / fallback', () => {
 
     const { result } = renderHook(() => useAIInsight(MOCK_CTX));
     await act(async () => {
-      await result.current.requestInsight('crowd status', null);
+      await result.current.requestInsight(uniquePrompt('network-null'), null);
     });
     expect(result.current.insight).toBeNull();
   });
@@ -132,7 +142,7 @@ describe('useAIInsight — 403 CSRF refresh', () => {
 
     const { result } = renderHook(() => useAIInsight(MOCK_CTX));
     await act(async () => {
-      await result.current.requestInsight('gate info', null);
+      await result.current.requestInsight(uniquePrompt('csrf-retry'), null);
     });
     expect(result.current.insight).toBe('Retry success');
   });
@@ -145,7 +155,7 @@ describe('useAIInsight — 403 CSRF refresh', () => {
 
     const { result } = renderHook(() => useAIInsight(MOCK_CTX));
     await act(async () => {
-      await result.current.requestInsight('gate info', 'fallback after 403');
+      await result.current.requestInsight(uniquePrompt('csrf-fail'), 'fallback after 403');
     });
     expect(result.current.insight).toBe('fallback after 403');
   });
@@ -155,11 +165,11 @@ describe('useAIInsight — 403 CSRF refresh', () => {
 // clearInsight
 // ─────────────────────────────────────────────
 describe('useAIInsight — clearInsight', () => {
-  it('resets insight to null', async () => {
+  it('resets insight to null after a successful call', async () => {
     const { result } = renderHook(() => useAIInsight(MOCK_CTX));
 
     await act(async () => {
-      await result.current.requestInsight('some prompt', null);
+      await result.current.requestInsight(uniquePrompt('clear-test'), null);
     });
     expect(result.current.insight).toBe('AI response here');
 
@@ -180,9 +190,7 @@ describe('useAIInsight — CSRF fetch failure on init', () => {
       return makeFetchResponse({ reply: 'ok' });
     });
 
-    // Should not throw
     const { result } = renderHook(() => useAIInsight(MOCK_CTX));
-    // Small wait for useEffect
     await act(async () => {
       await new Promise((r) => setTimeout(r, 50));
     });
