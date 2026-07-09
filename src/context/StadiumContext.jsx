@@ -4,13 +4,7 @@
  * Separated from AppContext (theme, activeView) to prevent
  * unnecessary re-renders of UI-only consumers on simulation ticks
  */
-import React, {
-  createContext,
-  useContext,
-  useEffect,
-  useRef,
-  useSyncExternalStore,
-} from 'react';
+import React, { createContext, useContext, useEffect, useRef, useSyncExternalStore } from 'react';
 import initialMockContext from '../data/mockContext.json';
 import { useAppContext, AppProvider } from './AppContext';
 import { NotificationProvider, useNotifications } from './NotificationContext';
