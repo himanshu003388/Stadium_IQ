@@ -1,6 +1,6 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect } from 'vitest';
-import { axe } from 'jest-axe';
+import { axe } from '../setupTests';
 import AccessibilityHub from './AccessibilityHub';
 import { StadiumProvider } from '../context/StadiumContext';
 

@@ -1,5 +1,4 @@
 import { describe, it, expect, vi } from 'vitest';
-import crypto from 'crypto';
 import { buildSafeContext } from '../../src/utils/contextFilter';
 
 import { sanitizeInput, validateChatInput } from '../../server/utils/validation.js';
@@ -7,6 +6,7 @@ import {
   generateCsrfToken as prodGenerateCsrfToken,
   validateCsrfToken as prodValidateCsrfToken,
 } from '../../server/utils/csrf.js';
+import { signToken as esSignToken, verifyToken as esVerifyToken } from '../../server/utils/jwt.js';
 
 const VALID_LANGUAGES = ['en', 'es', 'fr', 'ar', 'pt', 'ja', 'hi'];
 
@@ -389,86 +389,44 @@ describe('antiPrototypePollution', () => {
   });
 });
 
-describe('JWT utilities', () => {
-  const JWT_SECRET = 'test-jwt-secret-for-unit-tests';
-
-  function signToken(payload) {
-    const header = Buffer.from(JSON.stringify({ alg: 'HS256', typ: 'JWT' })).toString('base64url');
-    const nonce = crypto.randomBytes(8).toString('hex');
-    const body = Buffer.from(
-      JSON.stringify({
-        ...payload,
-        nonce,
-        iat: Math.floor(Date.now() / 1000),
-        exp: Math.floor(Date.now() / 1000) + 3600,
-      }),
-    ).toString('base64url');
-    const sig = crypto
-      .createHmac('sha256', JWT_SECRET)
-      .update(`${header}.${body}`)
-      .digest('base64url');
-    return `${header}.${body}.${sig}`;
-  }
-
-  function verifyToken(token) {
-    if (!token) return null;
-    try {
-      const parts = token.split('.');
-      if (parts.length !== 3) return null;
-      const [header, body, sig] = parts;
-      const expected = crypto
-        .createHmac('sha256', JWT_SECRET)
-        .update(`${header}.${body}`)
-        .digest('base64url');
-      const sigBuf = Buffer.from(sig);
-      const expBuf = Buffer.from(expected);
-      if (sigBuf.length !== expBuf.length) return null;
-      if (!crypto.timingSafeEqual(sigBuf, expBuf)) return null;
-      const data = JSON.parse(Buffer.from(body, 'base64url').toString());
-      if (data.exp && Date.now() / 1000 > data.exp) return null;
-      return data;
-    } catch {
-      return null;
-    }
-  }
-
+describe('JWT utilities (ES256)', () => {
   it('signs and verifies a valid token', () => {
-    const token = signToken({ sub: 'admin', role: 'admin' });
-    const payload = verifyToken(token);
+    const token = esSignToken({ sub: 'admin', role: 'admin' });
+    const payload = esVerifyToken(token);
     expect(payload).not.toBeNull();
     expect(payload.sub).toBe('admin');
     expect(payload.role).toBe('admin');
   });
 
   it('returns null for null token', () => {
-    expect(verifyToken(null)).toBeNull();
+    expect(esVerifyToken(null)).toBeNull();
   });
 
   it('returns null for empty string token', () => {
-    expect(verifyToken('')).toBeNull();
+    expect(esVerifyToken('')).toBeNull();
   });
 
   it('returns null for tampered token', () => {
-    const token = signToken({ sub: 'admin' });
+    const token = esSignToken({ sub: 'admin' });
     const tampered = token.slice(0, -10) + 'a'.repeat(10);
-    expect(verifyToken(tampered)).toBeNull();
+    expect(esVerifyToken(tampered)).toBeNull();
   });
 
   it('returns null for expired token', () => {
     vi.useFakeTimers();
-    const token = signToken({ sub: 'admin' });
+    const token = esSignToken({ sub: 'admin' });
     vi.advanceTimersByTime(2 * 3600 * 1000);
-    expect(verifyToken(token)).toBeNull();
+    expect(esVerifyToken(token)).toBeNull();
     vi.useRealTimers();
   });
 
   it('returns null for malformed token (less than 3 parts)', () => {
-    expect(verifyToken('header.body')).toBeNull();
+    expect(esVerifyToken('header.body')).toBeNull();
   });
 
   it('generates unique tokens on successive calls', () => {
-    const t1 = signToken({ sub: 'admin' });
-    const t2 = signToken({ sub: 'admin' });
+    const t1 = esSignToken({ sub: 'admin' });
+    const t2 = esSignToken({ sub: 'admin' });
     expect(t1).not.toBe(t2);
   });
 });

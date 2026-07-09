@@ -1,11 +1,8 @@
+import React from 'react';
 import { describe, it, expect } from 'vitest';
-import {
-  timeAgo,
-  getDemoResponse,
-  renderMarkdown,
-  getLoadBarColor,
-  getDensityColor,
-} from '../helpers';
+import { render } from '@testing-library/react';
+import { timeAgo, getDemoResponse, getLoadBarColor, getDensityColor } from '../helpers';
+import MarkdownRenderer from '../../components/MarkdownRenderer';
 
 describe('helpers edge cases', () => {
   describe('timeAgo', () => {
@@ -111,20 +108,33 @@ describe('helpers edge cases', () => {
     });
   });
 
-  describe('renderMarkdown', () => {
+  describe('MarkdownRenderer', () => {
     it('renders bold text', () => {
-      expect(renderMarkdown('**hello**')).toContain('<strong>hello</strong>');
+      const { container } = render(<MarkdownRenderer text="**hello**" />);
+      expect(container.querySelector('strong')).toHaveTextContent('hello');
     });
 
-    it('renders bullet points', () => {
-      const result = renderMarkdown('• item 1\n• item 2');
-      expect(result).toContain('<ul');
-      expect(result).toContain('<li>item 1</li>');
+    it('renders bullet points as list items', () => {
+      const { container } = render(<MarkdownRenderer text={'• item 1\n• item 2'} />);
+      expect(container.querySelector('ul')).toBeInTheDocument();
+      expect(container.querySelectorAll('li').length).toBe(2);
     });
 
-    it('handles line breaks', () => {
-      const result = renderMarkdown('line1\nline2');
-      expect(result).toContain('<br/>');
+    it('renders plain text as paragraphs', () => {
+      const { container } = render(<MarkdownRenderer text={'line1\nline2'} />);
+      const paragraphs = container.querySelectorAll('p');
+      expect(paragraphs.length).toBeGreaterThanOrEqual(1);
+    });
+
+    it('handles empty text without crashing', () => {
+      const { container } = render(<MarkdownRenderer text="" />);
+      expect(container.textContent).toBe('');
+    });
+
+    it('handles mixed bold and regular text', () => {
+      const { container } = render(<MarkdownRenderer text="**bold** and regular" />);
+      expect(container.querySelector('strong')).toHaveTextContent('bold');
+      expect(container.textContent).toContain('and regular');
     });
   });
 

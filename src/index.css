@@ -928,15 +928,32 @@ textarea {
   outline-offset: 2px;
 }
 
-/* Focus visible styles for better keyboard navigation */
+/* Focus visible styles — WCAG 2.4.11 Focus Appearance
+   Minimum: 3px outline, sufficient contrast against both light and dark backgrounds.
+   The white box-shadow creates a visible gap between the outline and the element,
+   ensuring the focus ring is distinguishable regardless of element color. */
 *:focus-visible {
-  outline: 2px solid var(--color-primary-container);
-  outline-offset: 2px;
+  outline: 3px solid var(--color-primary);
+  outline-offset: 3px;
   border-radius: 4px;
+  box-shadow: 0 0 0 5px rgba(255, 255, 255, 0.15);
+}
+
+/* High-contrast mode: use yellow focus ring for maximum visibility */
+html.high-contrast *:focus-visible {
+  outline: 3px solid #ffff00;
+  outline-offset: 3px;
+  box-shadow: 0 0 0 5px rgba(0, 0, 0, 0.8);
 }
 
 button:focus:not(:focus-visible) {
   outline: none;
+}
+
+/* Interactive nav items — override focus-visible for cleaner look within nav */
+.nav-item:focus-visible {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 2px;
 }
 
 /* Live region announcements for screen readers */

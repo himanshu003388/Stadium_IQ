@@ -7,7 +7,7 @@ if (!CSRF_SECRET) {
       'FATAL SECURITY ERROR: CSRF_SECRET environment variable must be defined in production.',
     );
   }
-  CSRF_SECRET = 'development-csrf-secret-fallback-stadium-iq';
+  CSRF_SECRET = crypto.randomBytes(64).toString('hex');
 }
 const CSRF_TOKEN_EXPIRY = 3600;
 

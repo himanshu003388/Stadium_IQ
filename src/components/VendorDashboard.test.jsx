@@ -1,10 +1,8 @@
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import VendorDashboard from './VendorDashboard';
-import { axe, toHaveNoViolations } from 'jest-axe';
+import { axe } from '../setupTests';
 import React from 'react';
-
-expect.extend(toHaveNoViolations);
 
 // Mock the context provider since it has setIntervals we don't want running wild
 vi.mock('../context/StadiumContext', async (importOriginal) => {

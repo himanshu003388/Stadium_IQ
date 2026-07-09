@@ -9,21 +9,36 @@ import { toHaveNoViolations, configureAxe } from 'jest-axe';
 expect.extend(toHaveNoViolations);
 
 /**
- * Configure axe for accessibility testing
+ * Standard axe configuration for component-level unit tests.
+ * Page-level rules (document-title, html-has-lang, page-has-heading-one,
+ * region, bypass) are disabled because individual components
+ * are not full HTML pages and cannot satisfy page-level requirements.
+ * These rules ARE tested in integration/page-level tests using `fullAxe`.
  */
 const axe = configureAxe({
-  rules: [
-    // Disable rules that require a full document context
-    { id: 'document-title', enabled: false },
-    { id: 'html-has-lang', enabled: false },
-    { id: 'page-has-heading-one', enabled: false },
-    { id: 'region', enabled: false },
-    { id: 'bypass', enabled: false },
-    // Enable all other rules
-  ],
+  rules: {
+    'document-title': { enabled: false },
+    'html-has-lang': { enabled: false },
+    'page-has-heading-one': { enabled: false },
+    region: { enabled: false },
+    bypass: { enabled: false },
+  },
 });
 
-export { axe };
+/**
+ * Full axe configuration with ALL WCAG rules enabled.
+ * Use this in integration tests that render complete page contexts
+ * (e.g., App.test.jsx, Layout.test.jsx, E2E tests).
+ */
+const fullAxe = configureAxe();
+
+export { axe, fullAxe };
+
+// Provide proper document context for a11y tests
+beforeEach(() => {
+  document.title = 'Stadium IQ — FIFA World Cup 2026';
+  document.documentElement.setAttribute('lang', 'en');
+});
 
 // Mock matchMedia for responsive tests
 Object.defineProperty(window, 'matchMedia', {

@@ -1,6 +1,6 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { axe } from 'jest-axe';
+import { axe, fullAxe } from '../setupTests';
 import Layout from './Layout';
 
 describe('Layout Component', () => {
@@ -78,4 +78,10 @@ describe('Layout Component', () => {
     expect(main).toBeInTheDocument();
     expect(main).toHaveAttribute('role', 'main');
   });
+
+  it('passes full-page accessibility audit with all WCAG rules', async () => {
+    const { container } = render(<Layout />);
+    const results = await fullAxe(container);
+    expect(results).toHaveNoViolations();
+  }, 15000);
 });

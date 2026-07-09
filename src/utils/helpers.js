@@ -209,25 +209,6 @@ export function getDemoResponse(text, ctx, language = 'en') {
   return langTemplates.default(stadium);
 }
 
-/**
- * Safely parses and renders simple Markdown text into HTML strings.
- * Used primarily for formatting Gemini chat responses.
- * @param {string} text - The raw Markdown text.
- * @returns {string} The parsed HTML output.
- */
-export function renderMarkdown(text) {
-  let result = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-  result = result.replace(/^• (.+)$/gm, '<li>$1</li>');
-  result = result.replace(
-    /(<li>.*<\/li>\n?)+/gs,
-    (match) => `<ul style="margin: 6px 0; padding-left: 16px;">${match}</ul>`,
-  );
-  result = result.replace(/\n/g, '<br/>');
-  result = result.replace(/<\/li><br\/>/g, '</li>');
-  result = result.replace(/<br\/><\/ul>/g, '</ul>');
-  return result;
-}
-
 export function getLoadBarColor(current, max) {
   const pct = Math.round((current / max) * 100);
   if (pct >= 100) return 'var(--color-status-critical)';

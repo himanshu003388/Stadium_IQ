@@ -5,7 +5,17 @@ import { verifyToken } from '../utils/jwt.js';
 const isProduction = process.env.NODE_ENV === 'production';
 const API_AUTH_KEY = process.env.API_AUTH_KEY;
 
+function safeTimingSafeEqual(a, b) {
+  if (typeof a !== 'string' || typeof b !== 'string') return false;
+  const aBuf = Buffer.from(a);
+  const bBuf = Buffer.from(b);
+  if (aBuf.length !== bBuf.length) return false;
+  return crypto.timingSafeEqual(aBuf, bBuf);
+}
+
 export function authenticateApiKey(req, res, next) {
+  // --- Case 1: No API key scheme configured in production ---
+  // Fall back to CSRF-only authentication.
   if (isProduction && (!API_AUTH_KEY || API_AUTH_KEY === 'your-api-auth-key')) {
     const csrfToken = req.headers['x-csrf-token'];
     if (csrfToken) {
@@ -16,22 +26,31 @@ export function authenticateApiKey(req, res, next) {
       .status(503)
       .json({ error: 'Service temporarily unavailable. API authentication not configured.' });
   }
+
+  // --- Case 2: Development with no API key configured ---
+  // Allow all requests (dev convenience).
   if (!isProduction && (!API_AUTH_KEY || API_AUTH_KEY === 'your-api-auth-key')) {
     return next();
   }
+
+  // --- Case 3: API key scheme IS active ---
+  // Check X-API-Key header. If correct, pass through.
   const providedKey = req.headers['x-api-key'];
-  if (
-    !providedKey ||
-    !crypto.timingSafeEqual(Buffer.from(providedKey), Buffer.from(API_AUTH_KEY))
-  ) {
-    const csrfToken = req.headers['x-csrf-token'];
-    if (csrfToken) {
-      if (validateCsrfToken(csrfToken, req)) return next();
-      return res.status(403).json({ error: 'Invalid CSRF token.' });
-    }
-    return res.status(401).json({ error: 'Unauthorized. Valid API key required.' });
+  if (providedKey && safeTimingSafeEqual(providedKey, API_AUTH_KEY)) {
+    return next();
   }
-  next();
+
+  // API key is wrong or missing — fall back to CSRF-token authentication.
+  // This allows browser-based clients (same origin, no API key) to authenticate
+  // via CSRF token while external API callers must use a valid API key.
+  const csrfToken = req.headers['x-csrf-token'];
+  if (csrfToken) {
+    if (validateCsrfToken(csrfToken, req)) return next();
+    return res.status(403).json({ error: 'Invalid CSRF token.' });
+  }
+
+  // Neither API key nor CSRF token provided — reject.
+  return res.status(401).json({ error: 'Unauthorized. Valid API key or CSRF token required.' });
 }
 
 export function csrfProtection(req, res, next) {

@@ -1,0 +1,75 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Announcer Snapshot > matches snapshot with default message 1`] = `
+<div>
+  <div
+    aria-atomic="true"
+    aria-live="polite"
+    class="sr-only"
+    data-testid="route-announcer"
+    role="status"
+  />
+</div>
+`;
+
+exports[`Announcer Snapshot > matches snapshot with empty message 1`] = `
+<div>
+  <div
+    aria-atomic="true"
+    aria-live="polite"
+    class="sr-only"
+    data-testid="route-announcer"
+    role="status"
+  />
+</div>
+`;
+
+exports[`FocusTrap Snapshot > matches snapshot when active 1`] = `
+<div>
+  <div>
+    <div>
+      <button>
+        First
+      </button>
+      <button>
+        Last
+      </button>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`FocusTrap Snapshot > matches snapshot when inactive 1`] = `
+<div>
+  <div>
+    <div>
+      <button>
+        Test
+      </button>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`MarkdownRenderer Snapshot > matches snapshot with bold text and bullets 1`] = `
+<div>
+  <p
+    style="margin: 4px 0px;"
+  >
+    <strong>
+      Welcome
+    </strong>
+     to Stadium IQ\\n• Feature 1\\n• Feature 2\\nNormal text
+  </p>
+</div>
+`;
+
+exports[`MarkdownRenderer Snapshot > matches snapshot with single paragraph 1`] = `
+<div>
+  <p
+    style="margin: 4px 0px;"
+  >
+    Hello world
+  </p>
+</div>
+`;

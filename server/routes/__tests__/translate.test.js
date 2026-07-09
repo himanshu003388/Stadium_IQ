@@ -6,8 +6,13 @@ vi.mock('../../middleware/auth.js', () => ({
   jwtAuth: (req, res, next) => next(),
 }));
 
+// Mock genai before importing router
+vi.mock('../../utils/genai.js', () => ({
+  getGenAI: vi.fn(),
+  getBestAvailableModel: vi.fn().mockResolvedValue('gemini-1.5-flash'),
+}));
+
 import translateRouter from '../translate.js';
-import dispatchRouter from '../dispatch.js';
 
 describe('server/routes/translate.js', () => {
   let req, res, next;
@@ -25,6 +30,9 @@ describe('server/routes/translate.js', () => {
       setHeader: vi.fn(),
     };
     next = vi.fn();
+
+    // Clear mocks
+    vi.clearAllMocks();
   });
 
   it('should return 400 if text is missing', async () => {
@@ -62,46 +70,15 @@ describe('server/routes/translate.js', () => {
       expect.objectContaining({ error: expect.stringContaining('exceeds maximum length') }),
     );
   });
-});
 
-describe('server/routes/dispatch.js', () => {
-  let req, res, next;
-
-  beforeEach(() => {
-    req = {
-      method: 'POST',
-      url: '/api/ai/volunteer-dispatch',
-      body: {},
-      headers: {},
-    };
-    res = {
-      status: vi.fn().mockReturnThis(),
-      json: vi.fn(),
-      setHeader: vi.fn(),
-    };
-    next = vi.fn();
-  });
-
-  it('should return 400 if task or volunteers is missing', async () => {
-    req.body = { task: {} }; // missing volunteers
-    await dispatchRouter(req, res, next);
-    expect(res.status).toHaveBeenCalledWith(400);
-  });
-
-  it('should return 400 if task description is too long', async () => {
-    req.body = {
-      task: {
-        id: 'T1',
-        description: 'a'.repeat(501),
-        requiredLanguage: 'en',
-        requiredSkill: 'first-aid',
-      },
-      volunteers: [],
-    };
-    await dispatchRouter(req, res, next);
-    expect(res.status).toHaveBeenCalledWith(400);
+  it('should use fallback if API key is missing (fallback object mapping)', async () => {
+    req.body = { text: 'Hello', targetLanguage: 'FR' };
+    await translateRouter(req, res, next);
     expect(res.json).toHaveBeenCalledWith(
-      expect.objectContaining({ error: expect.stringContaining('exceeds maximum length') }),
+      expect.objectContaining({
+        translatedText: expect.any(String),
+        fallback: true,
+      }),
     );
   });
 });

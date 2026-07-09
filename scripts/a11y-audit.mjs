@@ -14,10 +14,30 @@ const PAGES = [
   { path: '/crowdmap', label: 'Crowd Map' },
   { path: '/volunteers', label: 'Volunteer Dispatch' },
   { path: '/transport', label: 'Transport Hub' },
-  { path: '/sustainability', label: 'Sustainability' },
+  {
+    path: '/sustainability',
+    label: 'Sustainability (Eco Mode Active)',
+    action: async (tab) => {
+      const ecoButton = tab.getByRole('button', { name: /Eco Mode/i });
+      if (await ecoButton.isVisible()) {
+        await ecoButton.click();
+        await tab.waitForTimeout(200);
+      }
+    },
+  },
   { path: '/accessibility', label: 'Accessibility Hub' },
   { path: '/vendors', label: 'Concessions' },
-  { path: '/assistant', label: 'AI Assistant' },
+  {
+    path: '/assistant',
+    label: 'AI Assistant (Language Dropdown Open)',
+    action: async (tab) => {
+      const langBtn = tab.locator('button[aria-haspopup="listbox"]');
+      if (await langBtn.isVisible()) {
+        await langBtn.click();
+        await tab.waitForTimeout(200);
+      }
+    },
+  },
   { path: '/volunteer-mobile', label: 'Volunteer Mobile' },
 ];
 
@@ -39,6 +59,11 @@ async function runAudit() {
     try {
       await tab.goto(`${BASE_URL}${page.path}`, { waitUntil: 'networkidle', timeout: 15000 });
       await tab.waitForTimeout(1000);
+
+      if (typeof page.action === 'function') {
+        console.log(`  → Triggering pre-audit actions for transient states...`);
+        await page.action(tab);
+      }
 
       const violations = await tab.evaluate(async () => {
         const { default: axe } = await import('axe-core');

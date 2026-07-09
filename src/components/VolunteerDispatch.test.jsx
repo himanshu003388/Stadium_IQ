@@ -1,6 +1,6 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect } from 'vitest';
-import { axe } from 'jest-axe';
+import { axe } from '../setupTests';
 import VolunteerDispatch from './VolunteerDispatch';
 import { StadiumProvider } from '../context/StadiumContext';
 

@@ -4,10 +4,26 @@ import { signToken } from '../utils/jwt.js';
 
 const router = Router();
 
+if (!process.env.ADMIN_PASSWORD || !process.env.OPERATOR_PASSWORD) {
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error(
+      'FATAL SECURITY ERROR: ADMIN_PASSWORD and OPERATOR_PASSWORD environment variables must be defined.',
+    );
+  }
+}
+
 const CREDENTIALS = {
-  admin: process.env.ADMIN_PASSWORD || 'stadium-iq-admin',
-  operator: process.env.OPERATOR_PASSWORD || 'stadium-iq-operator',
+  admin: process.env.ADMIN_PASSWORD || crypto.randomBytes(16).toString('hex'),
+  operator: process.env.OPERATOR_PASSWORD || crypto.randomBytes(16).toString('hex'),
 };
+
+function safeTimingSafeEqual(a, b) {
+  if (typeof a !== 'string' || typeof b !== 'string') return false;
+  const aBuf = Buffer.from(a);
+  const bBuf = Buffer.from(b);
+  if (aBuf.length !== bBuf.length) return false;
+  return crypto.timingSafeEqual(aBuf, bBuf);
+}
 
 router.post('/api/auth/login', (req, res) => {
   const { username, password } = req.body || {};
@@ -15,10 +31,7 @@ router.post('/api/auth/login', (req, res) => {
     return res.status(400).json({ error: 'Username and password required.' });
   }
   const validPassword = CREDENTIALS[username];
-  if (
-    !validPassword ||
-    !crypto.timingSafeEqual(Buffer.from(password), Buffer.from(validPassword))
-  ) {
+  if (!validPassword || !safeTimingSafeEqual(password, validPassword)) {
     return res.status(401).json({ error: 'Invalid credentials.' });
   }
   const token = signToken({

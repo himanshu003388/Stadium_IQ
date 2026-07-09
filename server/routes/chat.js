@@ -11,6 +11,43 @@ import { queryCache } from '../utils/cache.js';
 const window = new JSDOM('').window;
 const purify = DOMPurify(window);
 
+/**
+ * Generates a stable context digest that filters out granular simulation details
+ * (such as exact occupancy and gate density values) and focuses on structural data
+ * (active incident count/severity, gate closed statuses, match phase).
+ * This ensures simulation timers do not continuously bust the cache.
+ */
+function getStableContextDigest(ctx) {
+  if (!ctx) return '';
+  const stadium = ctx.stadium || {};
+  // Bucket occupancy into 5% chunks to ensure minor changes don't bust the cache
+  const capacity = stadium.capacity || 100000;
+  const occupancy = stadium.currentOccupancy || 0;
+  const occupancyBucket = Math.round((occupancy / capacity) * 20); // 0-20 representing 5% increments
+
+  // Map gates status and accessibility
+  const gates = (ctx.gates || [])
+    .map((g) => `${g.id}:${g.status}:${g.accessible}`)
+    .sort()
+    .join(',');
+
+  // Map active incidents
+  const incidents = (ctx.incidents || [])
+    .map((i) => `${i.id}:${i.type}:${i.severity}`)
+    .sort()
+    .join(',');
+
+  const stableState = {
+    matchPhase: stadium.matchPhase || '',
+    score: stadium.score || '',
+    occupancyBucket,
+    gates,
+    incidents,
+  };
+
+  return crypto.createHash('sha256').update(JSON.stringify(stableState)).digest('hex');
+}
+
 const router = Router();
 
 /**
@@ -67,9 +104,7 @@ router.post('/api/chat', authenticateApiKey, csrfProtection, async (req, res) =>
         JSON.stringify({
           message: normalizedMessage,
           language: (language || 'en').toLowerCase(),
-          contextDigest: contextData
-            ? crypto.createHash('sha256').update(JSON.stringify(contextData)).digest('hex')
-            : '',
+          contextDigest: getStableContextDigest(contextData),
         }),
       )
       .digest('hex');
@@ -85,7 +120,7 @@ router.post('/api/chat', authenticateApiKey, csrfProtection, async (req, res) =>
         .json({ error: 'Gemini API Key is missing or invalid in server environment.' });
     }
 
-    const selectedModel = await getBestAvailableModel(GEMINI_API_KEY);
+    const selectedModel = await getBestAvailableModel();
     const model = genAI.getGenerativeModel({ model: selectedModel });
 
     const safeContext = JSON.stringify(contextData || {})
@@ -93,17 +128,7 @@ router.post('/api/chat', authenticateApiKey, csrfProtection, async (req, res) =>
       .slice(0, 5000);
     const systemPrompt = buildSystemPrompt(safeContext, language);
 
-    const chat = model.startChat({
-      history: [
-        { role: 'user', parts: [{ text: systemPrompt }] },
-        {
-          role: 'model',
-          parts: [{ text: 'Understood. I am ready to assist with stadium operations.' }],
-        },
-      ],
-    });
-
-    const result = await chat.sendMessage(sanitizedMessage);
+    const result = await model.generateContent(`${systemPrompt}\n\nUser: ${sanitizedMessage}`);
     const responseText = result.response.text();
     const safeResponse = sanitizeOutput(responseText);
 
@@ -129,15 +154,25 @@ router.post('/api/chat', authenticateApiKey, csrfProtection, async (req, res) =>
 router.post('/api/chat/stream', authenticateApiKey, csrfProtection, async (req, res) => {
   const requestId = crypto.randomBytes(4).toString('hex');
 
-  const validationErrors = validateChatInput(req.body);
-  if (validationErrors.length > 0) {
-    return res.status(400).json({ error: validationErrors.join('; ') });
-  }
-
-  const { message, contextData, language } = req.body;
-  const sanitizedMessage = doPurify(message);
-  if (!sanitizedMessage) {
-    return res.status(400).json({ error: 'Message contains no valid content after sanitization.' });
+  // Validate BEFORE setting SSE headers — errors must be JSON, not SSE events.
+  let sanitizedMessage, contextData, language;
+  try {
+    const validationErrors = validateChatInput(req.body);
+    if (validationErrors.length > 0) {
+      return res.status(400).json({ error: validationErrors.join('; '), requestId });
+    }
+    const msg = req.body.message;
+    contextData = req.body.contextData;
+    language = req.body.language;
+    sanitizedMessage = doPurify(msg);
+    if (!sanitizedMessage) {
+      return res
+        .status(400)
+        .json({ error: 'Message contains no valid content after sanitization.', requestId });
+    }
+  } catch (validationErr) {
+    logger.error(`[${requestId}] Stream validation error:`, validationErr);
+    return res.status(400).json({ error: 'Invalid request body.', requestId });
   }
 
   const normalizedMessage = sanitizedMessage.toLowerCase().replace(/\s+/g, ' ').trim();
@@ -147,9 +182,7 @@ router.post('/api/chat/stream', authenticateApiKey, csrfProtection, async (req, 
       JSON.stringify({
         message: normalizedMessage,
         language: (language || 'en').toLowerCase(),
-        contextDigest: contextData
-          ? crypto.createHash('sha256').update(JSON.stringify(contextData)).digest('hex')
-          : '',
+        contextDigest: getStableContextDigest(contextData),
       }),
     )
     .digest('hex');

@@ -1,10 +1,8 @@
 import { render, screen, fireEvent, act } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import VolunteerMobile from './VolunteerMobile';
-import { axe, toHaveNoViolations } from 'jest-axe';
+import { axe } from '../setupTests';
 import React from 'react';
-
-expect.extend(toHaveNoViolations);
 
 const mockResolveTask = vi.fn();
 

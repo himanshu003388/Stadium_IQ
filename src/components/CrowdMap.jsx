@@ -19,11 +19,12 @@
  * @property {boolean} accessible - Wheelchair accessible
  * @property {string[]} [accessibleFeatures] - List of accessibility features
  */
-import React, { useState, useEffect, useCallback, useMemo, memo } from 'react';
+import React, { useState, useCallback, useMemo, memo, useEffect } from 'react';
 import { useStadiumContext } from '../context/StadiumContext';
 import { COLORS, ZONE_COLORS, GATE_STATUS_COLORS } from '../utils/styles';
 import { getStatusColor } from '../utils/helpers';
 import { useAIInsight } from '../hooks/useAIInsight';
+import { useReducedMotion } from '../hooks/useReducedMotion';
 
 const GATE_POSITIONS = {
   A: { x: 250, y: 22, dir: 'N' },
@@ -38,13 +39,9 @@ const GATE_POSITIONS = {
  * Interactive stadium SVG with zone selection
  * @component
  */
-const StadiumSVG = memo(function StadiumSVG({
-  zones,
-  gates,
-  onZoneClick,
-  selectedZone,
-  reducedMotion,
-}) {
+const StadiumSVG = memo(function StadiumSVG({ zones, gates, onZoneClick, selectedZone }) {
+  // Use the shared hook instead of receiving reducedMotion as a prop
+  const reducedMotion = useReducedMotion();
   const [focusIndex, setFocusIndex] = useState(-1);
   const [hoveredZone, setHoveredZone] = useState(null);
 
@@ -434,17 +431,7 @@ function CrowdMap() {
   const stadium = useStadiumContext((s) => s.contextData.stadium);
   const [selectedZone, setSelectedZone] = useState();
   const [activeIndoorGate, setActiveIndoorGate] = useState(null);
-  const [reducedMotion, setReducedMotion] = useState(
-    () => window.matchMedia('(prefers-reduced-motion: reduce)').matches,
-  );
   const { insight: aiNavTip, requestInsight: requestNavTip } = useAIInsight(contextData);
-
-  useEffect(() => {
-    const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
-    const handleChange = (e) => setReducedMotion(e.matches);
-    mq.addEventListener('change', handleChange);
-    return () => mq.removeEventListener('change', handleChange);
-  }, []);
 
   const handleZoneClick = useCallback((zone) => {
     setSelectedZone((prev) => (prev === zone.id ? undefined : zone.id));
@@ -530,7 +517,6 @@ function CrowdMap() {
             gates={gates}
             onZoneClick={handleZoneClick}
             selectedZone={selectedZone}
-            reducedMotion={reducedMotion}
           />
 
           {/* Selected Zone Detail */}

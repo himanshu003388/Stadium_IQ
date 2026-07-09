@@ -1,6 +1,6 @@
 import { render, screen, act, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
-import { axe } from 'jest-axe';
+import { axe } from '../setupTests';
 import Header from './Header';
 import { StadiumProvider } from '../context/StadiumContext';
 

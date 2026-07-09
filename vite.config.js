@@ -30,14 +30,10 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks(id) {
-          if (
-            id.includes('node_modules/react') ||
-            id.includes('node_modules/react-dom') ||
-            id.includes('node_modules/react-router-dom')
-          )
+          if (id.includes('node_modules/react') || id.includes('node_modules/react-dom'))
             return 'react-vendor';
           if (id.includes('node_modules/@google/generative-ai')) return 'ai-vendor';
-          if (id.includes('node_modules/dompurify')) return 'ui-vendor';
+          if (id.includes('node_modules/dompurify')) return 'security-vendor';
         },
       },
     },
@@ -57,6 +53,7 @@ export default defineConfig({
         'src/setupTests.js',
         'src/main.jsx',
         'src/data/mockContext.json',
+        'src/**/__tests__/**',
       ],
       thresholds: {
         statements: 85,

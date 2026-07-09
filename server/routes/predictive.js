@@ -81,16 +81,14 @@ function generateInsights(contextData) {
   };
 }
 
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-
 router.post('/api/ai/predictive-insights', jwtAuth, async (req, res) => {
   const requestId = crypto.randomBytes(4).toString('hex');
   try {
     const { contextData } = req.body;
     const genAI = getGenAI();
 
-    if (genAI && GEMINI_API_KEY && GEMINI_API_KEY !== 'YOUR_GEMINI_API_KEY') {
-      const selectedModel = await getBestAvailableModel(GEMINI_API_KEY);
+    if (genAI) {
+      const selectedModel = await getBestAvailableModel();
       const model = genAI.getGenerativeModel({ model: selectedModel });
 
       const prompt = `You are a predictive operational intelligence engine for the FIFA World Cup 2026 Smart Stadium operations center, designed to enhance the tournament experience for venue staff and organizers.

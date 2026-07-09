@@ -1,5 +1,18 @@
+/**
+ * Input validation and sanitisation utilities for the Stadium IQ API server.
+ *
+ * @module validation
+ */
+
 const VALID_LANGUAGES = ['en', 'es', 'fr', 'ar', 'pt', 'ja', 'hi'];
 
+/**
+ * Strips HTML tags, script blocks, and dangerous characters from user input.
+ * Returns an empty string for non-string values.
+ *
+ * @param {*} input - Raw user input to sanitize.
+ * @returns {string} A sanitised, trimmed string with no HTML or dangerous chars.
+ */
 export function sanitizeInput(input) {
   if (typeof input !== 'string') return '';
   const clean = input
@@ -10,6 +23,13 @@ export function sanitizeInput(input) {
   return clean;
 }
 
+/**
+ * Validates a chat request body, returning an array of error messages.
+ * Checks message type/length, language code validity, and contextData structure.
+ *
+ * @param {*} body - The parsed JSON request body.
+ * @returns {string[]} An array of human-readable error messages (empty if valid).
+ */
 export function validateChatInput(body) {
   const errors = [];
   if (!body || typeof body !== 'object') {

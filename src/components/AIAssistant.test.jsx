@@ -4,7 +4,7 @@
  */
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { axe } from 'jest-axe';
+import { axe } from '../setupTests';
 import AIAssistant from './AIAssistant';
 import { StadiumProvider } from '../context/StadiumContext';
 import { AppProvider } from '../context/AppContext';

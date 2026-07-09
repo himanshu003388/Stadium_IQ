@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import compression from 'compression';
+import logger from './utils/logger.js';
 
 import {
   installHelmet,
@@ -65,5 +66,16 @@ if (isProduction) {
     res.sendFile('dist/index.html', { root: '.' });
   });
 }
+
+// Global error handling middleware
+app.use((err, req, res, _next) => {
+  logger.error('Unhandled server exception:', err);
+  const status = err.status || 500;
+  const message = isProduction ? 'An unexpected server error occurred.' : err.message;
+  res.status(status).json({
+    error: message,
+    requestId: req.headers['x-request-id'] || 'system',
+  });
+});
 
 export default app;

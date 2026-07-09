@@ -4,7 +4,7 @@
  * Run: node scripts/load-test.js [duration_seconds]
  * Requires: npm install autocannon
  */
-const autocannon = require('autocannon');
+import autocannon from 'autocannon';
 
 const BASE_URL = process.env.BASE_URL || 'http://localhost:3001';
 const DURATION = parseInt(process.argv[2], 10) || 30;
