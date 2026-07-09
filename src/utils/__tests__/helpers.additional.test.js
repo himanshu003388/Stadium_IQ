@@ -360,7 +360,7 @@ describe('getDemoResponse — multilingual responses', () => {
   it('falls back to default function in getDemoResponse switch statement when template is a function but matcher.res is not matched', () => {
     DEMO_RESPONSE_TEMPLATES.custom_test_lang = {
       food: () => 'custom food fallback value',
-      default: (s) => 'default fallback',
+      default: () => 'default fallback',
     };
     const res = getDemoResponse('food options', BASE_CTX, 'custom_test_lang');
     expect(res).toBe('custom food fallback value');
@@ -538,9 +538,7 @@ describe('helpers.js — extra branch coverage', () => {
   it('handles falsy accessibility service description', () => {
     const res = getDemoResponse('wheelchair', {
       ...BASE_CTX,
-      accessibilityServices: [
-        { type: 'Wheelchair', locations: ['Gate A'] },
-      ],
+      accessibilityServices: [{ type: 'Wheelchair', locations: ['Gate A'] }],
     });
     expect(res).toContain('Accessibility Services');
   });
