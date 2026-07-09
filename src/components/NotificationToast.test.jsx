@@ -121,7 +121,12 @@ describe('NotificationsContainer', () => {
     function Trigger() {
       const { addNotification } = useNotifications();
       React.useEffect(() => {
-        addNotification({ title: 'Test', message: 'Message', severity: 'info', autoDismiss: false });
+        addNotification({
+          title: 'Test',
+          message: 'Message',
+          severity: 'info',
+          autoDismiss: false,
+        });
         // eslint-disable-next-line react-hooks/exhaustive-deps
       }, []);
       return null;

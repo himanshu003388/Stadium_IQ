@@ -4,7 +4,15 @@
  * Separated from AppContext (theme, activeView) to prevent
  * unnecessary re-renders of UI-only consumers on simulation ticks
  */
-import React, { createContext, useContext, useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+  useMemo,
+  useRef,
+} from 'react';
 import initialMockContext from '../data/mockContext.json';
 import { useAppContext, AppProvider } from './AppContext';
 import { NotificationProvider, useNotifications } from './NotificationContext';
@@ -32,7 +40,13 @@ export const useStadiumContext = () => {
   return useMemo(() => ({ ...data, ...app }), [data, app]);
 };
 
-const SIMULATION_VIEWS = new Set(['dashboard', 'crowdmap', 'volunteers', 'sustainability', 'vendors']);
+const SIMULATION_VIEWS = new Set([
+  'dashboard',
+  'crowdmap',
+  'volunteers',
+  'sustainability',
+  'vendors',
+]);
 
 function InnerProvider({ children }) {
   const [contextData, setContextData] = useState(initialMockContext);
@@ -89,8 +103,10 @@ function InnerProvider({ children }) {
           const newCriticalCount = newGates.filter((g) => g.status === 'critical').length;
           if (newCriticalCount > prevCriticalRef.current) {
             const cooldownKey = 'gate-critical';
-            if (!notificationCooldownRef.current[cooldownKey] ||
-                now - notificationCooldownRef.current[cooldownKey] > 30000) {
+            if (
+              !notificationCooldownRef.current[cooldownKey] ||
+              now - notificationCooldownRef.current[cooldownKey] > 30000
+            ) {
               notificationCooldownRef.current[cooldownKey] = now;
               const criticalGates = newGates.filter((g) => g.status === 'critical');
               addNotification({

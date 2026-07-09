@@ -64,6 +64,7 @@ test.describe('Stadium IQ Application', () => {
   });
 
   test('should navigate to Volunteer Mobile view', async ({ page }) => {
+    await page.locator('button[aria-label^="Select User Role"]').waitFor({ state: 'visible' });
     await page.locator('button[aria-label^="Select User Role"]').click();
     await page.getByRole('option', { name: /Volunteer/ }).click();
     await page.locator('button[aria-label="Volunteer Mobile"]:visible').click();
@@ -215,6 +216,7 @@ test.describe('Stadium IQ Application', () => {
   });
 
   test('should display Volunteer Mobile view with active task', async ({ page }) => {
+    await page.locator('button[aria-label^="Select User Role"]').waitFor({ state: 'visible' });
     await page.locator('button[aria-label^="Select User Role"]').click();
     await page.getByRole('option', { name: /Volunteer/ }).click();
     await page.locator('button[aria-label="Volunteer Mobile"]:visible').click();

@@ -65,7 +65,6 @@ function Sidebar({ activeView, setActiveView }) {
 
   return (
     <>
-
       {/* Desktop Sidebar */}
       <aside
         className="hidden md:flex flex-col fixed left-0 top-20 bottom-0 w-72 z-40 custom-scrollbar overflow-y-auto"

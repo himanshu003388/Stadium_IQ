@@ -45,9 +45,9 @@ function VendorDashboard() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {(vendors || []).map((vendor, i) => {
-          const nearestGate = gates.find((g) =>
-            vendor.zone.toLowerCase().startsWith(g.direction.toLowerCase())
-          ) || gates[0];
+          const nearestGate =
+            gates.find((g) => vendor.zone.toLowerCase().startsWith(g.direction.toLowerCase())) ||
+            gates[0];
           const density = nearestGate ? nearestGate.density : 0.5;
 
           return (
@@ -134,7 +134,7 @@ function VendorDashboard() {
       </div>
     </div>
   );
-};
+}
 
 VendorDashboard.propTypes = {};
 export default memo(VendorDashboard);

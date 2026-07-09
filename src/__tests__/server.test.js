@@ -3,7 +3,10 @@ import crypto from 'crypto';
 import { buildSafeContext } from '../../src/utils/contextFilter';
 
 import { sanitizeInput, validateChatInput } from '../../server/utils/validation.js';
-import { generateCsrfToken as prodGenerateCsrfToken, validateCsrfToken as prodValidateCsrfToken } from '../../server/utils/csrf.js';
+import {
+  generateCsrfToken as prodGenerateCsrfToken,
+  validateCsrfToken as prodValidateCsrfToken,
+} from '../../server/utils/csrf.js';
 
 const VALID_LANGUAGES = ['en', 'es', 'fr', 'ar', 'pt', 'ja', 'hi'];
 
@@ -68,7 +71,9 @@ describe('validateChatInput', () => {
   });
 
   it('returns error when message exceeds 2000 characters', () => {
-    expect(validateChatInput({ message: 'a'.repeat(2001) })).toContain('message must be max 2000 characters');
+    expect(validateChatInput({ message: 'a'.repeat(2001) })).toContain(
+      'message must be max 2000 characters',
+    );
   });
 
   it('returns no error for a valid message', () => {
@@ -76,7 +81,9 @@ describe('validateChatInput', () => {
   });
 
   it('returns error for invalid language code', () => {
-    expect(validateChatInput({ message: 'Hi', language: 'xx' })).toContain('language must be a valid 2-letter ISO code');
+    expect(validateChatInput({ message: 'Hi', language: 'xx' })).toContain(
+      'language must be a valid 2-letter ISO code',
+    );
   });
 
   it('accepts all valid language codes', () => {
@@ -86,27 +93,53 @@ describe('validateChatInput', () => {
   });
 
   it('returns error for non-object contextData', () => {
-    expect(validateChatInput({ message: 'Hi', contextData: 'invalid' })).toContain('contextData must be an object');
+    expect(validateChatInput({ message: 'Hi', contextData: 'invalid' })).toContain(
+      'contextData must be an object',
+    );
   });
 
   it('returns error when stadium.name exceeds 200 chars', () => {
-    expect(validateChatInput({ message: 'Hi', contextData: { stadium: { name: 'A'.repeat(201) } } })).toContain('contextData.stadium.name exceeds maximum length');
+    expect(
+      validateChatInput({ message: 'Hi', contextData: { stadium: { name: 'A'.repeat(201) } } }),
+    ).toContain('contextData.stadium.name exceeds maximum length');
   });
 
   it('returns error when stadium.homeTeam exceeds 200 chars', () => {
-    expect(validateChatInput({ message: 'Hi', contextData: { stadium: { homeTeam: 'B'.repeat(201) } } })).toContain('contextData.stadium.homeTeam exceeds maximum length');
+    expect(
+      validateChatInput({ message: 'Hi', contextData: { stadium: { homeTeam: 'B'.repeat(201) } } }),
+    ).toContain('contextData.stadium.homeTeam exceeds maximum length');
   });
 
   it('returns error when stadium.awayTeam exceeds 200 chars', () => {
-    expect(validateChatInput({ message: 'Hi', contextData: { stadium: { awayTeam: 'C'.repeat(201) } } })).toContain('contextData.stadium.awayTeam exceeds maximum length');
+    expect(
+      validateChatInput({ message: 'Hi', contextData: { stadium: { awayTeam: 'C'.repeat(201) } } }),
+    ).toContain('contextData.stadium.awayTeam exceeds maximum length');
   });
 
   it('returns error when matchPhase exceeds 20 chars', () => {
-    expect(validateChatInput({ message: 'Hi', contextData: { stadium: { matchPhase: 'X'.repeat(21) } } })).toContain('contextData.stadium.matchPhase exceeds maximum length');
+    expect(
+      validateChatInput({
+        message: 'Hi',
+        contextData: { stadium: { matchPhase: 'X'.repeat(21) } },
+      }),
+    ).toContain('contextData.stadium.matchPhase exceeds maximum length');
   });
 
   it('accepts valid contextData within limits', () => {
-    expect(validateChatInput({ message: 'Hi', language: 'en', contextData: { stadium: { name: 'AT&T Stadium', homeTeam: 'Brazil', awayTeam: 'France', matchPhase: "67'" } } })).toHaveLength(0);
+    expect(
+      validateChatInput({
+        message: 'Hi',
+        language: 'en',
+        contextData: {
+          stadium: {
+            name: 'AT&T Stadium',
+            homeTeam: 'Brazil',
+            awayTeam: 'France',
+            matchPhase: "67'",
+          },
+        },
+      }),
+    ).toHaveLength(0);
   });
 });
 
@@ -292,7 +325,7 @@ function antiPrototypePollutionTest(req, res, next) {
     if (Object.getPrototypeOf(obj) !== Object.prototype) return true;
     const keys = Object.keys(obj);
     if (keys.includes('__proto__') || keys.includes('constructor')) return true;
-    return Object.values(obj).some(v => checkProto(v, seen));
+    return Object.values(obj).some((v) => checkProto(v, seen));
   }
   if (checkProto(req.body)) {
     return res.status(400).json({ error: 'Invalid payload structure detected.' });
@@ -362,8 +395,18 @@ describe('JWT utilities', () => {
   function signToken(payload) {
     const header = Buffer.from(JSON.stringify({ alg: 'HS256', typ: 'JWT' })).toString('base64url');
     const nonce = crypto.randomBytes(8).toString('hex');
-    const body = Buffer.from(JSON.stringify({ ...payload, nonce, iat: Math.floor(Date.now() / 1000), exp: Math.floor(Date.now() / 1000) + 3600 })).toString('base64url');
-    const sig = crypto.createHmac('sha256', JWT_SECRET).update(`${header}.${body}`).digest('base64url');
+    const body = Buffer.from(
+      JSON.stringify({
+        ...payload,
+        nonce,
+        iat: Math.floor(Date.now() / 1000),
+        exp: Math.floor(Date.now() / 1000) + 3600,
+      }),
+    ).toString('base64url');
+    const sig = crypto
+      .createHmac('sha256', JWT_SECRET)
+      .update(`${header}.${body}`)
+      .digest('base64url');
     return `${header}.${body}.${sig}`;
   }
 
@@ -373,7 +416,10 @@ describe('JWT utilities', () => {
       const parts = token.split('.');
       if (parts.length !== 3) return null;
       const [header, body, sig] = parts;
-      const expected = crypto.createHmac('sha256', JWT_SECRET).update(`${header}.${body}`).digest('base64url');
+      const expected = crypto
+        .createHmac('sha256', JWT_SECRET)
+        .update(`${header}.${body}`)
+        .digest('base64url');
       const sigBuf = Buffer.from(sig);
       const expBuf = Buffer.from(expected);
       if (sigBuf.length !== expBuf.length) return null;

@@ -448,9 +448,7 @@ describe('useGemini Hook', () => {
   });
 
   it('should handle SSE stream error chunk', async () => {
-    const streamChunks = [
-      'data: {"error":"Stream failed","requestId":"test"}\n\n',
-    ];
+    const streamChunks = ['data: {"error":"Stream failed","requestId":"test"}\n\n'];
 
     fetch.mockImplementation((url) => {
       if (url === '/api/csrf-token') {

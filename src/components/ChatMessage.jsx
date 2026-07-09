@@ -34,7 +34,10 @@ const ChatMessage = memo(function ChatMessage({ msg, index }) {
         ) : (
           <p className="text-sm">{msg.text}</p>
         )}
-        <div className="text-xs mt-1.5" style={{ opacity: 0.65, color: 'var(--color-on-surface-variant)' }}>
+        <div
+          className="text-xs mt-1.5"
+          style={{ opacity: 0.65, color: 'var(--color-on-surface-variant)' }}
+        >
           {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
         </div>
       </div>

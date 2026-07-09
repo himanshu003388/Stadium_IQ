@@ -2,7 +2,13 @@ import express from 'express';
 import cors from 'cors';
 import compression from 'compression';
 
-import { installHelmet, hppGuard, antiPrototypePollution, httpsRedirect, extraHeaders } from './middleware/security.js';
+import {
+  installHelmet,
+  hppGuard,
+  antiPrototypePollution,
+  httpsRedirect,
+  extraHeaders,
+} from './middleware/security.js';
 import { apiLimiter } from './middleware/rateLimit.js';
 
 import healthRouter from './routes/health.js';
@@ -19,15 +25,17 @@ const app = express();
 app.use(compression());
 installHelmet(app);
 
-app.use(cors({
-  origin: isProduction
-    ? process.env.ALLOWED_ORIGINS?.split(',') || []
-    : ['http://localhost:5173', 'http://localhost:4173'],
-  methods: ['POST', 'GET', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token'],
-  maxAge: 86400,
-  credentials: true,
-}));
+app.use(
+  cors({
+    origin: isProduction
+      ? process.env.ALLOWED_ORIGINS?.split(',') || []
+      : ['http://localhost:5173', 'http://localhost:4173'],
+    methods: ['POST', 'GET', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token'],
+    maxAge: 86400,
+    credentials: true,
+  }),
+);
 
 app.use(express.json({ limit: '10kb' }));
 app.use(express.urlencoded({ extended: false, limit: '10kb' }));

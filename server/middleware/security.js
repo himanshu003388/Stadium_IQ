@@ -55,7 +55,7 @@ export function antiPrototypePollution(req, res, next) {
     if (Object.getPrototypeOf(obj) !== Object.prototype) return true;
     const keys = Object.keys(obj);
     if (keys.includes('__proto__') || keys.includes('constructor')) return true;
-    return Object.values(obj).some(v => checkProto(v, seen));
+    return Object.values(obj).some((v) => checkProto(v, seen));
   }
   if (checkProto(req.body)) {
     return res.status(400).json({ error: 'Invalid payload structure detected.' });

@@ -97,12 +97,12 @@ function RoleSelector({ role, setRole }) {
   ];
 
   return (
-    <div className="relative hidden sm:block" ref={dropdownRef}>
+    <div className="relative" ref={dropdownRef}>
       <button
         ref={triggerRef}
         onClick={() => setIsOpen(!isOpen)}
         onKeyDown={(e) => e.key === 'Escape' && setIsOpen(false)}
-        className="flex items-center gap-2 text-sm rounded-lg px-3 py-2 outline-none font-medium cursor-pointer transition-colors focus-visible:outline-2 focus-visible:outline-[#3b82f6]"
+        className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm rounded-lg px-2 sm:px-3 py-1.5 sm:py-2 outline-none font-medium cursor-pointer transition-colors focus-visible:outline-2 focus-visible:outline-[#3b82f6]"
         style={{
           background: isOpen
             ? 'color-mix(in srgb, var(--color-header-text) 15%, transparent)'
@@ -147,7 +147,10 @@ function RoleSelector({ role, setRole }) {
               <button
                 className="w-full text-left px-4 py-2.5 text-sm flex items-center gap-3 transition-colors hover:bg-black/5 dark:hover:bg-white/5"
                 style={{
-                  color: role.toLowerCase() === r.value.toLowerCase() ? 'var(--color-primary)' : 'var(--color-on-surface)',
+                  color:
+                    role.toLowerCase() === r.value.toLowerCase()
+                      ? 'var(--color-primary)'
+                      : 'var(--color-on-surface)',
                   background:
                     role.toLowerCase() === r.value.toLowerCase()
                       ? 'color-mix(in srgb, var(--color-primary) 10%, transparent)'
@@ -164,7 +167,10 @@ function RoleSelector({ role, setRole }) {
               >
                 <span
                   className="material-symbols-outlined text-lg"
-                  style={{ fontVariationSettings: role.toLowerCase() === r.value.toLowerCase() ? "'FILL' 1" : "'FILL' 0" }}
+                  style={{
+                    fontVariationSettings:
+                      role.toLowerCase() === r.value.toLowerCase() ? "'FILL' 1" : "'FILL' 0",
+                  }}
                 >
                   {r.icon}
                 </span>
@@ -204,7 +210,7 @@ function Header({ setActiveView }) {
       role="banner"
       style={{ background: 'var(--color-header-bg)', boxShadow: '0 2px 20px rgba(0,0,0,0.2)' }}
     >
-      <div className="flex items-center justify-between h-full px-4 gap-3">
+      <div className="flex items-center justify-between h-full px-2 sm:px-4 gap-1.5 sm:gap-3">
         {/* Logo */}
         <div className="flex items-center gap-2.5 shrink-0">
           <a
@@ -222,18 +228,18 @@ function Header({ setActiveView }) {
                 alt="Stadium IQ Logo"
                 width="56"
                 height="56"
-                className="h-14 w-auto rounded-lg shadow-sm"
+                className="h-10 sm:h-14 w-auto rounded-lg shadow-sm"
               />
             </div>
-            <div className="hidden md:block">
+            <div className="flex flex-col">
               <div
-                className="font-bold text-base tracking-tight leading-none"
+                className="font-bold text-xs sm:text-base tracking-tight leading-none"
                 style={{ color: 'var(--color-header-text)' }}
               >
                 Stadium IQ
               </div>
               <div
-                className="text-sm leading-none mt-1"
+                className="text-[9px] sm:text-sm leading-none mt-1"
                 style={{ color: 'var(--color-header-text)', opacity: 0.8 }}
               >
                 FIFA World Cup 2026
@@ -244,16 +250,19 @@ function Header({ setActiveView }) {
 
         {/* Match Score - center */}
         <div
-          className="hidden lg:flex items-center gap-4 rounded-xl px-5 py-2"
+          className="flex items-center gap-1.5 sm:gap-4 rounded-lg sm:rounded-xl px-2 sm:px-5 py-1 sm:py-2"
           style={{ background: 'color-mix(in srgb, var(--color-header-text) 10%, transparent)' }}
           aria-label={`Match score: ${stadium.homeTeam} ${stadium.score} ${stadium.awayTeam}`}
         >
-          <span className="font-bold text-base" style={{ color: 'var(--color-header-text)' }}>
+          <span
+            className="font-bold text-xs sm:text-base"
+            style={{ color: 'var(--color-header-text)' }}
+          >
             {stadium.homeTeam}
           </span>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1.5 sm:gap-3">
             <span
-              className="font-mono text-xl font-bold tracking-wider"
+              className="font-mono text-sm sm:text-xl font-bold tracking-wider"
               style={{ color: 'var(--color-header-text)' }}
               aria-live="polite"
               aria-atomic="true"
@@ -261,32 +270,35 @@ function Header({ setActiveView }) {
               {stadium.score}
             </span>
             <span
-              className="text-sm px-2 py-0.5 rounded-md font-mono animate-pulse"
+              className="text-[10px] sm:text-sm px-1 sm:px-2 py-0.5 rounded-md font-mono animate-pulse"
               style={{ background: 'rgba(197,50,50,0.8)', color: 'white' }}
               aria-label={`Match time: ${matchTime}`}
             >
               {matchTime}
             </span>
           </div>
-          <span className="font-bold text-base" style={{ color: 'var(--color-header-text)' }}>
+          <span
+            className="font-bold text-xs sm:text-base"
+            style={{ color: 'var(--color-header-text)' }}
+          >
             {stadium.awayTeam}
           </span>
         </div>
 
         {/* Right Controls */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-1.5 sm:gap-3">
           {/* Role Toggle */}
           <RoleSelector role={role} setRole={setRole} />
 
           {/* Theme Toggle */}
           <button
             onClick={toggleTheme}
-            className="flex items-center justify-center w-10 h-10 rounded-full cursor-pointer transition-all hover:bg-black/10 focus-visible:outline-2 focus-visible:outline-[#00f0ff]"
+            className="flex items-center justify-center w-8 sm:w-10 h-8 sm:h-10 rounded-full cursor-pointer transition-all hover:bg-black/10 focus-visible:outline-2 focus-visible:outline-[#00f0ff]"
             aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
           >
             <span
               aria-hidden="true"
-              className="material-symbols-outlined text-xl"
+              className="material-symbols-outlined text-lg sm:text-xl"
               style={{ color: 'var(--color-header-text)', fontVariationSettings: "'FILL' 1" }}
             >
               {theme === 'light' ? 'dark_mode' : 'light_mode'}
@@ -295,7 +307,7 @@ function Header({ setActiveView }) {
 
           {/* AI Status */}
           <div
-            className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full"
+            className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full"
             style={{
               background: 'color-mix(in srgb, var(--color-status-nominal) 15%, transparent)',
               border: '1px solid color-mix(in srgb, var(--color-status-nominal) 35%, transparent)',
@@ -303,10 +315,10 @@ function Header({ setActiveView }) {
             aria-label="AI Assistant is active"
           >
             <span
-              className="w-2 h-2 rounded-full animate-pulse"
+              className="w-1.5 sm:w-2 h-1.5 sm:h-2 rounded-full animate-pulse"
               style={{ background: COLORS.success }}
             />
-            <span className="text-sm font-medium" style={{ color: COLORS.success }}>
+            <span className="text-xs sm:text-sm font-medium" style={{ color: COLORS.success }}>
               AI Active
             </span>
           </div>
@@ -316,7 +328,7 @@ function Header({ setActiveView }) {
             <button
               aria-label={`View ${activeIncidents} active incidents`}
               onClick={() => setActiveView('command')}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-full cursor-pointer transition-all hover:scale-105 focus-visible:outline-2 focus-visible:outline-[#c8962e]"
+              className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full cursor-pointer transition-all hover:scale-105 focus-visible:outline-2 focus-visible:outline-[#c8962e]"
               style={{
                 background: 'rgba(198,40,40,0.25)',
                 border: '1px solid rgba(198,40,40,0.5)',
@@ -324,12 +336,12 @@ function Header({ setActiveView }) {
             >
               <span
                 aria-hidden="true"
-                className="material-symbols-outlined text-base"
+                className="material-symbols-outlined text-xs sm:text-base"
                 style={{ color: COLORS.error, fontVariationSettings: "'FILL' 1" }}
               >
                 emergency
               </span>
-              <span className="text-sm font-bold" style={{ color: COLORS.error }}>
+              <span className="text-xs sm:text-sm font-bold" style={{ color: COLORS.error }}>
                 {activeIncidents}
               </span>
             </button>
@@ -337,7 +349,7 @@ function Header({ setActiveView }) {
 
           {/* Time */}
           <div
-            className="text-sm font-mono"
+            className="text-xs sm:text-sm font-mono"
             style={{ color: 'var(--color-header-text)', opacity: 0.8 }}
           >
             {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}

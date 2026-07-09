@@ -1,4 +1,12 @@
-import React, { createContext, useContext, useState, useCallback, useRef, useEffect, useMemo } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  useRef,
+  useEffect,
+  useMemo,
+} from 'react';
 
 const NotificationContext = createContext(null);
 
@@ -22,25 +30,28 @@ export function NotificationProvider({ children }) {
     }
   }, []);
 
-  const addNotification = useCallback((notification) => {
-    const id = `notif-${++idCounter.current}`;
-    const entry = { id, timestamp: new Date(), ...notification, isNew: true };
+  const addNotification = useCallback(
+    (notification) => {
+      const id = `notif-${++idCounter.current}`;
+      const entry = { id, timestamp: new Date(), ...notification, isNew: true };
 
-    setNotifications((prev) => {
-      const next = [entry, ...prev];
-      return next.slice(0, 20);
-    });
+      setNotifications((prev) => {
+        const next = [entry, ...prev];
+        return next.slice(0, 20);
+      });
 
-    if (notification.autoDismiss !== false) {
-      const duration = notification.duration || 8000;
-      const timer = setTimeout(() => {
-        removeNotification(id);
-      }, duration);
-      timersRef.current.set(id, timer);
-    }
+      if (notification.autoDismiss !== false) {
+        const duration = notification.duration || 8000;
+        const timer = setTimeout(() => {
+          removeNotification(id);
+        }, duration);
+        timersRef.current.set(id, timer);
+      }
 
-    return id;
-  }, [removeNotification]);
+      return id;
+    },
+    [removeNotification],
+  );
 
   const clearNotifications = useCallback(() => {
     timersRef.current.forEach((timer) => clearTimeout(timer));
@@ -61,9 +72,5 @@ export function NotificationProvider({ children }) {
     [notifications, addNotification, removeNotification, clearNotifications],
   );
 
-  return (
-    <NotificationContext.Provider value={value}>
-      {children}
-    </NotificationContext.Provider>
-  );
+  return <NotificationContext.Provider value={value}>{children}</NotificationContext.Provider>;
 }

@@ -16,12 +16,15 @@ function generateInsights(contextData) {
     direction: g.direction,
     currentDensity: Math.round(g.density * 100),
     riskLevel: g.density > 0.85 ? 'critical' : 'high',
-    recommendation: g.density > 0.85
-      ? `Gate ${g.id} is critically congested. Recommend redirecting influx to alternate gates and deploying additional staff.`
-      : `Gate ${g.id} has high density. Monitor closely and prepare overflow lanes.`,
+    recommendation:
+      g.density > 0.85
+        ? `Gate ${g.id} is critically congested. Recommend redirecting influx to alternate gates and deploying additional staff.`
+        : `Gate ${g.id} has high density. Monitor closely and prepare overflow lanes.`,
   }));
 
-  const criticalIncidents = incidents.filter((i) => i.status === 'active' && i.severity === 'critical');
+  const criticalIncidents = incidents.filter(
+    (i) => i.status === 'active' && i.severity === 'critical',
+  );
   const predictedEscalation = criticalIncidents.map((i) => ({
     incidentId: i.id,
     type: i.type,
@@ -37,18 +40,21 @@ function generateInsights(contextData) {
       name: v.name,
       lowStockItems: lowStock.map((item) => item.name || item.item),
       restockUrgency: lowStock.length > 3 ? 'high' : 'low',
-      recommendation: lowStock.length > 0
-        ? `Vendor ${v.name} has ${lowStock.length} items near depletion. AI suggests restocking within 30 minutes based on projected demand.`
-        : 'Stock levels adequate.',
+      recommendation:
+        lowStock.length > 0
+          ? `Vendor ${v.name} has ${lowStock.length} items near depletion. AI suggests restocking within 30 minutes based on projected demand.`
+          : 'Stock levels adequate.',
     };
   });
 
-  const peakEgressTime = occupancyRate > 0.7
-    ? Math.round(25 + (occupancyRate - 0.7) * 50)
-    : Math.round(10 + occupancyRate * 20);
-  const postMatchRecommendation = occupancyRate > 0.7
-    ? `Stadium is ${Math.round(occupancyRate * 100)}% full. Estimated peak egress: ${peakEgressTime} minutes. Recommend: (1) Open all exit gates, (2) Activate public address system for phased departure, (3) Increase shuttle frequency by 40%.`
-    : `Normal egress conditions expected. Estimated egress time: ${peakEgressTime} minutes.`;
+  const peakEgressTime =
+    occupancyRate > 0.7
+      ? Math.round(25 + (occupancyRate - 0.7) * 50)
+      : Math.round(10 + occupancyRate * 20);
+  const postMatchRecommendation =
+    occupancyRate > 0.7
+      ? `Stadium is ${Math.round(occupancyRate * 100)}% full. Estimated peak egress: ${peakEgressTime} minutes. Recommend: (1) Open all exit gates, (2) Activate public address system for phased departure, (3) Increase shuttle frequency by 40%.`
+      : `Normal egress conditions expected. Estimated egress time: ${peakEgressTime} minutes.`;
 
   return {
     timestamp: new Date().toISOString(),
@@ -82,11 +88,11 @@ router.post('/api/ai/predictive-insights', jwtAuth, async (req, res) => {
   try {
     const { contextData } = req.body;
     const genAI = getGenAI();
-    
+
     if (genAI && GEMINI_API_KEY && GEMINI_API_KEY !== 'YOUR_GEMINI_API_KEY') {
       const selectedModel = await getBestAvailableModel(GEMINI_API_KEY);
       const model = genAI.getGenerativeModel({ model: selectedModel });
-      
+
       const prompt = `You are a predictive operational analysis engine for the FIFA World Cup 2026 Smart Stadium operations center.
 Given the current stadium status context:
 ${JSON.stringify(contextData || {})}
@@ -139,11 +145,14 @@ The JSON object must have EXACTLY the following structure (do not return any mar
 
       const result = await model.generateContent(prompt);
       const text = result.response.text();
-      const cleanText = text.replace(/```json/g, '').replace(/```/g, '').trim();
+      const cleanText = text
+        .replace(/```json/g, '')
+        .replace(/```/g, '')
+        .trim();
       const insights = JSON.parse(cleanText);
       return res.json({ insights, requestId });
     }
-    
+
     // Rule-engine fallback
     const insights = generateInsights(contextData);
     res.json({ insights, requestId });

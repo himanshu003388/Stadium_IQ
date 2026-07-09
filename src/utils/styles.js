@@ -76,15 +76,69 @@ export const TRANSPORT_ICONS = {
 };
 
 export const NAV_ITEMS = [
-  { id: 'dashboard', icon: 'dashboard', label: 'Command Center', desc: 'Overview & KPIs', allowedRoles: ['organizer', 'staff'] },
-  { id: 'crowdmap', icon: 'map', label: 'Crowd Map', desc: 'Navigation & density', allowedRoles: ['organizer', 'staff', 'volunteer'] },
-  { id: 'volunteers', icon: 'groups', label: 'Volunteer Dispatch', desc: 'Task assignment', allowedRoles: ['organizer'] },
-  { id: 'transport', icon: 'directions_bus', label: 'Transport Hub', desc: 'Departure options', allowedRoles: ['organizer', 'staff', 'volunteer', 'fan'] },
-  { id: 'sustainability', icon: 'eco', label: 'Sustainability', desc: 'Green metrics', allowedRoles: ['organizer', 'staff', 'fan'] },
-  { id: 'accessibility', icon: 'accessible', label: 'Accessibility', desc: 'Inclusive services', allowedRoles: ['organizer', 'staff', 'volunteer', 'fan'] },
-  { id: 'vendors', icon: 'store', label: 'Concessions', desc: 'Vendor dashboard', allowedRoles: ['organizer', 'staff'] },
-  { id: 'volunteer-mobile', icon: 'smartphone', label: 'Volunteer Mobile', desc: 'Mobile responder', allowedRoles: ['volunteer'] },
-  { id: 'assistant', icon: 'smart_toy', label: 'AI Assistant', desc: 'GenAI help', allowedRoles: ['organizer', 'staff', 'volunteer', 'fan'] },
+  {
+    id: 'dashboard',
+    icon: 'dashboard',
+    label: 'Command Center',
+    desc: 'Overview & KPIs',
+    allowedRoles: ['organizer', 'staff'],
+  },
+  {
+    id: 'crowdmap',
+    icon: 'map',
+    label: 'Crowd Map',
+    desc: 'Navigation & density',
+    allowedRoles: ['organizer', 'staff', 'volunteer'],
+  },
+  {
+    id: 'volunteers',
+    icon: 'groups',
+    label: 'Volunteer Dispatch',
+    desc: 'Task assignment',
+    allowedRoles: ['organizer'],
+  },
+  {
+    id: 'transport',
+    icon: 'directions_bus',
+    label: 'Transport Hub',
+    desc: 'Departure options',
+    allowedRoles: ['organizer', 'staff', 'volunteer', 'fan'],
+  },
+  {
+    id: 'sustainability',
+    icon: 'eco',
+    label: 'Sustainability',
+    desc: 'Green metrics',
+    allowedRoles: ['organizer', 'staff', 'fan'],
+  },
+  {
+    id: 'accessibility',
+    icon: 'accessible',
+    label: 'Accessibility',
+    desc: 'Inclusive services',
+    allowedRoles: ['organizer', 'staff', 'volunteer', 'fan'],
+  },
+  {
+    id: 'vendors',
+    icon: 'store',
+    label: 'Concessions',
+    desc: 'Vendor dashboard',
+    allowedRoles: ['organizer', 'staff'],
+  },
+  {
+    id: 'volunteer-mobile',
+    icon: 'smartphone',
+    label: 'Volunteer Mobile',
+    desc: 'Mobile responder',
+    allowedRoles: ['volunteer'],
+  },
+  {
+    id: 'assistant',
+    icon: 'smart_toy',
+    label: 'AI Assistant',
+    desc: 'GenAI help',
+    allowedRoles: ['organizer', 'staff', 'volunteer', 'fan'],
+  },
 ];
 
 export const QUICK_PROMPTS = [

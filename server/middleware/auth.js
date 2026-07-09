@@ -12,13 +12,18 @@ export function authenticateApiKey(req, res, next) {
       if (validateCsrfToken(csrfToken, req)) return next();
       return res.status(403).json({ error: 'Invalid CSRF token.' });
     }
-    return res.status(503).json({ error: 'Service temporarily unavailable. API authentication not configured.' });
+    return res
+      .status(503)
+      .json({ error: 'Service temporarily unavailable. API authentication not configured.' });
   }
   if (!isProduction && (!API_AUTH_KEY || API_AUTH_KEY === 'your-api-auth-key')) {
     return next();
   }
   const providedKey = req.headers['x-api-key'];
-  if (!providedKey || !crypto.timingSafeEqual(Buffer.from(providedKey), Buffer.from(API_AUTH_KEY))) {
+  if (
+    !providedKey ||
+    !crypto.timingSafeEqual(Buffer.from(providedKey), Buffer.from(API_AUTH_KEY))
+  ) {
     const csrfToken = req.headers['x-csrf-token'];
     if (csrfToken) {
       if (validateCsrfToken(csrfToken, req)) return next();

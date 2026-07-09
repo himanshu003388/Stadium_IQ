@@ -819,32 +819,32 @@
 /* =========================================
    RTL SUPPORT — Arabic language
    ========================================= */
-html[lang="ar"] {
+html[lang='ar'] {
   direction: rtl;
 }
 
-html[lang="ar"] .chat-bubble-user {
+html[lang='ar'] .chat-bubble-user {
   border-radius: 18px 18px 18px 4px;
   margin-left: 0;
   margin-right: auto;
 }
 
-html[lang="ar"] .chat-bubble-ai {
+html[lang='ar'] .chat-bubble-ai {
   border-radius: 18px 4px 18px 18px;
 }
 
-html[lang="ar"] .nav-item {
+html[lang='ar'] .nav-item {
   border-left: none;
   border-right: 3px solid transparent;
   text-align: right;
 }
 
-html[lang="ar"] .nav-item.active {
+html[lang='ar'] .nav-item.active {
   border-left-color: transparent;
   border-right-color: var(--color-primary);
 }
 
-html[lang="ar"] .nav-item:hover {
+html[lang='ar'] .nav-item:hover {
   border-left-color: transparent;
   border-right-color: color-mix(in srgb, var(--color-primary) 40%, transparent);
 }

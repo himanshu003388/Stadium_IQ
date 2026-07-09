@@ -11,7 +11,9 @@ function parseMarkdown(text) {
     if (listItems.length > 0) {
       elements.push(
         <ul key={`ul-${elements.length}`} style={{ margin: '6px 0', paddingLeft: '16px' }}>
-          {listItems.map((item, i) => <li key={i}>{item}</li>)}
+          {listItems.map((item, i) => (
+            <li key={i}>{item}</li>
+          ))}
         </ul>,
       );
       listItems = [];
@@ -24,17 +26,21 @@ function parseMarkdown(text) {
     const bulletMatch = line.match(/^• (.+)$/);
     if (bulletMatch) {
       inList = true;
-      const boldProcessed = bulletMatch[1].split(/\*\*(.*?)\*\*/).map((part, j) =>
-        j % 2 === 1 ? <strong key={j}>{part}</strong> : part,
-      );
+      const boldProcessed = bulletMatch[1]
+        .split(/\*\*(.*?)\*\*/)
+        .map((part, j) => (j % 2 === 1 ? <strong key={j}>{part}</strong> : part));
       listItems.push(<React.Fragment key={i}>{boldProcessed}</React.Fragment>);
       continue;
     }
     flushList();
-    const boldProcessed = line.split(/\*\*(.*?)\*\*/).map((part, j) =>
-      j % 2 === 1 ? <strong key={j}>{part}</strong> : part,
+    const boldProcessed = line
+      .split(/\*\*(.*?)\*\*/)
+      .map((part, j) => (j % 2 === 1 ? <strong key={j}>{part}</strong> : part));
+    elements.push(
+      <p key={`p-${i}`} style={{ margin: '4px 0' }}>
+        {boldProcessed}
+      </p>,
     );
-    elements.push(<p key={`p-${i}`} style={{ margin: '4px 0' }}>{boldProcessed}</p>);
   }
   flushList();
   return elements;

@@ -27,7 +27,12 @@ export default defineConfig({
     },
     {
       name: 'mobile-chrome',
-      use: { ...devices['Pixel 5'] },
+      use: {
+        ...devices['Pixel 5'],
+        actionTimeout: 10000,
+        navigationTimeout: 30000,
+      },
+      timeout: 60000,
     },
   ],
   webServer: {

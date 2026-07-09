@@ -22,21 +22,26 @@ const endpoints = [
 
 async function runLoadTest(endpoint) {
   return new Promise((resolve, reject) => {
-    const instance = autocannon({
-      url: BASE_URL,
-      connections: 10,
-      pipelining: 1,
-      duration: DURATION,
-      method: endpoint.method,
-      path: endpoint.path,
-      body: endpoint.body,
-      headers: endpoint.headers,
-    }, (err, result) => {
-      if (err) return reject(err);
-      resolve(result);
-    });
+    const instance = autocannon(
+      {
+        url: BASE_URL,
+        connections: 10,
+        pipelining: 1,
+        duration: DURATION,
+        method: endpoint.method,
+        path: endpoint.path,
+        body: endpoint.body,
+        headers: endpoint.headers,
+      },
+      (err, result) => {
+        if (err) return reject(err);
+        resolve(result);
+      },
+    );
 
-    process.stdout.write(`\nRunning load test: ${endpoint.title} (${endpoint.method} ${endpoint.path})\n`);
+    process.stdout.write(
+      `\nRunning load test: ${endpoint.title} (${endpoint.method} ${endpoint.path})\n`,
+    );
     autocannon.track(instance, { renderProgressBar: true });
   });
 }

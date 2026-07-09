@@ -311,7 +311,10 @@ const SmartBroadcastWidget = memo(function SmartBroadcastWidget() {
   const handleBroadcast = () => {
     if (!message.trim()) return;
     setIsBroadcasting(true);
-    requestBroadcast(`Translate this stadium announcement to 7 languages (EN, ES, FR, AR, PT, JA, HI) and return the translations. Announcement: "${message}". Return the translations in a bullet list.`, '');
+    requestBroadcast(
+      `Translate this stadium announcement to 7 languages (EN, ES, FR, AR, PT, JA, HI) and return the translations. Announcement: "${message}". Return the translations in a bullet list.`,
+      '',
+    );
     setTimeout(() => {
       setIsBroadcasting(false);
       setBroadcasted(true);

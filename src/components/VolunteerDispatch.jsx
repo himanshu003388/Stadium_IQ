@@ -153,7 +153,14 @@ const TaskCard = memo(function TaskCard({ task, volunteers, onAssign, onResolve 
       throw new Error('No suggestions returned');
     } catch (err) {
       const best = eligibleVols.toSorted((a, b) => a.currentLoad - b.currentLoad)[0];
-      setAiSuggestion(best ? { ...best, customReason: `${best.name} matches required skill (${task.requiredSkill}) and language (fallback).` } : null);
+      setAiSuggestion(
+        best
+          ? {
+              ...best,
+              customReason: `${best.name} matches required skill (${task.requiredSkill}) and language (fallback).`,
+            }
+          : null,
+      );
     } finally {
       setAssigning(false);
     }
@@ -245,8 +252,8 @@ const TaskCard = memo(function TaskCard({ task, volunteers, onAssign, onResolve 
             <div className="text-xs" style={{ color: COLORS.primaryContainer }}>
               <div>
                 <span className="font-semibold">AI Suggests: </span>
-                {aiSuggestion.name} — {aiSuggestion.currentLoad}/{aiSuggestion.maxLoad} tasks, speaks{' '}
-                {aiSuggestion.languages.join(', ').toUpperCase()}
+                {aiSuggestion.name} — {aiSuggestion.currentLoad}/{aiSuggestion.maxLoad} tasks,
+                speaks {aiSuggestion.languages.join(', ').toUpperCase()}
               </div>
               {aiSuggestion.customReason && (
                 <p className="mt-1 opacity-90 italic leading-relaxed text-[11px]">

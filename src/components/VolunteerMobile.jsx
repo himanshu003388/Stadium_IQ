@@ -22,7 +22,10 @@ function VolunteerMobile() {
 
   useEffect(() => {
     if (activeTask) {
-      requestRoute(`Give concise navigation route for ${currentVolunteer.name} in ${currentVolunteer.zone} zone to handle task: "${activeTask.description}" in ${activeTask.zone} zone. Avoid crowded areas. Current stadium occupancy: ${contextData.stadium.currentOccupancy}. Keep to 2 sentences.`, '');
+      requestRoute(
+        `Give concise navigation route for ${currentVolunteer.name} in ${currentVolunteer.zone} zone to handle task: "${activeTask.description}" in ${activeTask.zone} zone. Avoid crowded areas. Current stadium occupancy: ${contextData.stadium.currentOccupancy}. Keep to 2 sentences.`,
+        '',
+      );
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTask?.id]);
@@ -198,12 +201,12 @@ function VolunteerMobile() {
                     AI Navigation & Translation
                   </span>
                 </div>
-                  <p
-                    className="text-xs mb-2 leading-relaxed"
-                    style={{ color: COLORS.onPrimaryContainer }}
-                  >
-                    <strong>Route:</strong> {routeInsight || 'Calculating optimal route using AI...'}
-                  </p>
+                <p
+                  className="text-xs mb-2 leading-relaxed"
+                  style={{ color: COLORS.onPrimaryContainer }}
+                >
+                  <strong>Route:</strong> {routeInsight || 'Calculating optimal route using AI...'}
+                </p>
                 {activeTask.requiredLanguage === 'es' && (
                   <div className="p-2 rounded bg-white/50 border border-white/20">
                     <p
@@ -318,20 +321,35 @@ function VolunteerMobile() {
           >
             assignment
           </span>
-          <span className="material-symbols-outlined text-2xl" style={{ color: COLORS.outline }} aria-label="Map" role="img">
+          <span
+            className="material-symbols-outlined text-2xl"
+            style={{ color: COLORS.outline }}
+            aria-label="Map"
+            role="img"
+          >
             map
           </span>
-          <span className="material-symbols-outlined text-2xl" style={{ color: COLORS.outline }} aria-label="Chat" role="img">
+          <span
+            className="material-symbols-outlined text-2xl"
+            style={{ color: COLORS.outline }}
+            aria-label="Chat"
+            role="img"
+          >
             chat
           </span>
-          <span className="material-symbols-outlined text-2xl" style={{ color: COLORS.outline }} aria-label="Profile" role="img">
+          <span
+            className="material-symbols-outlined text-2xl"
+            style={{ color: COLORS.outline }}
+            aria-label="Profile"
+            role="img"
+          >
             person
           </span>
         </div>
       </div>
     </div>
   );
-};
+}
 
 VolunteerMobile.propTypes = {};
 export default memo(VolunteerMobile);

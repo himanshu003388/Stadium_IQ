@@ -51,5 +51,3 @@ export const ECO_SCORE_THRESHOLDS = {
   moderate: 20,
   high: 40,
 };
-
-

@@ -37,8 +37,7 @@ export default defineConfig({
           )
             return 'react-vendor';
           if (id.includes('node_modules/@google/generative-ai')) return 'ai-vendor';
-          if (id.includes('node_modules/dompurify'))
-            return 'ui-vendor';
+          if (id.includes('node_modules/dompurify')) return 'ui-vendor';
         },
       },
     },

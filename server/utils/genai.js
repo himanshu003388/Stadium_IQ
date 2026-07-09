@@ -15,10 +15,9 @@ let cachedModelName = null;
 export async function getBestAvailableModel(apiKey) {
   if (cachedModelName) return cachedModelName;
   try {
-    const res = await fetch(
-      'https://generativelanguage.googleapis.com/v1beta/models',
-      { headers: { 'x-goog-api-key': apiKey } },
-    );
+    const res = await fetch('https://generativelanguage.googleapis.com/v1beta/models', {
+      headers: { 'x-goog-api-key': apiKey },
+    });
     if (!res.ok) return 'gemini-1.5-flash';
     const data = await res.json();
     const flashModels = data.models

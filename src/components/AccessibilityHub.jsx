@@ -18,7 +18,12 @@ function AccessibilityHub() {
   const { accessibilityServices, gates } = contextData;
 
   const accessibleGates = useMemo(() => gates.filter((g) => g.accessible), [gates]);
-  const { insight: aiTip, isLoading: aiTipLoading, requestInsight: requestAiTip, clearInsight: clearAiTip } = useAIInsight(contextData);
+  const {
+    insight: aiTip,
+    isLoading: aiTipLoading,
+    requestInsight: requestAiTip,
+    clearInsight: clearAiTip,
+  } = useAIInsight(contextData);
 
   const handleAskAI = (query) => {
     const fallback = getDemoResponse(query, contextData, 'en');
@@ -241,7 +246,9 @@ function AccessibilityHub() {
           </div>
         ) : (
           <p className="text-sm mb-3" style={{ color: 'rgba(168,202,255,0.9)' }}>
-            {aiTipLoading ? 'Consulting AI...' : 'Ask about accessible routes, services, or get personalized assistance.'}
+            {aiTipLoading
+              ? 'Consulting AI...'
+              : 'Ask about accessible routes, services, or get personalized assistance.'}
           </p>
         )}
         <div

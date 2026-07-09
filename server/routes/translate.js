@@ -12,10 +12,14 @@ router.post('/api/ai/translate', authenticateApiKey, csrfProtection, async (req,
   const { text, targetLanguage } = req.body;
 
   if (!text || typeof text !== 'string') {
-    return res.status(400).json({ error: 'Text parameter is required and must be a string.', requestId });
+    return res
+      .status(400)
+      .json({ error: 'Text parameter is required and must be a string.', requestId });
   }
   if (!targetLanguage || typeof targetLanguage !== 'string') {
-    return res.status(400).json({ error: 'TargetLanguage parameter is required and must be a string.', requestId });
+    return res
+      .status(400)
+      .json({ error: 'TargetLanguage parameter is required and must be a string.', requestId });
   }
 
   const cleanText = sanitizeInput(text);

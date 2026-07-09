@@ -15,7 +15,10 @@ router.post('/api/auth/login', (req, res) => {
     return res.status(400).json({ error: 'Username and password required.' });
   }
   const validPassword = CREDENTIALS[username];
-  if (!validPassword || !crypto.timingSafeEqual(Buffer.from(password), Buffer.from(validPassword))) {
+  if (
+    !validPassword ||
+    !crypto.timingSafeEqual(Buffer.from(password), Buffer.from(validPassword))
+  ) {
     return res.status(401).json({ error: 'Invalid credentials.' });
   }
   const token = signToken({

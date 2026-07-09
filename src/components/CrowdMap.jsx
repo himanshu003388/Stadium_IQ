@@ -339,7 +339,15 @@ const StadiumSVG = memo(function StadiumSVG({
 
       {/* Compass / Navigation Rose */}
       <g transform="translate(460, 30)" role="img" aria-label="Compass rose, north pointing up">
-        <circle cx="0" cy="0" r="14" fill="#0f1623" stroke="#334155" strokeWidth="1" aria-hidden="true" />
+        <circle
+          cx="0"
+          cy="0"
+          r="14"
+          fill="#0f1623"
+          stroke="#334155"
+          strokeWidth="1"
+          aria-hidden="true"
+        />
         <text
           x="0"
           y="-1"
@@ -392,7 +400,10 @@ function CrowdMap() {
 
   const navTipFallback = `🟢 Use Gate ${bestGate?.id || 'A'} for fastest entry — only ${bestGate?.waitTimeMinutes || 5} min wait. 🔴 ${worstZone?.name || 'Unknown'} is at ${Math.round((worstZone?.occupancy || 0) * 100)}% capacity.`;
   useEffect(() => {
-    requestNavTip(`Give a concise navigation tip for fans at ${stadium.name}. Current best gate: ${bestGate?.id}, wait time: ${bestGate?.waitTimeMinutes}min. Busiest zone: ${worstZone?.name} at ${Math.round((worstZone?.occupancy || 0) * 100)}% capacity. Current score: ${stadium.score}. Keep it to 2 sentences.`, navTipFallback);
+    requestNavTip(
+      `Give a concise navigation tip for fans at ${stadium.name}. Current best gate: ${bestGate?.id}, wait time: ${bestGate?.waitTimeMinutes}min. Busiest zone: ${worstZone?.name} at ${Math.round((worstZone?.occupancy || 0) * 100)}% capacity. Current score: ${stadium.score}. Keep it to 2 sentences.`,
+      navTipFallback,
+    );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

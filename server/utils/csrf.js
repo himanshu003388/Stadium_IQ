@@ -33,7 +33,10 @@ export function generateCsrfToken(req, res) {
       });
     } else if (res && typeof res.setHeader === 'function') {
       const secureFlag = isProd ? '; Secure' : '';
-      res.setHeader('Set-Cookie', `session_id=${sessionId}; HttpOnly; SameSite=Strict; Path=/; Max-Age=86400${secureFlag}`);
+      res.setHeader(
+        'Set-Cookie',
+        `session_id=${sessionId}; HttpOnly; SameSite=Strict; Path=/; Max-Age=86400${secureFlag}`,
+      );
     }
   }
 
@@ -69,4 +72,3 @@ export function validateCsrfToken(rawToken, req) {
     return false;
   }
 }
-

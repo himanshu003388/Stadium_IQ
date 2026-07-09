@@ -114,7 +114,10 @@ function TransportHub() {
 
   const depFallback = `With ${Math.round((stadium.currentOccupancy / stadium.capacity) * 100)}% capacity and match ending soon, expect heavy foot traffic. Take the ${bestEco?.type} (${bestEco?.line}) for the greenest option, or the ${fastest?.type} for speed.`;
   useEffect(() => {
-    requestDep(`Give a concise departure recommendation for fans at ${stadium.name}. Best eco option: ${bestEco?.type} (${bestEco?.co2e}g CO2). Fastest: ${fastest?.type} (${fastest?.etaMinutes}min). Occupancy: ${Math.round((stadium.currentOccupancy / stadium.capacity) * 100)}%. Keep to 2 sentences.`, depFallback);
+    requestDep(
+      `Give a concise departure recommendation for fans at ${stadium.name}. Best eco option: ${bestEco?.type} (${bestEco?.co2e}g CO2). Fastest: ${fastest?.type} (${fastest?.etaMinutes}min). Occupancy: ${Math.round((stadium.currentOccupancy / stadium.capacity) * 100)}%. Keep to 2 sentences.`,
+      depFallback,
+    );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

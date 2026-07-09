@@ -63,7 +63,12 @@ describe('NotificationContext', () => {
     const { result } = renderHook(() => useNotifications(), { wrapper });
 
     act(() => {
-      result.current.addNotification({ title: 'Custom', message: 'Custom duration', severity: 'warning', duration: 3000 });
+      result.current.addNotification({
+        title: 'Custom',
+        message: 'Custom duration',
+        severity: 'warning',
+        duration: 3000,
+      });
     });
 
     expect(result.current.notifications).toHaveLength(1);
@@ -85,7 +90,12 @@ describe('NotificationContext', () => {
     const { result } = renderHook(() => useNotifications(), { wrapper });
 
     act(() => {
-      result.current.addNotification({ title: 'Sticky', message: 'Stays forever', severity: 'info', autoDismiss: false });
+      result.current.addNotification({
+        title: 'Sticky',
+        message: 'Stays forever',
+        severity: 'info',
+        autoDismiss: false,
+      });
     });
 
     act(() => {
@@ -100,7 +110,11 @@ describe('NotificationContext', () => {
 
     let id;
     act(() => {
-      id = result.current.addNotification({ title: 'Remove', message: 'To remove', severity: 'info' });
+      id = result.current.addNotification({
+        title: 'Remove',
+        message: 'To remove',
+        severity: 'info',
+      });
     });
 
     expect(result.current.notifications).toHaveLength(1);
@@ -134,7 +148,12 @@ describe('NotificationContext', () => {
 
     act(() => {
       for (let i = 0; i < 25; i++) {
-        result.current.addNotification({ title: `Notif ${i}`, message: `Message ${i}`, severity: 'info', autoDismiss: false });
+        result.current.addNotification({
+          title: `Notif ${i}`,
+          message: `Message ${i}`,
+          severity: 'info',
+          autoDismiss: false,
+        });
       }
     });
 
@@ -145,7 +164,11 @@ describe('NotificationContext', () => {
     const { result, unmount } = renderHook(() => useNotifications(), { wrapper });
 
     act(() => {
-      result.current.addNotification({ title: 'Cleanup', message: 'Will be cleaned', severity: 'info' });
+      result.current.addNotification({
+        title: 'Cleanup',
+        message: 'Will be cleaned',
+        severity: 'info',
+      });
     });
 
     const clearTimeoutSpy = vi.spyOn(global, 'clearTimeout');
@@ -161,8 +184,18 @@ describe('NotificationContext', () => {
 
     let id1, id2;
     act(() => {
-      id1 = result.current.addNotification({ title: 'A', message: 'A', severity: 'info', autoDismiss: false });
-      id2 = result.current.addNotification({ title: 'B', message: 'B', severity: 'info', autoDismiss: false });
+      id1 = result.current.addNotification({
+        title: 'A',
+        message: 'A',
+        severity: 'info',
+        autoDismiss: false,
+      });
+      id2 = result.current.addNotification({
+        title: 'B',
+        message: 'B',
+        severity: 'info',
+        autoDismiss: false,
+      });
     });
 
     expect(id1).not.toBe(id2);

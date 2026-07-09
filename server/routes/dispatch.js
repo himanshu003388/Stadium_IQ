@@ -12,7 +12,7 @@ function fallbackDispatch(task, volunteers) {
       v.languages.includes(task.requiredLanguage) &&
       v.skills.includes(task.requiredSkill) &&
       v.currentLoad < v.maxLoad &&
-      v.status !== 'busy'
+      v.status !== 'busy',
   );
   if (eligible.length === 0) return null;
   // Sort by load, then by zone match
@@ -33,7 +33,9 @@ router.post('/api/ai/volunteer-dispatch', authenticateApiKey, csrfProtection, as
   const { task, volunteers } = req.body;
 
   if (!task || !Array.isArray(volunteers)) {
-    return res.status(400).json({ error: 'Task object and volunteers array are required.', requestId });
+    return res
+      .status(400)
+      .json({ error: 'Task object and volunteers array are required.', requestId });
   }
 
   try {
@@ -59,7 +61,10 @@ Choose the best volunteer. Output ONLY a valid JSON object with the volunteer's 
 
       const result = await model.generateContent(prompt);
       const text = result.response.text();
-      const cleanText = text.replace(/```json/g, '').replace(/```/g, '').trim();
+      const cleanText = text
+        .replace(/```json/g, '')
+        .replace(/```/g, '')
+        .trim();
       const dispatchResult = JSON.parse(cleanText);
       return res.json({ suggestion: dispatchResult, requestId });
     }
