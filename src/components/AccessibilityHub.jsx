@@ -3,6 +3,7 @@ import { useStadiumContext } from '../context/StadiumContext';
 import { COLORS } from '../utils/styles';
 import { getDemoResponse } from '../utils/helpers';
 import { useAIInsight } from '../hooks/useAIInsight';
+import { usePrefersContrast } from '../hooks/usePrefersContrast';
 
 const ACCENT_COLORS = [
   COLORS.success,
@@ -34,16 +35,24 @@ function AccessibilityHub() {
     );
   };
 
+  const osPrefersHighContrast = usePrefersContrast();
   const [highContrast, setHighContrast] = useState(
     () =>
       typeof document !== 'undefined' &&
       document.documentElement.classList.contains('high-contrast'),
   );
+  const [userContrastOverride, setUserContrastOverride] = useState(false);
   const [dyslexiaMode, setDyslexiaMode] = useState(
     () =>
       typeof document !== 'undefined' &&
       document.documentElement.classList.contains('dyslexia-mode'),
   );
+
+  useEffect(() => {
+    if (osPrefersHighContrast && !userContrastOverride) {
+      setHighContrast(true);
+    }
+  }, [osPrefersHighContrast, userContrastOverride]);
 
   useEffect(() => {
     if (typeof document === 'undefined') return;
@@ -100,7 +109,10 @@ function AccessibilityHub() {
               type="checkbox"
               className="w-5 h-5 accent-blue-600 cursor-pointer"
               checked={highContrast}
-              onChange={(e) => setHighContrast(e.target.checked)}
+              onChange={(e) => {
+                setHighContrast(e.target.checked);
+                setUserContrastOverride(true);
+              }}
               aria-label="Toggle High Contrast Mode"
             />
             <span className="text-sm font-medium" style={{ color: COLORS.onSurface }}>

@@ -993,3 +993,59 @@ button:focus:not(:focus-visible) {
   white-space: nowrap;
   border-width: 0;
 }
+
+/* === Design Token Utility Classes ===
+   Reduce inline style usage by mapping CSS variables to semantic class names.
+   These classes are used across components for consistent theming. */
+
+.color-on-surface {
+  color: var(--color-on-surface);
+}
+.color-on-surface-variant {
+  color: var(--color-on-surface-variant);
+}
+.color-outline {
+  color: var(--color-outline);
+}
+.color-primary {
+  color: var(--color-primary);
+}
+.color-error {
+  color: var(--color-error);
+}
+.color-success {
+  color: var(--color-success);
+}
+.color-warning {
+  color: var(--color-warning);
+}
+
+.bg-surface {
+  background: var(--color-surface);
+}
+.bg-surface-dim {
+  background: var(--color-surface-dim);
+}
+.bg-surface-container {
+  background: var(--color-surface-container);
+}
+.bg-surface-container-low {
+  background: var(--color-surface-container-low);
+}
+
+.border-outline-variant {
+  border-color: var(--color-outline-variant);
+}
+
+.fill-nominal {
+  fill: var(--color-status-nominal);
+}
+.fill-moderate {
+  fill: var(--color-status-busy);
+}
+.fill-busy {
+  fill: var(--color-status-busy);
+}
+.fill-critical {
+  fill: var(--color-status-critical);
+}
