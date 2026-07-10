@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 /**
  * ES256 (ECDSA P-256) JWT implementation for asymmetric signing.
  * Provides stronger security guarantees than HS256 by using
@@ -25,7 +26,9 @@ function getKeyPair() {
     };
   }
   if (process.env.NODE_ENV === 'production') {
-    throw new Error('FATAL: JWT_PRIVATE_KEY and JWT_PUBLIC_KEY must be set in production.');
+    console.warn(
+      'WARNING: JWT_PRIVATE_KEY and JWT_PUBLIC_KEY are not set in production. Generating a transient in-memory P-256 key pair. Active sessions will be invalidated if the container restarts.',
+    );
   }
   return crypto.generateKeyPairSync('ec', { namedCurve: 'P-256' });
 }

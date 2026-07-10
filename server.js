@@ -15,8 +15,6 @@ dotenv.config();
 if (process.env.NODE_ENV === 'production') {
   const missingKeys = [];
   if (!process.env.CSRF_SECRET) missingKeys.push('CSRF_SECRET');
-  if (!process.env.JWT_PRIVATE_KEY) missingKeys.push('JWT_PRIVATE_KEY');
-  if (!process.env.JWT_PUBLIC_KEY) missingKeys.push('JWT_PUBLIC_KEY');
   if (!process.env.ADMIN_PASSWORD) missingKeys.push('ADMIN_PASSWORD');
   if (!process.env.OPERATOR_PASSWORD) missingKeys.push('OPERATOR_PASSWORD');
 
@@ -25,6 +23,12 @@ if (process.env.NODE_ENV === 'production') {
       `[FATAL SECURITY ERROR] Missing required security environment variables in production: ${missingKeys.join(', ')}. The server is shutting down to prevent insecure operation.`,
     );
     process.exit(1);
+  }
+
+  if (!process.env.JWT_PRIVATE_KEY || !process.env.JWT_PUBLIC_KEY) {
+    console.warn(
+      '[SECURITY WARNING] JWT_PRIVATE_KEY and JWT_PUBLIC_KEY are not set in production. Falling back to a transient in-memory P-256 key pair.',
+    );
   }
 }
 
