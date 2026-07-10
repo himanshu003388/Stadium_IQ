@@ -30,12 +30,12 @@ describe('MarkdownRenderer Snapshot', () => {
 
 describe('Announcer Snapshot', () => {
   it('matches snapshot with default message', () => {
-    const { container } = render(<Announcer message="Welcome to Command Center" />);
+    const { container } = render(<Announcer activeView="command" />);
     expect(container).toMatchSnapshot();
   });
 
   it('matches snapshot with empty message', () => {
-    const { container } = render(<Announcer message="" />);
+    const { container } = render(<Announcer activeView="" />);
     expect(container).toMatchSnapshot();
   });
 });

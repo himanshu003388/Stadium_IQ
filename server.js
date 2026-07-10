@@ -14,13 +14,14 @@ import { installRedact } from './server/utils/redact.js';
 installRedact();
 
 import app from './server/app.js';
-
 import logger from './server/utils/logger.js';
+import { initWebSocketServer } from './server/utils/socket.js';
 
 const PORT = process.env.PORT || 3001;
 const isProduction = process.env.NODE_ENV === 'production';
 
 const server = app.listen(PORT, () => {
+  initWebSocketServer(server);
   logger.info(`Stadium IQ server running on port ${PORT}`);
   logger.info(`Environment: ${isProduction ? 'production' : 'development'}`);
 

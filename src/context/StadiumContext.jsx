@@ -8,6 +8,7 @@ import React, { createContext, useContext, useEffect, useRef, useSyncExternalSto
 import initialMockContext from '../data/mockContext.json';
 import { useAppContext, AppProvider } from './AppContext';
 import { NotificationProvider, useNotifications } from './NotificationContext';
+import { useRealTimeSync } from '../hooks/useRealTimeSync';
 
 const StadiumStoreContext = createContext(null);
 
@@ -78,6 +79,7 @@ function InnerProvider({ children }) {
   const { addNotification } = useNotifications();
   const prevCriticalRef = useRef(0);
   const notificationCooldownRef = useRef({});
+  const wsSyncRef = useRef(null);
 
   // Initialize the pub-sub store once
   const storeRef = useRef(null);
@@ -102,8 +104,8 @@ function InnerProvider({ children }) {
       }
     };
 
-    // Actions
-    const assignVolunteer = (taskId, volunteerId) => {
+    // Actions (Local mutations as a fallback for offline-first resilience)
+    const applyAssignVolunteer = (taskId, volunteerId) => {
       setState((prev) => ({
         ...prev,
         contextData: {
@@ -120,7 +122,7 @@ function InnerProvider({ children }) {
       }));
     };
 
-    const resolveTask = (taskId) => {
+    const applyResolveTask = (taskId) => {
       setState((prev) => {
         const task = prev.contextData.tasks.find((t) => t.id === taskId);
         return {
@@ -138,7 +140,7 @@ function InnerProvider({ children }) {
       });
     };
 
-    const toggleEcoMode = () => {
+    const applyToggleEcoMode = () => {
       setState((prev) => ({
         ...prev,
         contextData: {
@@ -161,7 +163,7 @@ function InnerProvider({ children }) {
       }));
     };
 
-    const resolveIncident = (incidentId) => {
+    const applyResolveIncident = (incidentId) => {
       setState((prev) => ({
         ...prev,
         contextData: {
@@ -171,6 +173,41 @@ function InnerProvider({ children }) {
           ),
         },
       }));
+    };
+
+    const assignVolunteer = (taskId, volunteerId) => {
+      if (
+        wsSyncRef.current &&
+        wsSyncRef.current.sendAction('ASSIGN_VOLUNTEER', { taskId, volunteerId })
+      ) {
+        // Dispatched via WS
+      } else {
+        applyAssignVolunteer(taskId, volunteerId);
+      }
+    };
+
+    const resolveTask = (taskId) => {
+      if (wsSyncRef.current && wsSyncRef.current.sendAction('RESOLVE_TASK', { taskId })) {
+        // Dispatched via WS
+      } else {
+        applyResolveTask(taskId);
+      }
+    };
+
+    const toggleEcoMode = () => {
+      if (wsSyncRef.current && wsSyncRef.current.sendAction('TOGGLE_ECO_MODE', {})) {
+        // Dispatched via WS
+      } else {
+        applyToggleEcoMode();
+      }
+    };
+
+    const resolveIncident = (incidentId) => {
+      if (wsSyncRef.current && wsSyncRef.current.sendAction('RESOLVE_INCIDENT', { incidentId })) {
+        // Dispatched via WS
+      } else {
+        applyResolveIncident(incidentId);
+      }
     };
 
     const setIsSimulating = (isSimulating) => {
@@ -202,11 +239,16 @@ function InnerProvider({ children }) {
     };
   }
 
+  // Initialize client real-time synchronization hook
+  const wsSync = useRealTimeSync(storeRef.current, addNotification);
+  wsSyncRef.current = wsSync;
+
   // Simulation engine with adaptive tick rate
   useEffect(() => {
     const currentState = storeRef.current.getState();
     if (!currentState.isSimulating) return;
     if (!SIMULATION_VIEWS.has(activeView)) return;
+    if (wsSync.isConnected) return; // Suppress client-side simulation while WebSocket is connected
 
     // Wrap the numeric interval ID in an object so we can attach metadata
     let intervalHandle = null; // { id: number, _targetInterval: number }
@@ -370,7 +412,7 @@ function InnerProvider({ children }) {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       stopInterval();
     };
-  }, [activeView, addNotification]); // isSimulating is checked on tick
+  }, [activeView, addNotification, wsSync.isConnected]); // isSimulating is checked on tick
 
   return (
     <StadiumStoreContext.Provider value={storeRef.current}>{children}</StadiumStoreContext.Provider>

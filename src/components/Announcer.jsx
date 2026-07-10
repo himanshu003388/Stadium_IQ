@@ -20,6 +20,7 @@ const viewTitles = {
 
 const Announcer = ({ activeView }) => {
   const [message, setMessage] = useState('');
+  const [assertiveMessage, setAssertiveMessage] = useState('');
 
   useEffect(() => {
     const title = viewTitles[activeView] || 'Page';
@@ -29,16 +30,39 @@ const Announcer = ({ activeView }) => {
     return () => clearTimeout(timeout);
   }, [activeView]);
 
+  useEffect(() => {
+    const handleAnnouncement = (e) => {
+      if (e.detail?.assertive) {
+        setAssertiveMessage(e.detail.message);
+      } else if (e.detail?.message) {
+        setMessage(e.detail.message);
+      }
+    };
+    window.addEventListener('stadium-a11y-announcement', handleAnnouncement);
+    return () => window.removeEventListener('stadium-a11y-announcement', handleAnnouncement);
+  }, []);
+
   return (
-    <div
-      role="status"
-      aria-live="polite"
-      aria-atomic="true"
-      className="sr-only"
-      data-testid="route-announcer"
-    >
-      {message}
-    </div>
+    <>
+      <div
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+        className="sr-only"
+        data-testid="route-announcer"
+      >
+        {message}
+      </div>
+      <div
+        role="alert"
+        aria-live="assertive"
+        aria-atomic="true"
+        className="sr-only"
+        data-testid="assertive-announcer"
+      >
+        {assertiveMessage}
+      </div>
+    </>
   );
 };
 

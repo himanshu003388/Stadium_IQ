@@ -9,6 +9,13 @@ exports[`Announcer Snapshot > matches snapshot with default message 1`] = `
     data-testid="route-announcer"
     role="status"
   />
+  <div
+    aria-atomic="true"
+    aria-live="assertive"
+    class="sr-only"
+    data-testid="assertive-announcer"
+    role="alert"
+  />
 </div>
 `;
 
@@ -20,6 +27,13 @@ exports[`Announcer Snapshot > matches snapshot with empty message 1`] = `
     class="sr-only"
     data-testid="route-announcer"
     role="status"
+  />
+  <div
+    aria-atomic="true"
+    aria-live="assertive"
+    class="sr-only"
+    data-testid="assertive-announcer"
+    role="alert"
   />
 </div>
 `;

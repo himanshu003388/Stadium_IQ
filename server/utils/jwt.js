@@ -38,14 +38,14 @@ const JWT_EXPIRY = 3600;
  * @param {object} payload - The JWT payload (must be a plain object).
  * @returns {string} A signed JWT string (header.body.signature).
  */
-export function signToken(payload) {
+export function signToken(payload, expiry = JWT_EXPIRY) {
   if (!keyPair) keyPair = getKeyPair();
   const header = Buffer.from(JSON.stringify({ alg: 'ES256', typ: 'JWT' })).toString('base64url');
   const body = Buffer.from(
     JSON.stringify({
       ...payload,
       iat: Math.floor(Date.now() / 1000),
-      exp: Math.floor(Date.now() / 1000) + JWT_EXPIRY,
+      exp: Math.floor(Date.now() / 1000) + expiry,
     }),
   ).toString('base64url');
   const sig = crypto.sign('sha256', Buffer.from(`${header}.${body}`), keyPair.privateKey);

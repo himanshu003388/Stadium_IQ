@@ -67,4 +67,36 @@ describe('FocusTrap Edge Cases', () => {
     );
     expect(document.activeElement).not.toBe(screen.getByText('Button'));
   });
+
+  it('recovers focus if active element escapes the trap (e.g. unmounted)', () => {
+    render(
+      <FocusTrap active={true}>
+        <button>First</button>
+        <button>Second</button>
+      </FocusTrap>,
+    );
+
+    const first = screen.getByText('First');
+    const second = screen.getByText('Second');
+
+    expect(document.activeElement).toBe(first);
+
+    // Focus escapes trap (simulated by focusing body or another element outside)
+    const outsideBtn = document.createElement('button');
+    document.body.appendChild(outsideBtn);
+    outsideBtn.focus();
+    expect(document.activeElement).toBe(outsideBtn);
+
+    // Press tab key -> should recover to first
+    fireEvent.keyDown(outsideBtn, { key: 'Tab' });
+    expect(document.activeElement).toBe(first);
+
+    // Shift tab -> should recover to second (last)
+    outsideBtn.focus();
+    fireEvent.keyDown(outsideBtn, { key: 'Tab', shiftKey: true });
+    expect(document.activeElement).toBe(second);
+
+    // Clean up
+    document.body.removeChild(outsideBtn);
+  });
 });

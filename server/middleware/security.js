@@ -8,7 +8,14 @@ const cspDirectives = {
   styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
   fontSrc: ["'self'", 'https://fonts.gstatic.com', 'https://fonts.googleapis.com'],
   imgSrc: ["'self'", 'data:', 'https:'],
-  connectSrc: ["'self'", ...(isProduction ? [] : ['http://localhost:5173'])],
+  connectSrc: [
+    "'self'",
+    'ws:',
+    'wss:',
+    ...(isProduction
+      ? []
+      : ['http://localhost:5173', 'ws://localhost:5173', 'ws://localhost:3001']),
+  ],
   objectSrc: ["'none'"],
   frameAncestors: ["'none'"],
   frameSrc: ["'none'"],

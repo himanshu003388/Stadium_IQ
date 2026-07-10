@@ -24,6 +24,18 @@ export function FocusTrap({ children, active, onEscape }) {
       if (focusable.length === 0) return;
       const first = focusable[0];
       const last = focusable[focusable.length - 1];
+
+      // Handle focus recovery if the active element is no longer inside the trap (e.g. unmounted on state update)
+      if (!containerRef.current?.contains(document.activeElement)) {
+        e.preventDefault();
+        if (e.shiftKey) {
+          last.focus();
+        } else {
+          first.focus();
+        }
+        return;
+      }
+
       if (e.shiftKey && document.activeElement === first) {
         e.preventDefault();
         last.focus();
