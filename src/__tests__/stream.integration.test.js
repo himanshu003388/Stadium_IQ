@@ -1,9 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import request from 'supertest';
 import express from 'express';
-import { EventEmitter } from 'events';
 import chatRouter from '../../server/routes/chat.js';
-import * as auth from '../../server/middleware/auth.js';
 import * as genai from '../../server/utils/genai.js';
 import { queryCache } from '../../server/utils/cache.js';
 
