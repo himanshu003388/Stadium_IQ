@@ -33,6 +33,8 @@ class MockWebSocket {
 MockWebSocket.instances = [];
 MockWebSocket.sentMessages = [];
 MockWebSocket.shouldFailHandshake = false;
+MockWebSocket.OPEN = 1;
+MockWebSocket.CLOSED = 3;
 
 describe('useRealTimeSync hook', () => {
   let mockStore;
