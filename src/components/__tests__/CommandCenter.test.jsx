@@ -114,6 +114,12 @@ describe('SeverityBadge', () => {
     render(<SeverityBadge severity="low" />);
     expect(screen.getByText('low')).toBeInTheDocument();
   });
+
+  it('falls back to default badge-info styling if severity is unknown', () => {
+    const { container } = render(<SeverityBadge severity="unknown-severity-xyz" />);
+    const badge = container.querySelector('span');
+    expect(badge).toHaveClass('badge-info');
+  });
 });
 
 describe('StatusDot', () => {
@@ -304,5 +310,37 @@ describe('SmartBroadcastWidget', () => {
     fireEvent.change(textarea, { target: { value: 'Gate C is closed' } });
     const button = screen.getByText('Generate & Broadcast');
     expect(button.closest('button')).not.toBeDisabled();
+  });
+
+  it('calls generate broadcast on click and updates button state', async () => {
+    vi.useFakeTimers();
+    const mockFetch = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 400,
+      json: () => Promise.resolve({ error: 'API Key is missing' }),
+    });
+    const originalFetch = global.fetch;
+    global.fetch = mockFetch;
+
+    renderWithProviders(<SmartBroadcastWidget />);
+    const textarea = screen.getByLabelText('Enter broadcast announcement');
+    fireEvent.change(textarea, { target: { value: 'Important broadcast message' } });
+    const button = screen.getByRole('button', { name: /Generate & Broadcast/i });
+    
+    await act(async () => {
+      fireEvent.click(button);
+    });
+
+    expect(screen.getByText('Broadcast Sent')).toBeInTheDocument();
+    
+    // Fast-forward 5 seconds to reset the broadcast state
+    act(() => {
+      vi.advanceTimersByTime(5000);
+    });
+    
+    expect(screen.queryByText('Broadcast Sent')).not.toBeInTheDocument();
+    
+    global.fetch = originalFetch;
+    vi.useRealTimers();
   });
 });

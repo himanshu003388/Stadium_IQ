@@ -50,4 +50,28 @@ describe('Announcer', () => {
 
     expect(screen.getByRole('status')).toHaveTextContent('Navigated to Page');
   });
+
+  it('updates messages when window receives custom stadium-a11y-announcement event', () => {
+    render(<Announcer activeView="command" />);
+
+    // Test polite announcement
+    act(() => {
+      window.dispatchEvent(
+        new CustomEvent('stadium-a11y-announcement', {
+          detail: { message: 'Polite reminder message' },
+        }),
+      );
+    });
+    expect(screen.getByTestId('route-announcer')).toHaveTextContent('Polite reminder message');
+
+    // Test assertive announcement
+    act(() => {
+      window.dispatchEvent(
+        new CustomEvent('stadium-a11y-announcement', {
+          detail: { assertive: true, message: 'Assertive critical alert' },
+        }),
+      );
+    });
+    expect(screen.getByTestId('assertive-announcer')).toHaveTextContent('Assertive critical alert');
+  });
 });

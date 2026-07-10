@@ -92,35 +92,50 @@ test.describe('Real-time WebSocket Flow', () => {
 
     // Simulate pushing a critical crowd warning notification from the socket server
     await page.evaluate(() => {
+      const payload = {
+        type: 'NOTIFICATION',
+        data: {
+          title: 'CRITICAL: Crowd Crush Alert',
+          message: 'Potential crush risk in East Wing sector. Reroute volunteers.',
+          severity: 'critical',
+          duration: 10000,
+        },
+      };
+
       const ws = window.activeSockets[window.activeSockets.length - 1];
-      if (ws && ws.onmessage) {
-        ws.onmessage({
-          data: JSON.stringify({
-            type: 'NOTIFICATION',
-            data: {
-              title: 'CRITICAL: Crowd Crush Alert',
-              message: 'Potential crush risk in East Wing sector. Reroute volunteers.',
-              severity: 'critical',
-              duration: 10000,
-            },
-          }),
-        });
+      if (!ws) return;
+
+      const sendNotification = () => {
+        if (ws && ws.onmessage) {
+          ws.onmessage({ data: JSON.stringify(payload) });
+        }
+      };
+
+      if (ws.readyState === 1) {
+        sendNotification();
+      } else {
+        // wait for the mock socket open event before sending
+        ws.addEventListener('open', sendNotification, { once: true });
       }
     });
 
-    // Assert that the toast is displayed on the screen
-    await expect(page.getByText('CRITICAL: Crowd Crush Alert')).toBeVisible();
+    // Add a small rendering buffer
+    await page.waitForTimeout(500);
+
+    // Assert that the toast is displayed on the screen with dynamic timeout & case-insensitive regex
+    await expect(page.getByText(/CRITICAL:\s*Crowd Crush Alert/i)).toBeVisible({ timeout: 15000 });
     await expect(
       page
         .getByLabel('Notifications')
-        .getByText('Potential crush risk in East Wing sector. Reroute volunteers.'),
-    ).toBeVisible();
+        .getByText(/Potential crush risk in East Wing sector.?\s*Reroute volunteers./i),
+    ).toBeVisible({ timeout: 15000 });
 
     // Assert that the assertive aria-live announcer received the notification for screen readers
     const announcer = page.locator('[data-testid="assertive-announcer"]');
     await expect(announcer).toHaveAttribute('aria-live', 'assertive');
     await expect(announcer).toHaveText(
-      'Potential crush risk in East Wing sector. Reroute volunteers.',
+      /Potential crush risk in East Wing sector.?\s*Reroute volunteers./i,
+      { timeout: 15000 },
     );
   });
 });

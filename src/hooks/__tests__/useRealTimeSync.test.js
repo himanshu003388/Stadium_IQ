@@ -7,6 +7,7 @@ class MockWebSocket {
   constructor(url) {
     this.url = url;
     MockWebSocket.instances.push(this);
+    this.readyState = 1; // WebSocket.OPEN
     setTimeout(() => {
       if (MockWebSocket.shouldFailHandshake) {
         if (this.onerror) this.onerror(new Error('Handshake failed'));
@@ -20,8 +21,12 @@ class MockWebSocket {
     MockWebSocket.sentMessages.push(data);
   }
   close(code, reason) {
+    this.readyState = 3; // WebSocket.CLOSED
     this.closed = { code, reason };
     if (this.onclose) this.onclose({ code: code || 1000, reason });
+  }
+  triggerMessage(data) {
+    if (this.onmessage) this.onmessage({ data: JSON.stringify(data) });
   }
 }
 
@@ -180,5 +185,83 @@ describe('useRealTimeSync hook', () => {
       action: 'TEST_ACTION',
       payload: { foo: 'bar' },
     });
+  });
+
+  it('should update store state on STATE_UPDATE message', async () => {
+    renderHook(() => useRealTimeSync(mockStore, mockAddNotification));
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(10);
+    });
+
+    const socket = MockWebSocket.instances[0];
+    const mockState = { stadium: { name: 'New Name' } };
+
+    act(() => {
+      socket.triggerMessage({
+        type: 'STATE_UPDATE',
+        data: mockState,
+      });
+    });
+
+    expect(mockStore.setState).toHaveBeenCalled();
+  });
+
+  it('should call addNotification on NOTIFICATION message and dispatch event if critical', async () => {
+    const listener = vi.fn();
+    window.addEventListener('stadium-a11y-announcement', listener);
+
+    renderHook(() => useRealTimeSync(mockStore, mockAddNotification));
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(10);
+    });
+
+    const socket = MockWebSocket.instances[0];
+    
+    // Non-critical notification
+    act(() => {
+      socket.triggerMessage({
+        type: 'NOTIFICATION',
+        data: { message: 'Normal notification message', severity: 'normal' },
+      });
+    });
+
+    expect(mockAddNotification).toHaveBeenCalledWith({
+      message: 'Normal notification message',
+      severity: 'normal',
+    });
+    expect(listener).not.toHaveBeenCalled();
+
+    // Critical notification
+    act(() => {
+      socket.triggerMessage({
+        type: 'NOTIFICATION',
+        data: { message: 'Critical alert message', severity: 'critical' },
+      });
+    });
+
+    expect(mockAddNotification).toHaveBeenCalledWith({
+      message: 'Critical alert message',
+      severity: 'critical',
+    });
+    expect(listener).toHaveBeenCalled();
+
+    window.removeEventListener('stadium-a11y-announcement', listener);
+  });
+
+  it('should close socket if component unmounts', async () => {
+    const { unmount } = renderHook(() => useRealTimeSync(mockStore, mockAddNotification));
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(10);
+    });
+
+    const socket = MockWebSocket.instances[0];
+    const closeSpy = vi.spyOn(socket, 'close');
+
+    unmount();
+
+    expect(closeSpy).toHaveBeenCalled();
   });
 });
