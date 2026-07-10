@@ -144,4 +144,85 @@ describe('Header Component', () => {
     fireEvent.keyDown(roleBtn, { key: 'Escape', code: 'Escape' });
     expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
   });
+
+  it('closes role dropdown when clicking outside', () => {
+    renderHeader();
+    const roleBtn = screen.getByRole('button', { name: /Select User Role/i });
+    fireEvent.click(roleBtn); // open
+    expect(screen.getByRole('listbox')).toBeInTheDocument();
+
+    // Click outside on the body
+    fireEvent.mouseDown(document.body);
+    expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
+  });
+
+  it('navigates role options with ArrowDown and ArrowUp keys', () => {
+    renderHeader();
+    const roleBtn = screen.getByRole('button', { name: /Select User Role/i });
+    fireEvent.click(roleBtn); // open
+    const listbox = screen.getByRole('listbox');
+
+    // First button (Organizer) should be focused by default
+    const options = screen.getAllByRole('option');
+    expect(options[0]).toHaveFocus();
+
+    // Press ArrowDown -> should focus Staff
+    fireEvent.keyDown(listbox, { key: 'ArrowDown', code: 'ArrowDown' });
+    expect(options[1]).toHaveFocus();
+
+    // Press ArrowDown -> Volunteer
+    fireEvent.keyDown(listbox, { key: 'ArrowDown', code: 'ArrowDown' });
+    expect(options[2]).toHaveFocus();
+
+    // Press ArrowUp -> Staff
+    fireEvent.keyDown(listbox, { key: 'ArrowUp', code: 'ArrowUp' });
+    expect(options[1]).toHaveFocus();
+  });
+
+  it('traps Tab focus inside the role dropdown', () => {
+    renderHeader();
+    const roleBtn = screen.getByRole('button', { name: /Select User Role/i });
+    fireEvent.click(roleBtn); // open
+    const listbox = screen.getByRole('listbox');
+    const options = screen.getAllByRole('option');
+
+    // Focus last item (Fan)
+    options[3].focus();
+
+    // Press Tab -> should wrap focus to the first item (Organizer)
+    fireEvent.keyDown(listbox, { key: 'Tab', code: 'Tab' });
+    expect(options[0]).toHaveFocus();
+
+    // Press Shift+Tab on first item -> should wrap focus to the last item (Fan)
+    fireEvent.keyDown(listbox, { key: 'Tab', code: 'Tab', shiftKey: true });
+    expect(options[3]).toHaveFocus();
+  });
+
+  it('handles clock simulation for extra time boundaries (>90)', () => {
+    vi.useFakeTimers();
+    try {
+      renderHeader();
+      expect(screen.getAllByText("67'")[0]).toBeInTheDocument();
+
+      act(() => {
+        vi.advanceTimersByTime(60000 * 23); // From 67' to 90'
+      });
+      expect(screen.getAllByText("90'")[0]).toBeInTheDocument();
+
+      // Now at 90', advance another minute
+      act(() => {
+        vi.advanceTimersByTime(60000);
+      });
+      // Should show 91' +
+      expect(screen.getAllByText("91' +")[0]).toBeInTheDocument();
+
+      // Advance by 30 more minutes to hit 121' limit (which will return "90'")
+      act(() => {
+        vi.advanceTimersByTime(60000 * 30);
+      });
+      expect(screen.getAllByText("90'")[0]).toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
 });

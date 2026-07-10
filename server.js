@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 /**
  * Stadium IQ - API Proxy Server
  * Security-hardened Express server with Gemini AI integration
@@ -9,6 +10,23 @@ if (fs.existsSync('.env.local')) {
   dotenv.config({ path: '.env.local' });
 }
 dotenv.config();
+
+// Fail-closed verification for production security variables
+if (process.env.NODE_ENV === 'production') {
+  const missingKeys = [];
+  if (!process.env.CSRF_SECRET) missingKeys.push('CSRF_SECRET');
+  if (!process.env.JWT_PRIVATE_KEY) missingKeys.push('JWT_PRIVATE_KEY');
+  if (!process.env.JWT_PUBLIC_KEY) missingKeys.push('JWT_PUBLIC_KEY');
+  if (!process.env.ADMIN_PASSWORD) missingKeys.push('ADMIN_PASSWORD');
+  if (!process.env.OPERATOR_PASSWORD) missingKeys.push('OPERATOR_PASSWORD');
+
+  if (missingKeys.length > 0) {
+    console.error(
+      `[FATAL SECURITY ERROR] Missing required security environment variables in production: ${missingKeys.join(', ')}. The server is shutting down to prevent insecure operation.`,
+    );
+    process.exit(1);
+  }
+}
 
 import { installRedact } from './server/utils/redact.js';
 installRedact();
@@ -27,11 +45,6 @@ const server = app.listen(PORT, () => {
 
   // Environment Verification Logs
   if (isProduction) {
-    if (!process.env.CSRF_SECRET) {
-      logger.warn(
-        `CSRF_SECRET is not defined in production environment. A default fallback will be used, posing security risks!`,
-      );
-    }
     if (!process.env.API_AUTH_KEY) {
       logger.warn(
         `API_AUTH_KEY is not defined in production. Proxy routes will rely solely on CSRF token validation.`,
