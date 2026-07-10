@@ -1,6 +1,6 @@
 import React, { useState, memo, useEffect } from 'react';
 import { useStadiumContext } from '../context/StadiumContext';
-import { COLORS } from '../utils/styles';
+import { COLORS, PRIORITY_COLORS } from '../utils/styles';
 import { useAIInsight } from '../hooks/useAIInsight';
 
 function VolunteerMobile() {
@@ -83,9 +83,7 @@ function VolunteerMobile() {
   };
 
   const getTaskPriorityColor = (priority) => {
-    if (priority === 'high') return COLORS.error;
-    if (priority === 'medium') return COLORS.warning;
-    return COLORS.info;
+    return PRIORITY_COLORS[priority] || COLORS.info;
   };
 
   return (

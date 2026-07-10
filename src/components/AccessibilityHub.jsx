@@ -1,6 +1,6 @@
 import React, { useState, useMemo, memo, useEffect } from 'react';
 import { useStadiumContext } from '../context/StadiumContext';
-import { COLORS } from '../utils/styles';
+import { COLORS, ACCENT_COLORS } from '../utils/styles';
 import { getDemoResponse } from '../utils/helpers';
 import { useAIInsight } from '../hooks/useAIInsight';
 import { usePrefersContrast } from '../hooks/usePrefersContrast';
@@ -12,15 +12,6 @@ import { getGateThemeColor } from '../utils/gateUtils';
  *
  * @component
  */
-
-const ACCENT_COLORS = [
-  COLORS.success,
-  COLORS.tertiary,
-  COLORS.secondaryContainer,
-  COLORS.info,
-  COLORS.secondary,
-  COLORS.primaryContainer,
-];
 
 function AccessibilityHub() {
   const contextData = useStadiumContext((s) => s.contextData);

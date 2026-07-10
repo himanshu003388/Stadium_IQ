@@ -149,3 +149,18 @@ export const QUICK_PROMPTS = [
   { text: 'Where can I eat nearby?', icon: 'restaurant' },
   { text: 'Sustainability efforts?', icon: 'eco' },
 ];
+
+export const ACCENT_COLORS = [
+  COLORS.success,
+  COLORS.tertiary,
+  COLORS.secondaryContainer,
+  COLORS.info,
+  COLORS.secondary,
+  COLORS.primaryContainer,
+];
+
+export const VOLUNTEER_STATUS_COLORS = {
+  available: 'var(--color-status-nominal)',
+  busy: 'var(--color-status-critical)',
+  default: 'var(--color-status-busy)',
+};

@@ -1,19 +1,33 @@
 import NodeCache from 'node-cache';
+import { createClient } from 'redis';
 import logger from './logger.js';
 
 const localCache = new NodeCache({ stdTTL: 300, checkperiod: 60, maxKeys: 1000 });
 
-const redisClient = null;
-const isRedisConnected = false;
+let redisClient = null;
+let isRedisConnected = false;
 
 if (process.env.REDIS_URL) {
   logger.info(
-    `[CACHE] REDIS_URL detected: ${process.env.REDIS_URL}. Distributed cache mode ready.`,
+    `[CACHE] REDIS_URL detected: ${process.env.REDIS_URL}. Initializing distributed cache...`,
   );
-  // Abstraction for future connection:
-  // import { createClient } from 'redis';
-  // redisClient = createClient({ url: process.env.REDIS_URL });
-  // redisClient.connect().then(() => { isRedisConnected = true; }).catch(...)
+  try {
+    redisClient = createClient({ url: process.env.REDIS_URL });
+    redisClient.on('error', (err) => {
+      logger.error(`[CACHE] Redis Client Error: ${err.message}`);
+    });
+    redisClient
+      .connect()
+      .then(() => {
+        isRedisConnected = true;
+        logger.info(`[CACHE] Connected to Redis. Distributed cache mode active.`);
+      })
+      .catch((err) => {
+        logger.error(`[CACHE] Redis Connection Failed: ${err.message}`);
+      });
+  } catch (err) {
+    logger.error(`[CACHE] Redis Client initialization failed: ${err.message}`);
+  }
 }
 
 /**
@@ -55,7 +69,7 @@ export const queryCache = {
     if (isRedisConnected && redisClient) {
       try {
         logger.info(`[CACHE] Redis Set key: ${key}`);
-        await redisClient.set(key, val, { EX: ttl || 300 });
+        await redisClient.set(key, String(val), { EX: ttl || 300 });
         return true;
       } catch (err) {
         logger.error(`[CACHE] Redis set error: ${err.message}`);

@@ -1,13 +1,13 @@
 import React, { useState, useMemo, useCallback, memo } from 'react';
 import { useStadiumContext } from '../context/StadiumContext';
-import { COLORS, PRIORITY_COLORS, PRIORITY_BG, LANG_FLAGS } from '../utils/styles';
+import {
+  COLORS,
+  PRIORITY_COLORS,
+  PRIORITY_BG,
+  LANG_FLAGS,
+  VOLUNTEER_STATUS_COLORS,
+} from '../utils/styles';
 import { getLoadBarColor } from '../utils/helpers';
-
-const VOLUNTEER_STATUS_COLORS = {
-  available: 'var(--color-status-nominal)',
-  busy: 'var(--color-status-critical)',
-  default: 'var(--color-status-busy)',
-};
 
 /**
  * Load bar showing current vs max capacity with color-coded fill.
