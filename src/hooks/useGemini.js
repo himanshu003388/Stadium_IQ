@@ -103,6 +103,7 @@ export function useGemini(stadiumContext) {
       role: 'ai',
       text: "👋 Hello! I'm **Stadium IQ**, your AI guide for today's match. I can help with:\n• Navigation & gate directions\n• Transport & parking\n• Accessibility assistance\n• Stadium services & amenities\n• Sustainability info\n\nAsk me anything in your language!",
       timestamp: new Date(),
+      lang: 'en',
     },
   ]);
   const [isLoading, setIsLoading] = useState(false);
@@ -167,6 +168,7 @@ export function useGemini(stadiumContext) {
         role: 'user',
         text: sanitized,
         timestamp: new Date(),
+        lang: languageRef.current,
       };
       appendMessage(userMsg);
       setIsLoading(true);
@@ -215,6 +217,7 @@ export function useGemini(stadiumContext) {
                   text: chunk,
                   timestamp: new Date(),
                   isStreaming: true,
+                  lang: languageRef.current,
                 });
                 streamingStarted = true;
               } else {
@@ -235,6 +238,7 @@ export function useGemini(stadiumContext) {
               role: 'ai',
               text: 'Sorry, I could not generate a response.',
               timestamp: new Date(),
+              lang: languageRef.current,
             });
           }
 
@@ -292,6 +296,7 @@ export function useGemini(stadiumContext) {
                 role: 'ai',
                 text: demoResponse,
                 timestamp: new Date(),
+                lang: languageRef.current,
               });
               setIsLoading(false);
               return;
@@ -305,6 +310,7 @@ export function useGemini(stadiumContext) {
             role: 'ai',
             text: data.reply || 'Sorry, I could not generate a response.',
             timestamp: new Date(),
+            lang: languageRef.current,
           });
         }
       } catch (err) {
@@ -316,6 +322,7 @@ export function useGemini(stadiumContext) {
             text: '⚠️ Unable to connect right now. Please try again.',
             timestamp: new Date(),
             isError: true,
+            lang: languageRef.current,
           });
         }
       } finally {

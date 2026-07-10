@@ -220,7 +220,7 @@ describe('useRealTimeSync hook', () => {
     });
 
     const socket = MockWebSocket.instances[0];
-    
+
     // Non-critical notification
     act(() => {
       socket.triggerMessage({

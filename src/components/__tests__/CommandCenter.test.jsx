@@ -326,20 +326,20 @@ describe('SmartBroadcastWidget', () => {
     const textarea = screen.getByLabelText('Enter broadcast announcement');
     fireEvent.change(textarea, { target: { value: 'Important broadcast message' } });
     const button = screen.getByRole('button', { name: /Generate & Broadcast/i });
-    
+
     await act(async () => {
       fireEvent.click(button);
     });
 
     expect(screen.getByText('Broadcast Sent')).toBeInTheDocument();
-    
+
     // Fast-forward 5 seconds to reset the broadcast state
     act(() => {
       vi.advanceTimersByTime(5000);
     });
-    
+
     expect(screen.queryByText('Broadcast Sent')).not.toBeInTheDocument();
-    
+
     global.fetch = originalFetch;
     vi.useRealTimers();
   });

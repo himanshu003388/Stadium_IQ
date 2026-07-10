@@ -6,8 +6,9 @@
 import React, { useState, useMemo, useCallback, memo, useEffect } from 'react';
 import { useStadiumContext } from '../context/StadiumContext';
 import { COLORS, TRANSPORT_ICONS } from '../utils/styles';
-import { ECO_SCORE_THRESHOLDS } from '../utils/constants';
-import { getCO2Color, getCapacityColor } from '../utils/helpers';
+import EcoScore from './transport/EcoScore';
+import CO2Bar from './transport/CO2Bar';
+import CapacityIndicator from './transport/CapacityIndicator';
 import { useAIInsight } from '../hooks/useAIInsight';
 
 /**
@@ -21,60 +22,6 @@ import { useAIInsight } from '../hooks/useAIInsight';
  * @property {boolean} recommended - Whether AI recommends this option
  * @property {string} [icon] - Material symbol icon name
  */
-
-/**
- * Eco score badge based on CO₂ emissions.
- * @param {{ co2e: number }} props
- */
-const EcoScore = memo(function EcoScore({ co2e }) {
-  if (co2e === ECO_SCORE_THRESHOLDS.zero)
-    return <span className="badge-success">Zero Emission</span>;
-  if (co2e <= ECO_SCORE_THRESHOLDS.low) return <span className="badge-success">Eco ♻️</span>;
-  if (co2e <= ECO_SCORE_THRESHOLDS.moderate) return <span className="badge-info">Low CO₂</span>;
-  if (co2e <= ECO_SCORE_THRESHOLDS.high) return <span className="badge-warning">Moderate</span>;
-  return <span className="badge-critical">High CO₂</span>;
-});
-
-/**
- * CO₂ impact bar with color-coded fill.
- * @param {{ co2e: number, maxCo2?: number }} props
- */
-const CO2Bar = memo(function CO2Bar({ co2e, maxCo2 = 50 }) {
-  const pct = Math.min((co2e / maxCo2) * 100, 100);
-  const color = getCO2Color(co2e);
-  return (
-    <div
-      className="density-bar"
-      style={{ height: '5px' }}
-      role="progressbar"
-      aria-valuenow={Math.round(pct)}
-      aria-valuemin={0}
-      aria-valuemax={100}
-      aria-label={`CO₂ impact at ${Math.round(pct)}%`}
-    >
-      <div className="density-fill" style={{ width: `${pct}%`, background: color }} />
-    </div>
-  );
-});
-
-/**
- * Capacity indicator showing remaining seats with color coding.
- * @param {{ left: number }} props
- */
-const CapacityIndicator = memo(function CapacityIndicator({ left }) {
-  const color = getCapacityColor(left);
-  return (
-    <span
-      className="text-xs font-medium"
-      style={{ color }}
-      role="status"
-      aria-live="polite"
-      aria-label={`${left} seats left`}
-    >
-      {left <= 5 ? '⚠️' : '✓'} {left} seats left
-    </span>
-  );
-});
 
 /**
  * Transport Hub panel — post-match departure options with sorting and eco insights.

@@ -10,4 +10,10 @@ describe('cache.js - queryCache', () => {
   it('should return undefined for missing keys', () => {
     expect(queryCache.get('missing_key')).toBeUndefined();
   });
+
+  it('should get and set async cache values correctly', async () => {
+    await queryCache.setAsync('async_key', 'async_value');
+    const val = await queryCache.getAsync('async_key');
+    expect(val).toBe('async_value');
+  });
 });

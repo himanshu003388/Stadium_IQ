@@ -30,6 +30,8 @@ const ChatMessage = memo(function ChatMessage({ msg, index }) {
         className={msg.role === 'user' ? 'chat-bubble-user' : 'chat-bubble-ai'}
         aria-live={msg.role === 'ai' ? 'polite' : undefined}
         aria-atomic={msg.role === 'ai' ? 'false' : undefined}
+        lang={msg.lang || 'en'}
+        dir={msg.lang === 'ar' ? 'rtl' : 'ltr'}
       >
         {msg.role === 'ai' ? (
           <div className="text-sm">
@@ -69,6 +71,7 @@ ChatMessage.propTypes = {
     text: PropTypes.string.isRequired,
     timestamp: PropTypes.instanceOf(Date).isRequired,
     id: PropTypes.string,
+    lang: PropTypes.string,
   }).isRequired,
   index: PropTypes.number.isRequired,
 };
