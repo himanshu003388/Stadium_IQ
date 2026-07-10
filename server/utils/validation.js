@@ -1,25 +1,42 @@
-/**
- * Input validation and sanitisation utilities for the Stadium IQ API server.
- *
- * @module validation
- */
+import { JSDOM } from 'jsdom';
+import DOMPurify from 'dompurify';
+
+const window = new JSDOM('').window;
+const purify = DOMPurify(window);
 
 const VALID_LANGUAGES = ['en', 'es', 'fr', 'ar', 'pt', 'ja', 'hi'];
 
 /**
- * Strips HTML tags, script blocks, and dangerous characters from user input.
- * Returns an empty string for non-string values.
+ * Strips HTML tags, script blocks, and dangerous characters from user input
+ * using DOMPurify as the primary defense, supplemented by regex constraints.
  *
  * @param {*} input - Raw user input to sanitize.
  * @returns {string} A sanitised, trimmed string with no HTML or dangerous chars.
  */
 export function sanitizeInput(input) {
   if (typeof input !== 'string') return '';
-  const clean = input
-    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+
+  // 1. Pre-filter nested script tags to prevent DOMPurify from parsing them as plain text
+  const preFiltered = input.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
+
+  // 2. Primary HTML-aware defense via DOMPurify
+  const purified = purify.sanitize(preFiltered);
+
+  // 3. Decode HTML entities to allow regex filters to strip them
+  const decoded = purified
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&#96;/g, '`')
+    .replace(/&amp;/g, '&');
+
+  // 4. Secondary regex filters to remove HTML tags and raw special characters
+  const clean = decoded
     .replace(/<[^>]*>/g, '')
     .replace(/[<>"'`]/g, '')
     .trim();
+
   return clean;
 }
 

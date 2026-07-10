@@ -4,6 +4,14 @@ import { COLORS } from '../utils/styles';
 import { getDemoResponse } from '../utils/helpers';
 import { useAIInsight } from '../hooks/useAIInsight';
 import { usePrefersContrast } from '../hooks/usePrefersContrast';
+import { getGateThemeColor } from '../utils/gateUtils';
+
+/**
+ * Accessibility Hub Component — Displays inclusive access information,
+ * AI accessibility assistance, and accessibility settings.
+ *
+ * @component
+ */
 
 const ACCENT_COLORS = [
   COLORS.success,
@@ -160,12 +168,7 @@ function AccessibilityHub() {
                 <div
                   className="w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold text-white shrink-0"
                   style={{
-                    background:
-                      gate.status === 'critical'
-                        ? COLORS.error
-                        : gate.status === 'watch'
-                          ? COLORS.warning
-                          : COLORS.success,
+                    background: getGateThemeColor(gate.status),
                   }}
                 >
                   {gate.id}

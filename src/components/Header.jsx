@@ -213,7 +213,7 @@ function RoleSelector({ role, setRole }) {
 function Header({ setActiveView }) {
   const stadium = useStadiumContext((s) => s.contextData.stadium);
   const incidents = useStadiumContext((s) => s.contextData.incidents);
-  const { theme, toggleTheme, role, setRole } = useAppContext();
+  const { theme, toggleTheme, role, setRole, geminiActive } = useAppContext();
   const { currentTime, matchTime } = useMatchClock();
 
   const activeIncidents = useMemo(
@@ -322,23 +322,43 @@ function Header({ setActiveView }) {
             </span>
           </button>
 
-          {/* AI Status */}
-          <div
-            className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full"
-            style={{
-              background: 'color-mix(in srgb, var(--color-status-nominal) 15%, transparent)',
-              border: '1px solid color-mix(in srgb, var(--color-status-nominal) 35%, transparent)',
-            }}
-            aria-label="AI Assistant is active"
-          >
-            <span
-              className="w-1.5 sm:w-2 h-1.5 sm:h-2 rounded-full animate-pulse"
-              style={{ background: COLORS.success }}
-            />
-            <span className="text-xs sm:text-sm font-medium" style={{ color: COLORS.success }}>
-              AI Active
-            </span>
-          </div>
+          {/* AI Status / Demo Mode */}
+          {geminiActive ? (
+            <div
+              className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full"
+              style={{
+                background: 'color-mix(in srgb, var(--color-status-nominal) 15%, transparent)',
+                border:
+                  '1px solid color-mix(in srgb, var(--color-status-nominal) 35%, transparent)',
+              }}
+              aria-label="AI Assistant is active"
+            >
+              <span
+                className="w-1.5 sm:w-2 h-1.5 sm:h-2 rounded-full animate-pulse"
+                style={{ background: COLORS.success }}
+              />
+              <span className="text-xs sm:text-sm font-medium" style={{ color: COLORS.success }}>
+                AI Active
+              </span>
+            </div>
+          ) : (
+            <div
+              className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full"
+              style={{
+                background: 'color-mix(in srgb, var(--color-warning) 15%, transparent)',
+                border: '1px solid color-mix(in srgb, var(--color-warning) 35%, transparent)',
+              }}
+              aria-label="Demo Mode active"
+            >
+              <span
+                className="w-1.5 sm:w-2 h-1.5 sm:h-2 rounded-full animate-pulse"
+                style={{ background: COLORS.warning }}
+              />
+              <span className="text-xs sm:text-sm font-medium" style={{ color: COLORS.warning }}>
+                Demo Mode
+              </span>
+            </div>
+          )}
 
           {/* Incident Alert Badge */}
           {activeIncidents > 0 && (

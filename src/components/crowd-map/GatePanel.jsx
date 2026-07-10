@@ -1,6 +1,7 @@
 import React, { memo } from 'react';
 import PropTypes from 'prop-types';
-import { COLORS, GATE_STATUS_COLORS } from '../../utils/styles';
+import { COLORS } from '../../utils/styles';
+import { getGateColorConfig } from '../../utils/gateUtils';
 
 function GatePanel({ gates, activeIndoorGate, onToggleIndoorNav }) {
   return (
@@ -23,7 +24,7 @@ function GatePanel({ gates, activeIndoorGate, onToggleIndoorNav }) {
       </div>
       <div className="flex flex-col gap-2">
         {gates.map((gate) => {
-          const gateColorConfig = GATE_STATUS_COLORS[gate.status] || GATE_STATUS_COLORS.normal;
+          const gateColorConfig = getGateColorConfig(gate.status);
           const bgColor = gateColorConfig.bg;
           const textColor = gateColorConfig.text;
           const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent('AT&T Stadium, Arlington, TX')}&travelmode=walking&q=${encodeURIComponent(`Gate ${gate.id}`)}`;

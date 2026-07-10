@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import crypto from 'crypto';
 import { signToken } from '../utils/jwt.js';
+import { loginLimiter } from '../middleware/loginRateLimit.js';
 
 const router = Router();
 
@@ -25,7 +26,7 @@ function safeTimingSafeEqual(a, b) {
   return crypto.timingSafeEqual(aBuf, bBuf);
 }
 
-router.post('/api/auth/login', (req, res) => {
+router.post('/api/auth/login', loginLimiter, (req, res) => {
   const { username, password } = req.body || {};
   if (!username || !password) {
     return res.status(400).json({ error: 'Username and password required.' });

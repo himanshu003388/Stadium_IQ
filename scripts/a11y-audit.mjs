@@ -6,6 +6,9 @@
  */
 import { chromium } from '@playwright/test';
 import { writeFileSync, mkdirSync } from 'fs';
+import { createRequire } from 'module';
+
+const require = createRequire(import.meta.url);
 
 const BASE_URL = process.env.BASE_URL || 'http://localhost:5173';
 const REPORT_DIR = './coverage/a11y-audit';
@@ -47,6 +50,7 @@ async function runAudit() {
   const browser = await chromium.launch({ headless: true });
   const context = await browser.newContext({
     viewport: { width: 1280, height: 800 },
+    bypassCSP: true,
     colorScheme: 'light',
   });
 
@@ -65,9 +69,11 @@ async function runAudit() {
         await page.action(tab);
       }
 
+      // Inject axe-core into the page before running evaluate
+      await tab.addScriptTag({ path: require.resolve('axe-core') });
+
       const violations = await tab.evaluate(async () => {
-        const { default: axe } = await import('axe-core');
-        const result = await axe.run(document, {
+        const result = await window.axe.run(document, {
           runOnly: ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'],
           resultTypes: ['violations'],
         });

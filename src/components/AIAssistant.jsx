@@ -1,15 +1,28 @@
-import React, { useState, useRef, useEffect, memo } from 'react';
+/**
+ * AI Assistant Component
+ * Provides a GenAI-enabled chat interface for tournament operations,
+ * supporting multilingual assistance, context awareness, and streaming.
+ *
+ * @component
+ */
+import React, { useState, useRef, memo } from 'react';
 import { useStadiumContext } from '../context/StadiumContext';
 import { useAppContext } from '../context/AppContext';
 import { useGemini } from '../hooks/useGemini';
+import { useScrollToBottom } from '../hooks/useScrollToBottom';
 import { COLORS, QUICK_PROMPTS } from '../utils/styles';
 import LanguageSelector from './LanguageSelector';
 import ChatMessage from './ChatMessage';
 import ChatInput from './ChatInput';
 
+/**
+ * GenAI Assistant panel supporting chat streaming, language select, and quick prompts.
+ *
+ * @returns {React.ReactElement} The AIAssistant component.
+ */
 function AIAssistant() {
   const contextData = useStadiumContext((s) => s.contextData);
-  const { setUiLanguage } = useAppContext();
+  const { setUiLanguage, geminiActive } = useAppContext();
   const { messages, isLoading, language, setLanguage, sendMessage } = useGemini(contextData);
   const [input, setInput] = useState('');
   const messagesEndRef = useRef(null);
@@ -21,13 +34,8 @@ function AIAssistant() {
     setUiLanguage(lang);
   };
 
-  useEffect(() => {
-    const el = messagesEndRef.current;
-    if (el && typeof el.scrollIntoView === 'function') {
-      const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
-      el.scrollIntoView({ behavior: mq.matches ? 'auto' : 'smooth' });
-    }
-  }, [messages, isLoading]);
+  // Scroll to bottom when messages or loading state changes
+  useScrollToBottom(messagesEndRef, [messages, isLoading]);
 
   const handleSend = () => {
     if (input.trim()) {
@@ -67,12 +75,25 @@ function AIAssistant() {
               smart_toy
             </span>
           </div>
-          <div>
+          <div className="flex-1 min-w-0">
             <h2 className="font-bold text-sm" style={{ color: COLORS.onSurface }}>
               FIFA World Cup 2026 GenAI Assistant
             </h2>
-            <p className="text-xs" style={{ color: COLORS.outline }}>
-              Powered by Gemini AI · Multilingual support for all fans & staff
+            <p
+              className="text-xs flex items-center gap-1.5 truncate"
+              style={{ color: COLORS.outline }}
+            >
+              {geminiActive ? (
+                <>
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
+                  Powered by Gemini AI · Multilingual support for all fans & staff
+                </>
+              ) : (
+                <>
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse shrink-0" />
+                  ⚠️ Offline Demo Mode · Using local contextual fallback engine
+                </>
+              )}
             </p>
           </div>
           <LanguageSelector language={language} setLanguage={handleLanguageChange} />

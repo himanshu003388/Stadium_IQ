@@ -1,83 +1,13 @@
 import { Router } from 'express';
 import logger from '../utils/logger.js';
 import crypto from 'crypto';
-import { JSDOM } from 'jsdom';
-import DOMPurify from 'dompurify';
 import { authenticateApiKey, csrfProtection } from '../middleware/auth.js';
 import { validateChatInput } from '../utils/validation.js';
 import { getGenAI, getBestAvailableModel, buildSystemPrompt } from '../utils/genai.js';
 import { queryCache } from '../utils/cache.js';
-
-const window = new JSDOM('').window;
-const purify = DOMPurify(window);
-
-/**
- * Generates a stable context digest that filters out granular simulation details
- * (such as exact occupancy and gate density values) and focuses on structural data
- * (active incident count/severity, gate closed statuses, match phase).
- * This ensures simulation timers do not continuously bust the cache.
- */
-function getStableContextDigest(ctx) {
-  if (!ctx) return '';
-  const stadium = ctx.stadium || {};
-  // Bucket occupancy into 5% chunks to ensure minor changes don't bust the cache
-  const capacity = stadium.capacity || 100000;
-  const occupancy = stadium.currentOccupancy || 0;
-  const occupancyBucket = Math.round((occupancy / capacity) * 20); // 0-20 representing 5% increments
-
-  // Map gates status and accessibility
-  const gates = (ctx.gates || [])
-    .map((g) => `${g.id}:${g.status}:${g.accessible}`)
-    .sort()
-    .join(',');
-
-  // Map active incidents
-  const incidents = (ctx.incidents || [])
-    .map((i) => `${i.id}:${i.type}:${i.severity}`)
-    .sort()
-    .join(',');
-
-  const stableState = {
-    matchPhase: stadium.matchPhase || '',
-    score: stadium.score || '',
-    occupancyBucket,
-    gates,
-    incidents,
-  };
-
-  return crypto.createHash('sha256').update(JSON.stringify(stableState)).digest('hex');
-}
+import { doPurify, getStableContextDigest, sanitizeOutput } from '../utils/chatHelper.js';
 
 const router = Router();
-
-/**
- * Sanitizes user-supplied input using DOMPurify, then strips any residual
- * script tags and angle-bracket characters.
- * @param {string} input - Raw user input
- * @returns {string} Sanitised, trimmed string
- */
-function doPurify(input) {
-  const clean = purify.sanitize(input);
-  return clean
-    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
-    .replace(/<[^>]*>/g, '')
-    .replace(/[<>"'`]/g, '')
-    .trim();
-}
-
-/**
- * Sanitizes AI response output — strips scripts and HTML tags, then truncates.
- * Extracted to eliminate duplication between stream and non-stream handlers.
- * @param {string} text - Raw AI response text
- * @param {number} [maxLen=10000] - Maximum character length
- * @returns {string} Safe, truncated response
- */
-function sanitizeOutput(text, maxLen = 10000) {
-  return text
-    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
-    .replace(/<[^>]*>/g, '')
-    .slice(0, maxLen);
-}
 
 router.post('/api/chat', authenticateApiKey, csrfProtection, async (req, res) => {
   const requestId = crypto.randomBytes(4).toString('hex');

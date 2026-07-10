@@ -430,3 +430,58 @@ describe('JWT utilities (ES256)', () => {
     expect(t1).not.toBe(t2);
   });
 });
+
+describe('CSRF token user/JWT identity binding', () => {
+  it('validates a token generated with user JWT identity when validated with same identity', () => {
+    const tokenAdmin = esSignToken({ sub: 'admin', role: 'admin' });
+    const reqGen = { headers: { cookie: 'session_id=123', authorization: `Bearer ${tokenAdmin}` } };
+    const resGen = { cookie: vi.fn(), setHeader: vi.fn() };
+    const csrfToken = prodGenerateCsrfToken(reqGen, resGen);
+
+    const reqVal = { headers: { cookie: 'session_id=123', authorization: `Bearer ${tokenAdmin}` } };
+    expect(prodValidateCsrfToken(csrfToken, reqVal)).toBe(true);
+  });
+
+  it('fails validation when validated with a different user JWT identity', () => {
+    const tokenAdmin = esSignToken({ sub: 'admin', role: 'admin' });
+    const tokenOperator = esSignToken({ sub: 'operator', role: 'operator' });
+    const reqGen = { headers: { cookie: 'session_id=123', authorization: `Bearer ${tokenAdmin}` } };
+    const resGen = { cookie: vi.fn(), setHeader: vi.fn() };
+    const csrfToken = prodGenerateCsrfToken(reqGen, resGen);
+
+    const reqVal = {
+      headers: { cookie: 'session_id=123', authorization: `Bearer ${tokenOperator}` },
+    };
+    expect(prodValidateCsrfToken(csrfToken, reqVal)).toBe(false);
+  });
+
+  it('fails validation when an anonymous token is validated with a JWT context', () => {
+    const reqGen = { headers: { cookie: 'session_id=123' } }; // anonymous
+    const resGen = { cookie: vi.fn(), setHeader: vi.fn() };
+    const csrfToken = prodGenerateCsrfToken(reqGen, resGen);
+
+    const tokenAdmin = esSignToken({ sub: 'admin', role: 'admin' });
+    const reqVal = { headers: { cookie: 'session_id=123', authorization: `Bearer ${tokenAdmin}` } };
+    expect(prodValidateCsrfToken(csrfToken, reqVal)).toBe(false);
+  });
+
+  it('fails validation when a user token is validated anonymously', () => {
+    const tokenAdmin = esSignToken({ sub: 'admin', role: 'admin' });
+    const reqGen = { headers: { cookie: 'session_id=123', authorization: `Bearer ${tokenAdmin}` } };
+    const resGen = { cookie: vi.fn(), setHeader: vi.fn() };
+    const csrfToken = prodGenerateCsrfToken(reqGen, resGen);
+
+    const reqVal = { headers: { cookie: 'session_id=123' } }; // anonymous
+    expect(prodValidateCsrfToken(csrfToken, reqVal)).toBe(false);
+  });
+});
+
+describe('sanitizeInput HTML-aware protection', () => {
+  it('correctly handles complex nested XSS payloads', () => {
+    expect(sanitizeInput('<img src="x" onerror="alert(1)">')).toBe('');
+    expect(sanitizeInput('<svg><script>alert(1)</script></svg>')).toBe('');
+    expect(sanitizeInput('<div style="background: url(javascript:alert(1))">Test</div>')).toBe(
+      'Test',
+    );
+  });
+});

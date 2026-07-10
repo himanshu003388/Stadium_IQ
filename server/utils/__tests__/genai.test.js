@@ -71,7 +71,8 @@ describe('genai.js', () => {
     expect(m1).toBe('gemini-2.5-flash');
     expect(m2).toBe('gemini-2.5-flash');
 
-    // Due to deduplication, generateContent should only be called once
+    // Due to deduplication, generateContent and getGenerativeModel should only be called once
+    expect(mockGetGenerativeModel).toHaveBeenCalledTimes(1);
     expect(mockGenerateContent).toHaveBeenCalledTimes(1);
 
     // Clean calls after cache is set should hit cache directly and not call generateContent

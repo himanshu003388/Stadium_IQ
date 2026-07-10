@@ -1,4 +1,5 @@
 import crypto from 'crypto';
+import { verifyToken } from './jwt.js';
 
 let CSRF_SECRET = process.env.CSRF_SECRET;
 if (!CSRF_SECRET) {
@@ -21,6 +22,27 @@ function parseCookies(cookieHeader) {
     cookies[name] = decodeURIComponent(value);
   });
   return cookies;
+}
+
+/**
+ * Extracts user identity (subject) from JWT Authorization header if present.
+ * Defaults to 'anonymous' if no valid JWT is found.
+ *
+ * @param {object} req - Express request object.
+ * @returns {string} User identity subject.
+ */
+function getUserIdentity(req) {
+  if (req && req.headers && req.headers.authorization) {
+    const authHeader = req.headers.authorization;
+    if (authHeader.startsWith('Bearer ')) {
+      const token = authHeader.slice(7);
+      const payload = verifyToken(token);
+      if (payload && payload.sub) {
+        return payload.sub;
+      }
+    }
+  }
+  return 'anonymous';
 }
 
 export function generateCsrfToken(req, res) {
@@ -48,8 +70,9 @@ export function generateCsrfToken(req, res) {
     }
   }
 
+  const userId = getUserIdentity(req);
   const payload = `${Date.now()}:${crypto.randomBytes(16).toString('hex')}`;
-  const hashInput = `${payload}:${sessionId}`;
+  const hashInput = `${payload}:${sessionId}:${userId}`;
   const sig = crypto.createHmac('sha256', CSRF_SECRET).update(hashInput).digest('hex');
   return Buffer.from(`${payload}:${sig}`).toString('base64url');
 }
@@ -67,7 +90,8 @@ export function validateCsrfToken(rawToken, req) {
     const [ts, nonce, sig] = decoded.split(':');
     if (!ts || !nonce || !sig) return false;
 
-    const hashInput = `${ts}:${nonce}:${sessionId}`;
+    const userId = getUserIdentity(req);
+    const hashInput = `${ts}:${nonce}:${sessionId}:${userId}`;
     const expected = crypto.createHmac('sha256', CSRF_SECRET).update(hashInput).digest('hex');
     const sigBuf = Buffer.from(sig, 'hex');
     const expBuf = Buffer.from(expected, 'hex');

@@ -7,6 +7,12 @@ import GateRow from './command-center/GateRow';
 import IncidentCard from './command-center/IncidentCard';
 import SmartBroadcastWidget from './command-center/SmartBroadcastWidget';
 
+/**
+ * Command Center Dashboard Component
+ * Displays real-time stadium KPIs, active incident tracking feeds, and broadcast controllers.
+ *
+ * @component
+ */
 function CommandCenter() {
   const gates = useStadiumContext((s) => s.contextData.gates);
   const stadium = useStadiumContext((s) => s.contextData.stadium);

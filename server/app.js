@@ -11,6 +11,7 @@ import {
   extraHeaders,
 } from './middleware/security.js';
 import { apiLimiter } from './middleware/rateLimit.js';
+import { optionalJwtAuth } from './middleware/auth.js';
 
 import healthRouter from './routes/health.js';
 import csrfRouter from './routes/csrf.js';
@@ -57,6 +58,7 @@ if (isProduction) {
 }
 
 app.use('/api/', apiLimiter);
+app.use(optionalJwtAuth);
 
 app.use(healthRouter);
 app.use(csrfRouter);

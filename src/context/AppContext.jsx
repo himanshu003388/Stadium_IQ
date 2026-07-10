@@ -22,10 +22,26 @@ export function AppProvider({ children }) {
     document.documentElement.classList.toggle('dark', theme === 'dark');
   }, [theme]);
 
-  // ACCESSIBILITY: Update <html lang> so screen readers adjust pronunciation
+  // ACCESSIBILITY: Update <html lang> and <html dir> so screen readers adjust pronunciation and layout
   useEffect(() => {
     document.documentElement.lang = uiLanguage;
+    document.documentElement.dir = uiLanguage === 'ar' ? 'rtl' : 'ltr';
   }, [uiLanguage]);
+
+  const [geminiActive, setGeminiActive] = useState(true);
+
+  useEffect(() => {
+    fetch('/api/health')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data && typeof data.geminiActive === 'boolean') {
+          setGeminiActive(data.geminiActive);
+        }
+      })
+      .catch(() => {
+        // Fallback or ignore
+      });
+  }, []);
 
   const toggleTheme = useCallback(() => {
     setTheme((prev) => (prev === 'light' ? 'dark' : 'light'));
@@ -41,8 +57,9 @@ export function AppProvider({ children }) {
       setRole,
       uiLanguage,
       setUiLanguage,
+      geminiActive,
     }),
-    [theme, toggleTheme, activeView, setActiveView, role, uiLanguage],
+    [theme, toggleTheme, activeView, setActiveView, role, uiLanguage, geminiActive],
   );
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

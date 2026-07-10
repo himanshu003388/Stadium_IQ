@@ -1,17 +1,8 @@
 import React, { useState, memo } from 'react';
 import PropTypes from 'prop-types';
 import { ZONE_COLORS } from '../../utils/styles';
-import { getStatusColor } from '../../utils/helpers';
 import { useReducedMotion } from '../../hooks/useReducedMotion';
-
-const GATE_POSITIONS = {
-  A: { x: 250, y: 22, dir: 'N' },
-  B: { x: 310, y: 22, dir: 'N' },
-  C: { x: 250, y: 378, dir: 'S' },
-  D: { x: 310, y: 378, dir: 'S' },
-  E: { x: 412, y: 200, dir: 'E' },
-  F: { x: 88, y: 200, dir: 'W' },
-};
+import { GATE_POSITIONS, getGateStatusColor } from '../../utils/gateUtils';
 
 function StadiumSVG({ zones, gates, onZoneClick, selectedZone }) {
   const reducedMotion = useReducedMotion();
@@ -218,7 +209,7 @@ function StadiumSVG({ zones, gates, onZoneClick, selectedZone }) {
       {gates.map((gate) => {
         const pos = GATE_POSITIONS[gate.id];
         if (!pos) return null;
-        const gColor = getStatusColor(gate.status);
+        const gColor = getGateStatusColor(gate.status);
         return (
           <g
             key={gate.id}

@@ -74,3 +74,15 @@ export function jwtAuth(req, res, next) {
   req.user = payload;
   next();
 }
+
+export function optionalJwtAuth(req, res, next) {
+  const authHeader = req.headers.authorization;
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    const token = authHeader.slice(7);
+    const payload = verifyToken(token);
+    if (payload) {
+      req.user = payload;
+    }
+  }
+  next();
+}
